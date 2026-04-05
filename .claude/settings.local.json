@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf .next)",
+      "Bash(npm run:*)",
+      "Bash(netstat -ano)",
+      "Bash(xargs -r taskkill //F //PID)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Read(//c/Users/maisi/**)",
+      "Bash(npx playwright:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
