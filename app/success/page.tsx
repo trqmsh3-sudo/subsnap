@@ -2,8 +2,6 @@ import Stripe from 'stripe'
 import Link from 'next/link'
 import SuccessContent from '@/components/SuccessContent'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-
 const PLAN_LABELS: Record<string, string> = {
   single: 'Single Snap',
   starter: 'Starter Pack',
@@ -22,6 +20,7 @@ export default async function SuccessPage({ searchParams }: Props) {
   }
 
   try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
     const session = await stripe.checkout.sessions.retrieve(session_id)
 
     if (session.payment_status !== 'paid') {

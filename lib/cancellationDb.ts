@@ -73,6 +73,14 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     difficulty: 'easy',
   },
   {
+    name: 'Canva',
+    keywords: ['canva'],
+    cancelUrl: 'https://www.canva.com/settings/billing',
+    method: 'url',
+    difficulty: 'easy',
+    notes: 'Cancel from billing settings',
+  },
+  {
     name: 'Test Service',
     keywords: ['test', 'test service'],
     cancelUrl: 'http://localhost:3006/test-cancel.html',

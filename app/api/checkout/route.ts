@@ -2,9 +2,8 @@ import Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
 import { PLANS } from '@/lib/credits'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-
 export async function POST(req: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const { planId, userId } = await req.json()
 
   const plan = PLANS.find((p) => p.id === planId)
