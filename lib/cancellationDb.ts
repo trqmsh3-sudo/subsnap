@@ -4,6 +4,7 @@ export interface CancellationEntry {
   cancelUrl: string
   method: 'url' | 'phone' | 'chat'
   notes: string
+  difficulty: 'easy' | 'hard'
 }
 
 export const CANCELLATION_DB: CancellationEntry[] = [
@@ -13,6 +14,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://www.netflix.com/cancelplan',
     method: 'url',
     notes: 'Direct cancel page — no chat required',
+    difficulty: 'easy',
   },
   {
     name: 'Spotify',
@@ -20,6 +22,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://www.spotify.com/account/subscription/cancel',
     method: 'url',
     notes: 'Must be logged in',
+    difficulty: 'easy',
   },
   {
     name: 'Adobe',
@@ -27,6 +30,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://account.adobe.com/plans',
     method: 'url',
     notes: 'Early termination fee may apply',
+    difficulty: 'hard',
   },
   {
     name: 'iCloud',
@@ -34,6 +38,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://support.apple.com/en-us/118428',
     method: 'url',
     notes: 'Cancel via Apple ID settings',
+    difficulty: 'easy',
   },
   {
     name: 'ChatGPT Plus',
@@ -41,6 +46,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://chat.openai.com/#settings/Subscription',
     method: 'url',
     notes: 'Cancel from subscription settings',
+    difficulty: 'easy',
   },
   {
     name: 'Amazon Prime',
@@ -48,6 +54,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://www.amazon.com/gp/primecentral',
     method: 'url',
     notes: 'May offer pause instead of cancel',
+    difficulty: 'hard',
   },
   {
     name: 'YouTube Premium',
@@ -55,6 +62,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://www.youtube.com/paid_memberships',
     method: 'url',
     notes: 'Cancel from memberships page — requires Google login',
+    difficulty: 'easy',
   },
   {
     name: 'Disney Plus',
@@ -62,6 +70,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'https://www.disneyplus.com/account',
     method: 'url',
     notes: 'Cancel from account page',
+    difficulty: 'easy',
   },
   {
     name: 'Test Service',
@@ -69,6 +78,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     cancelUrl: 'http://localhost:3006/test-cancel.html',
     method: 'url',
     notes: 'Local test cancellation flow',
+    difficulty: 'easy',
   },
 ]
 

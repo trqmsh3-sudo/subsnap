@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('[cancel] launching browser for:', entry.cancelUrl)
-    const result = await cancelSubscription(entry.cancelUrl, entry.name)
+    const result = await cancelSubscription(entry.cancelUrl, entry.name, entry.difficulty)
     console.log('[cancel] result:', result)
     return NextResponse.json(result)
   } catch (error) {

@@ -10,7 +10,10 @@
       "Read(//c/Users/maisi/**)",
       "Bash(npx playwright:*)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx plugins:*)",
+      "Bash(unset ANTHROPIC_API_KEY)",
+      "Bash(claude mcp:*)"
     ]
   }
 }
