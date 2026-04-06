@@ -4,6 +4,6 @@
     "dockerfilePath": "railway-server/Dockerfile"
   },
   "deploy": {
-    "startCommand": "node railway-server/server.js"
+    "startCommand": "node server.js"
   }
 }
