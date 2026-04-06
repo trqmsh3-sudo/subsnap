@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { findCancellationEntry } from '@/lib/cancellationDb'
-import { cancelSubscription } from '@/lib/playwrightCancel'
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,10 +22,40 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    console.log(`[cancel] tier=${entry.tier} launching browser for: ${entry.cancelUrl}`)
-    const result = await cancelSubscription(entry.cancelUrl, entry.name, entry.difficulty, entry.tier, entry.steps)
-    console.log('[cancel] result:', result)
+    const railwayUrl = process.env.RAILWAY_SERVER_URL
+    if (!railwayUrl) {
+      console.error('[cancel] RAILWAY_SERVER_URL is not set')
+      return NextResponse.json({
+        success: false,
+        message: 'Cancellation server is not configured. Please try again later.',
+      })
+    }
+
+    console.log(`[cancel] tier=${entry.tier} | forwarding to Railway: ${railwayUrl}/cancel`)
+
+    const railwayRes = await fetch(`${railwayUrl}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        serviceName: entry.name,
+        cancelUrl: entry.cancelUrl,
+        difficulty: entry.difficulty,
+        steps: entry.steps,
+      }),
+      // 3-minute timeout — Playwright flows can take ~60–90s
+      signal: AbortSignal.timeout(180_000),
+    })
+
+    if (!railwayRes.ok) {
+      const text = await railwayRes.text()
+      console.error(`[cancel] Railway returned ${railwayRes.status}: ${text}`)
+      return NextResponse.json({ success: false, message: 'Cancellation server error' })
+    }
+
+    const result = await railwayRes.json()
+    console.log('[cancel] Railway result:', result)
     return NextResponse.json({ ...result, tier: entry.tier })
+
   } catch (error) {
     console.error('[cancel] error:', error)
     return NextResponse.json({ success: false, message: String(error) })

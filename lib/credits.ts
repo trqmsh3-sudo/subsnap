@@ -1,30 +1,44 @@
-// In-memory store for demo purposes.
-// Replace with a database (e.g. Redis, Postgres) in production.
-const creditStore = new Map<string, number>()
-const freeUsed = new Set<string>()
+import { Redis } from '@upstash/redis'
 
-export function getCredits(userId: string): number {
-  return creditStore.get(userId) ?? 0
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+// ─── Key helpers ──────────────────────────────────────────────────────────────
+
+function creditsKey(userId: string) { return `credits:${userId}` }
+function freeKey(userId: string)    { return `free_used:${userId}` }
+
+// ─── Credit operations ────────────────────────────────────────────────────────
+
+export async function getCredits(userId: string): Promise<number> {
+  const val = await redis.get<number>(creditsKey(userId))
+  return val ?? 0
 }
 
-export function addCredits(userId: string, amount: number): void {
-  creditStore.set(userId, getCredits(userId) + amount)
+export async function addCredits(userId: string, amount: number): Promise<void> {
+  const current = await getCredits(userId)
+  await redis.set(creditsKey(userId), current + amount)
 }
 
-export function deductCredit(userId: string): boolean {
-  const current = getCredits(userId)
+export async function deductCredit(userId: string): Promise<boolean> {
+  const current = await getCredits(userId)
   if (current <= 0) return false
-  creditStore.set(userId, current - 1)
+  await redis.set(creditsKey(userId), current - 1)
   return true
 }
 
-export function hasFreeCancel(userId: string): boolean {
-  return !freeUsed.has(userId)
+export async function hasFreeCancel(userId: string): Promise<boolean> {
+  const used = await redis.get<boolean>(freeKey(userId))
+  return !used
 }
 
-export function useFreeCancel(userId: string): void {
-  freeUsed.add(userId)
+export async function useFreeCancel(userId: string): Promise<void> {
+  await redis.set(freeKey(userId), true)
 }
+
+// ─── Plans ────────────────────────────────────────────────────────────────────
 
 export const PLANS = [
   {
