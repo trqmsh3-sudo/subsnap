@@ -5,6 +5,8 @@ export interface CancellationEntry {
   method: 'url' | 'phone' | 'chat'
   notes: string
   difficulty: 'easy' | 'hard'
+  tier: 'auto' | 'session' | 'manual'
+  steps?: string[]   // service-specific hints passed to AI prompt
 }
 
 export const CANCELLATION_DB: CancellationEntry[] = [
@@ -15,6 +17,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Direct cancel page — no chat required',
     difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'Spotify',
@@ -23,6 +26,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Must be logged in',
     difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'Adobe',
@@ -31,6 +35,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Early termination fee may apply',
     difficulty: 'hard',
+    tier: 'session',
   },
   {
     name: 'iCloud',
@@ -39,6 +44,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Cancel via Apple ID settings',
     difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'ChatGPT Plus',
@@ -47,6 +53,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Cancel from subscription settings',
     difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'Amazon Prime',
@@ -55,6 +62,13 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'May offer pause instead of cancel',
     difficulty: 'hard',
+    tier: 'manual',
+    steps: [
+      'Look for a link that says "Update, cancel and more" and click it',
+      'Click "End membership" or "Cancel membership"',
+      'If you see a retention offer (pause, discounted plan), click "Continue to cancel" or "No thanks"',
+      'Click the final confirm button to complete cancellation',
+    ],
   },
   {
     name: 'YouTube Premium',
@@ -63,6 +77,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Cancel from memberships page — requires Google login',
     difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'Disney Plus',
@@ -71,14 +86,16 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Cancel from account page',
     difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'Canva',
     keywords: ['canva'],
     cancelUrl: 'https://www.canva.com/settings/billing',
     method: 'url',
-    difficulty: 'easy',
     notes: 'Cancel from billing settings',
+    difficulty: 'easy',
+    tier: 'auto',
   },
   {
     name: 'Test Service',
@@ -87,6 +104,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'Local test cancellation flow',
     difficulty: 'easy',
+    tier: 'auto',
   },
 ]
 

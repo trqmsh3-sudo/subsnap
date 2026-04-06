@@ -14,7 +14,8 @@
       "Bash(npx plugins:*)",
       "Bash(unset ANTHROPIC_API_KEY)",
       "Bash(claude mcp:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(unset GEMINI_API_KEY)"
     ]
   }
 }

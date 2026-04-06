@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SubSnap — Opening cancellation page</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f9fafb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.02em;
+    }
+    .logo span { color: #6366f1; }
+    .divider {
+      width: 1px;
+      height: 18px;
+      background: #e5e7eb;
+    }
+    .header-label {
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
+    .header-service {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .icon {
+      width: 52px;
+      height: 52px;
+      background: #eef2ff;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      margin-top: 28px;
+      background: #f3f4f6;
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #818cf8);
+      border-radius: 999px;
+      transition: width 0.05s linear;
+    }
+
+    .countdown {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">Sub<span>Snap</span></div>
+    <div class="divider"></div>
+    <span class="header-label">Cancelling&nbsp;</span>
+    <span class="header-service" id="header-service">...</span>
+  </div>
+
+  <div class="card">
+    <div class="icon">✂️</div>
+    <h1>Opening cancellation page</h1>
+    <p id="description">We're taking you directly to the cancellation page.<br>Sign in when prompted and we'll guide you from there.</p>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <p class="countdown" id="countdown">Redirecting in 1s...</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const service = params.get('service') || 'subscription'
+    const url = params.get('url') || ''
+
+    document.getElementById('header-service').textContent = service
+    document.getElementById('description').innerHTML =
+      `We're taking you directly to the <strong>${service}</strong> cancellation page.<br>Sign in when prompted and we'll guide you from there.`
+
+    const DURATION = 1000 // ms
+    const bar = document.getElementById('progress-bar')
+    const countdown = document.getElementById('countdown')
+    const start = Date.now()
+
+    function tick() {
+      const elapsed = Date.now() - start
+      const pct = Math.min(100, (elapsed / DURATION) * 100)
+      bar.style.width = pct + '%'
+      const remaining = Math.max(0, Math.ceil((DURATION - elapsed) / 1000))
+      countdown.textContent = remaining > 0 ? `Redirecting in ${remaining}s...` : 'Redirecting...'
+      if (elapsed < DURATION) {
+        requestAnimationFrame(tick)
+      } else if (url) {
+        window.location.href = url
+      }
+    }
+
+    requestAnimationFrame(tick)
+  </script>
+</body>
+</html>
