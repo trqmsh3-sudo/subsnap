@@ -62,7 +62,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     method: 'url',
     notes: 'May offer pause instead of cancel',
     difficulty: 'hard',
-    tier: 'manual',
+    tier: 'session',
     steps: [
       'Look for a link that says "Update, cancel and more" and click it',
       'Click "End membership" or "Cancel membership"',
