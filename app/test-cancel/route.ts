@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+export function GET() {
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -30,8 +31,6 @@
   </style>
 </head>
 <body>
-
-<!-- Step 1: Login -->
 <div class="card">
   <div id="step-login" class="step active">
     <h1>Sign in</h1>
@@ -42,8 +41,6 @@
     <input id="password" type="password" placeholder="••••••••" value="password123" />
     <button class="btn-primary" onclick="goToStep('step-manage')">Sign in</button>
   </div>
-
-  <!-- Step 2: Manage subscription -->
   <div id="step-manage" class="step">
     <span class="badge">Active Plan</span>
     <h1>Manage Subscription</h1>
@@ -55,8 +52,6 @@
     <button class="btn-danger" onclick="goToStep('step-confirm')">Cancel subscription</button>
     <button class="btn-ghost" onclick="goToStep('step-login')">Back</button>
   </div>
-
-  <!-- Step 3: Confirm cancel -->
   <div id="step-confirm" class="step">
     <h1>Are you sure?</h1>
     <p>You'll lose access to Premium features at the end of your billing period.</p>
@@ -67,15 +62,12 @@
     <button class="btn-danger" id="confirm-cancel-btn" onclick="goToStep('step-done')">Yes, cancel my subscription</button>
     <button class="btn-ghost" onclick="goToStep('step-manage')">Keep my plan</button>
   </div>
-
-  <!-- Step 4: Done -->
   <div id="step-done" class="step">
     <div class="success-icon">✅</div>
     <div class="success-title">Subscription cancelled</div>
     <p class="success-msg">Your Premium plan has been cancelled. You'll have access until Dec 31, 2026.</p>
   </div>
 </div>
-
 <script>
   function goToStep(id) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'))
@@ -83,4 +75,7 @@
   }
 </script>
 </body>
-</html>
+</html>`
+
+  return new Response(html, { headers: { 'Content-Type': 'text/html' } })
+}

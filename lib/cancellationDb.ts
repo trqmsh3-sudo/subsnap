@@ -100,11 +100,37 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Test Service',
     keywords: ['test', 'test service'],
-    cancelUrl: 'http://localhost:3006/test-cancel.html',
+    cancelUrl: 'http://localhost:3009/test-cancel',
     method: 'url',
     notes: 'Local test cancellation flow',
     difficulty: 'easy',
     tier: 'auto',
+  },
+  {
+    name: 'Test Easy',
+    keywords: ['test easy', 'easystream'],
+    cancelUrl: 'http://localhost:3009/test-easy',
+    method: 'url',
+    notes: 'Local easy-flow test — direct cancel button visible',
+    difficulty: 'easy',
+    tier: 'auto',
+  },
+  {
+    name: 'Test Hard',
+    keywords: ['test hard', 'darkstream'],
+    cancelUrl: 'http://localhost:3009/test-hard',
+    method: 'url',
+    notes: 'Local dark-patterns test — retention popup, survey, pause offer',
+    difficulty: 'hard',
+    tier: 'session',
+    steps: [
+      'Sign in with the pre-filled credentials',
+      'Click "Manage Subscription"',
+      'On the retention popup, click "Continue to cancel"',
+      'Select any survey option and click "Next"',
+      'On the pause offer screen, click "No thanks, cancel anyway"',
+      'Click "Confirm cancellation" to complete',
+    ],
   },
 ]
 

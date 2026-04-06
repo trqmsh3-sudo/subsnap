@@ -9,6 +9,8 @@ const MOCK_SUBSCRIPTIONS = [
   { name: 'YouTube Premium', amount: '₪22', frequency: 'monthly', category: 'streaming' },
   { name: 'Canva', amount: '$15.00', frequency: 'monthly', category: 'software' },
   { name: 'Amazon Prime', amount: '$14.99', frequency: 'monthly', category: 'other' },
+  { name: 'Test Easy', amount: '$9.99', frequency: 'monthly', category: 'other' },
+  { name: 'Test Hard', amount: '$29.99', frequency: 'monthly', category: 'other' },
 ]
 
 export async function POST(req: NextRequest) {

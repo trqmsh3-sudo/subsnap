@@ -20,20 +20,24 @@ async function scoutDifficulty(
   fallback: 'easy' | 'hard'
 ): Promise<'easy' | 'medium' | 'hard'> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     const result = await model.generateContent([
       { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
       `Look at this cancellation page screenshot. Rate the complexity: reply with only one word: easy, medium, or hard.
 Easy = direct cancel button visible. Medium = multi-step flow. Hard = chat required, phone required, or heavy dark patterns.`,
     ])
     const rating = result.response.text().trim().toLowerCase()
+    console.log(`[scout] raw response: "${rating}"`)
     if (rating === 'easy' || rating === 'medium' || rating === 'hard') {
       return rating
     }
     console.warn(`[scout] Unexpected rating "${rating}", using fallback: ${fallback}`)
     return fallback === 'hard' ? 'hard' : 'easy'
-  } catch (err) {
-    console.warn(`[scout] Failed, using manual fallback: ${fallback}`, err)
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string; errorDetails?: unknown }
+    console.error(`[scout] FAILED — status=${e?.status ?? 'n/a'} message="${e?.message ?? String(err)}"`)
+    if (e?.errorDetails) console.error(`[scout] errorDetails:`, JSON.stringify(e.errorDetails, null, 2))
+    console.warn(`[scout] using manual fallback: ${fallback}`)
     return fallback === 'hard' ? 'hard' : 'easy'
   }
 }
@@ -84,7 +88,7 @@ async function getNextActionClaude(screenshotBase64: string, goal: string, steps
 }
 
 async function getNextActionGemini(screenshotBase64: string, goal: string, steps?: string[]): Promise<ActionResult> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
   const result = await model.generateContent([
     { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
     ACTION_PROMPT(goal, steps),
@@ -98,17 +102,52 @@ function pickModel(scoutRating: 'easy' | 'medium' | 'hard'): 'gemini' | 'claude'
   return scoutRating === 'hard' ? 'claude' : 'gemini'
 }
 
+// ─── Cost estimation ──────────────────────────────────────────────────────────
+
+const COST = {
+  scoutCall: 0.000025,      // one Gemini Flash image call for Scout
+  geminiCancel: 0.15,       // flat per-cancellation estimate (Gemini steps)
+  claudeCancel: 0.75,       // flat per-cancellation estimate (Claude steps)
+}
+
+function logCost(serviceName: string, model: 'gemini' | 'claude', stepCount: number) {
+  const base = model === 'claude' ? COST.claudeCancel : COST.geminiCancel
+  const total = (COST.scoutCall + base).toFixed(6)
+  console.log(
+    `[cost] service=${serviceName} | model=${model} | steps=${stepCount} | estimated=$${total}`
+  )
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
+
+export interface CancelResult {
+  success: boolean
+  message: string
+  model?: 'gemini' | 'claude'
+  stepsTaken?: number
+  estimatedCost?: number
+}
+
+function calcCost(model: 'gemini' | 'claude'): number {
+  return COST.scoutCall + (model === 'claude' ? COST.claudeCancel : COST.geminiCancel)
+}
 
 export async function cancelSubscription(
   cancelUrl: string,
   serviceName: string,
   manualDifficulty: 'easy' | 'hard' = 'easy',
   tier: 'auto' | 'session' | 'manual' = 'auto',
-  steps?: string[]
-): Promise<{ success: boolean; message: string }> {
-  const browser = await chromium.launch({ headless: false })
+  steps?: string[],
+  options: { headless?: boolean } = {}
+): Promise<CancelResult> {
+  const browser = await chromium.launch({ headless: options.headless ?? false })
   const page = await browser.newPage()
+
+  const timeoutMs = options.headless ? 90_000 : 30_000
+  const timeoutHandle = setTimeout(async () => {
+    console.warn(`[playwright] ${timeoutMs / 1000}s timeout reached — closing browser`)
+    await browser.close().catch(() => {})
+  }, timeoutMs)
 
   try {
     // Tier 2 (session): show branded bridge page first, then navigate to cancel URL
@@ -134,7 +173,7 @@ export async function cancelSubscription(
     const scoutRating = await scoutDifficulty(firstBase64, manualDifficulty)
     const model = pickModel(scoutRating)
 
-    console.log(`[scout] service=${serviceName} | rated=${scoutRating} | model=${model === 'claude' ? 'claude-opus-4-5' : 'gemini-1.5-flash'} | manual-fallback=${manualDifficulty}`)
+    console.log(`[scout] service=${serviceName} | rated=${scoutRating} | model=${model === 'claude' ? 'claude-opus-4-5' : 'gemini-2.5-flash'} | manual-fallback=${manualDifficulty}`)
 
     let stepCount = 0
     const maxSteps = 10
@@ -150,17 +189,24 @@ export async function cancelSubscription(
       console.log(`[step ${stepCount + 1}] model=${model} action=${action.action} reason="${action.reason}"`)
 
       if (action.action === 'done') {
+        clearTimeout(timeoutHandle)
+        logCost(serviceName, model, stepCount + 1)
         await browser.close()
-        return { success: true, message: `${serviceName} cancelled successfully` }
+        return { success: true, message: `${serviceName} cancelled successfully`, model, stepsTaken: stepCount + 1, estimatedCost: calcCost(model) }
       }
 
       if (action.action === 'need_human') {
-        return { success: true, message: `Please complete login in the browser window, then the process will continue` }
+        clearTimeout(timeoutHandle)
+        logCost(serviceName, model, stepCount + 1)
+        await browser.close()
+        return { success: false, message: `need_human — login required`, model, stepsTaken: stepCount + 1, estimatedCost: calcCost(model) }
       }
 
       if (action.action === 'click' && action.selector) {
         await page.click(action.selector).catch(() =>
-          page.getByText(action.selector!).click()
+          page.getByRole('button', { name: action.selector! }).click()
+            .catch(() => page.getByRole('link', { name: action.selector! }).click()
+              .catch(() => page.getByText(action.selector!, { exact: false }).first().click()))
         )
         await page.waitForTimeout(1500)
       }
@@ -177,11 +223,14 @@ export async function cancelSubscription(
       currentBase64 = next.toString('base64')
     }
 
-    return { success: false, message: 'Max steps reached — please complete manually' }
+    clearTimeout(timeoutHandle)
+    logCost(serviceName, model, maxSteps)
+    return { success: false, message: 'Max steps reached — please complete manually', model, stepsTaken: maxSteps, estimatedCost: calcCost(model) }
 
   } catch (error) {
+    clearTimeout(timeoutHandle)
     console.error('[playwright] error:', error)
-    await browser.close()
+    await browser.close().catch(() => {})
     return { success: false, message: 'Automation failed — opening page manually' }
   }
 }
