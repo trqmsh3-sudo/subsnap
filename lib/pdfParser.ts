@@ -5,7 +5,10 @@ export async function parsePdfToCanvas(
   file: File
 ): Promise<{ canvas: HTMLCanvasElement; text: string; textItems: any[] }> {
   const pdfjsLib = await import('pdfjs-dist')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+  // Use the worker we copied to /public at build time.
+  // Avoids the CDN 404 (cdnjs doesn't carry pdfjs v5) and the webpack
+  // bundling crash caused by webpack not knowing pdf.worker.mjs is ESM.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
   const buffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
