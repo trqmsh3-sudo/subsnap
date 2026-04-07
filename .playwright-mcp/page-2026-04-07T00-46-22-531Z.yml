@@ -1,0 +1,226 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "S SubSnap" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - generic [ref=e7]: S
+          - img [ref=e8]
+        - generic [ref=e10]: SubSnap
+      - navigation [ref=e11]:
+        - link "How it works" [ref=e12] [cursor=pointer]:
+          - /url: "#how-it-works"
+        - link "Pricing" [ref=e13] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Get Started" [ref=e14] [cursor=pointer]:
+          - /url: /app
+  - generic [ref=e16]:
+    - generic [ref=e17]: No bank login · Privacy-first · Free first cancellation
+    - heading "Stop paying for things you forgot about." [level=1] [ref=e19]:
+      - text: Stop paying for things
+      - text: you forgot about.
+    - paragraph [ref=e20]:
+      - text: The average person wastes
+      - strong [ref=e21]: $180/year
+      - text: on forgotten subscriptions.
+      - text: Find yours in 60 seconds.
+    - generic [ref=e23]:
+      - text: $180/yr
+      - paragraph [ref=e24]: Average annual waste per person
+    - generic [ref=e25]:
+      - link "Scan My Statement — Free" [ref=e26] [cursor=pointer]:
+        - /url: /app
+        - text: Scan My Statement — Free
+        - img [ref=e27]
+      - paragraph [ref=e29]: No bank login · No account needed · Your data stays on your device
+  - generic [ref=e31]:
+    - generic [ref=e32]:
+      - generic [ref=e33]: $2.4M+
+      - generic [ref=e34]: In wasted subs found
+    - generic [ref=e35]:
+      - generic [ref=e36]: 14,000+
+      - generic [ref=e37]: Subscriptions cancelled
+    - generic [ref=e38]:
+      - generic [ref=e39]: < 2 min
+      - generic [ref=e40]: Avg time to cancel
+    - generic [ref=e41]:
+      - generic [ref=e42]: 100%
+      - generic [ref=e43]: Local data processing
+  - generic [ref=e45]:
+    - generic [ref=e46]:
+      - heading "Three steps. Zero frustration." [level=2] [ref=e47]
+      - paragraph [ref=e48]: No account required. Works on any bank.
+    - generic [ref=e49]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - img [ref=e55]
+          - generic [ref=e58]: "01"
+        - heading "Upload your statement" [level=3] [ref=e59]
+        - paragraph [ref=e60]: Drag in your bank or credit card PDF. It's processed locally on your device — nothing leaves your browser yet.
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - img [ref=e64]
+          - generic [ref=e67]: "02"
+        - heading "AI finds every charge" [level=3] [ref=e68]
+        - paragraph [ref=e69]: Our AI scans every line and flags recurring charges — even the ones with confusing billing names you've been ignoring.
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - img [ref=e73]
+          - generic [ref=e76]: "03"
+        - heading "Cancel with one click" [level=3] [ref=e77]
+        - paragraph [ref=e78]: Click Cancel and our automation navigates the actual website — through dark patterns, retention flows, and confirm screens.
+  - generic [ref=e80]:
+    - heading "Unlike other tools, we never connect to your bank." [level=3] [ref=e81]
+    - generic [ref=e82]:
+      - generic [ref=e83]:
+        - generic [ref=e84]: Feature
+        - generic [ref=e85]: SubSnap
+        - generic [ref=e86]: Others
+      - generic [ref=e87]:
+        - generic [ref=e88]: Requires bank login
+        - img [ref=e90]
+        - img [ref=e94]
+      - generic [ref=e96]:
+        - generic [ref=e97]: Stores your financial data
+        - img [ref=e99]
+        - img [ref=e103]
+      - generic [ref=e105]:
+        - generic [ref=e106]: Actually cancels for you
+        - img [ref=e108]
+        - img [ref=e111]
+      - generic [ref=e114]:
+        - generic [ref=e115]: Works without an account
+        - img [ref=e117]
+        - img [ref=e120]
+      - generic [ref=e123]:
+        - generic [ref=e124]: Handles dark patterns & retention
+        - img [ref=e126]
+        - img [ref=e129]
+  - generic [ref=e135]:
+    - img [ref=e138]
+    - generic [ref=e140]:
+      - heading "Bank-level privacy, zero risk." [level=2] [ref=e141]
+      - paragraph [ref=e142]:
+        - text: Your statement is processed entirely in your browser. Sensitive details are masked before anything is sent for analysis.
+        - strong [ref=e143]: We never see your account numbers.
+      - list [ref=e144]:
+        - listitem [ref=e145]:
+          - img [ref=e147]
+          - text: Statement processed locally in your browser
+        - listitem [ref=e149]:
+          - img [ref=e151]
+          - text: You redact sensitive data before anything is sent
+        - listitem [ref=e153]:
+          - img [ref=e155]
+          - text: We never see your account numbers or balances
+        - listitem [ref=e157]:
+          - img [ref=e159]
+          - text: No account, no tracking, no data retention
+  - generic [ref=e162]:
+    - generic [ref=e163]:
+      - heading "Simple pricing." [level=2] [ref=e164]
+      - paragraph [ref=e165]: Pay per cancellation. No subscription irony.
+    - generic [ref=e166]:
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - paragraph [ref=e169]: Try it out
+          - paragraph [ref=e170]: Free
+        - list [ref=e171]:
+          - listitem [ref=e172]:
+            - img [ref=e173]
+            - text: 1 cancellation included
+          - listitem [ref=e175]:
+            - img [ref=e176]
+            - text: Full browser automation
+          - listitem [ref=e178]:
+            - img [ref=e179]
+            - text: No account needed
+        - link "Start free" [ref=e181] [cursor=pointer]:
+          - /url: /app
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - paragraph [ref=e184]: One-time
+          - paragraph [ref=e185]: $2.49
+        - list [ref=e186]:
+          - listitem [ref=e187]:
+            - img [ref=e188]
+            - text: 1 cancellation credit
+          - listitem [ref=e190]:
+            - img [ref=e191]
+            - text: $2.49 per cancel
+          - listitem [ref=e193]:
+            - img [ref=e194]
+            - text: Full browser automation
+          - listitem [ref=e196]:
+            - img [ref=e197]
+            - text: AI routing for fastest path
+        - link "Buy now" [ref=e199] [cursor=pointer]:
+          - /url: /app
+      - generic [ref=e200]:
+        - generic [ref=e201]: Most Popular
+        - generic [ref=e202]:
+          - paragraph [ref=e203]: Best value
+          - paragraph [ref=e204]: $7.99
+        - list [ref=e205]:
+          - listitem [ref=e206]:
+            - img [ref=e207]
+            - text: 5 cancellation credits
+          - listitem [ref=e209]:
+            - img [ref=e210]
+            - text: $1.60 per cancel
+          - listitem [ref=e212]:
+            - img [ref=e213]
+            - text: Full browser automation
+          - listitem [ref=e215]:
+            - img [ref=e216]
+            - text: AI routing for fastest path
+          - listitem [ref=e218]:
+            - img [ref=e219]
+            - text: Priority processing
+        - link "Buy now" [ref=e221] [cursor=pointer]:
+          - /url: /app
+      - generic [ref=e222]:
+        - generic [ref=e223]:
+          - paragraph [ref=e224]: Power user
+          - paragraph [ref=e225]: $19.99
+        - list [ref=e226]:
+          - listitem [ref=e227]:
+            - img [ref=e228]
+            - text: 15 cancellation credits
+          - listitem [ref=e230]:
+            - img [ref=e231]
+            - text: $1.33 per cancel
+          - listitem [ref=e233]:
+            - img [ref=e234]
+            - text: Full browser automation
+          - listitem [ref=e236]:
+            - img [ref=e237]
+            - text: AI routing for fastest path
+          - listitem [ref=e239]:
+            - img [ref=e240]
+            - text: Priority processing
+          - listitem [ref=e242]:
+            - img [ref=e243]
+            - text: Dark-pattern specialist (Claude)
+        - link "Buy now" [ref=e245] [cursor=pointer]:
+          - /url: /app
+  - generic [ref=e247]:
+    - heading "Your forgotten subscriptions are billing you right now." [level=2] [ref=e248]:
+      - text: Your forgotten subscriptions are
+      - text: billing you right now.
+    - paragraph [ref=e249]: Takes 60 seconds. First cancellation is free. No card required.
+    - link "Scan My Statement — Free" [ref=e250] [cursor=pointer]:
+      - /url: /app
+      - text: Scan My Statement — Free
+      - img [ref=e251]
+  - contentinfo [ref=e253]:
+    - generic [ref=e254]:
+      - link "S SubSnap" [ref=e255] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e256]:
+          - generic [ref=e257]: S
+          - img [ref=e258]
+        - generic [ref=e260]: SubSnap
+      - paragraph [ref=e261]: SubSnap © 2026 · Privacy Policy · Terms
+      - link "Open the app →" [ref=e262] [cursor=pointer]:
+        - /url: /app

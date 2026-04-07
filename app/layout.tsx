@@ -1,37 +1,33 @@
-// Global layout wrapper for the entire Subsnap application.
-// Sets the HTML lang attribute, imports global Tailwind CSS styles,
-// and provides a consistent shell (fonts, metadata, nav) around every page.
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: "Subsnap",
-  description: "Redact sensitive data before AI analysis",
-};
+  title: 'SubSnap | Your Money. Reclaimed.',
+  description:
+    'Stop the bleed. Our autonomous agents scan your statements and terminate ghost subscriptions with professional-grade precision.',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`dark ${inter.variable}`}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        />
+      </head>
+      <body className="min-h-screen flex flex-col antialiased bg-surface text-on-surface">
+        {children}
+      </body>
     </html>
-  );
+  )
 }

@@ -40,8 +40,11 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
       onClick={() => inputRef.current?.click()}
-      className={`border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all
-        ${dragging ? 'border-teal-400 bg-teal-50' : 'border-gray-300 hover:border-gray-400'}`}
+      className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center text-center space-y-4 cursor-pointer transition-colors duration-300 bg-surface-container-low/50 ${
+        dragging
+          ? 'border-secondary bg-secondary/5'
+          : 'border-outline-variant hover:border-secondary'
+      }`}
     >
       <input
         ref={inputRef}
@@ -50,13 +53,25 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         className="hidden"
         onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
       />
+
+      <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center">
+        <span className="material-symbols-outlined text-secondary text-3xl">upload_file</span>
+      </div>
+
       {loading ? (
-        <p className="text-gray-500 text-sm">Processing file...</p>
+        <div className="space-y-1">
+          <p className="font-bold text-on-surface">Processing file…</p>
+          <p className="text-sm text-on-surface-variant">Parsing your statement locally</p>
+        </div>
       ) : (
-        <>
-          <p className="text-lg font-medium text-gray-700">Drop your bank statement here</p>
-          <p className="text-sm text-gray-400 mt-1">PDF or screenshot — stays on your device</p>
-        </>
+        <div className="space-y-1">
+          <h3 className="font-bold text-on-surface">
+            Drop your bank statement here — PDF or screenshot
+          </h3>
+          <p className="text-sm text-on-surface-variant">
+            Processed locally on your device. Nothing leaves your browser.
+          </p>
+        </div>
       )}
     </div>
   )

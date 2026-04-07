@@ -15,7 +15,24 @@
       "Bash(unset ANTHROPIC_API_KEY)",
       "Bash(claude mcp:*)",
       "Bash(npx vercel:*)",
-      "Bash(unset GEMINI_API_KEY)"
+      "Bash(unset GEMINI_API_KEY)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(npx tsx -e ':*)",
+      "Bash(node_modules/.bin/tsx -e ':*)",
+      "Bash(node_modules/.bin/tsx test-easy-run.ts)",
+      "Bash(tasklist)",
+      "Bash(taskkill /F /IM chrome.exe)",
+      "Bash(cmd /c \"taskkill /F /IM chrome.exe\")",
+      "Bash(TEST_PORT=3010 node_modules/.bin/tsx scripts/test-costs.ts)",
+      "Bash(railway:*)",
+      "Bash(curl:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(unzip -o 'עיצוב סטיצ/stitch \\(__TRACKED_VAR__\\).zip' -d 'עיצוב סטיצ/extracted___TRACKED_VAR__')",
+      "mcp__playwright__browser_tabs",
+      "mcp__playwright__browser_run_code",
+      "Bash(npx next:*)"
     ]
   }
 }

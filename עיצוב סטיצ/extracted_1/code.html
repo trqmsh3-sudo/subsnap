@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SubSnap | Your Money. Reclaimed.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "on-secondary-container": "#004d44",
+                        "on-primary": "#103251",
+                        "primary": "#abc9ef",
+                        "inverse-primary": "#436182",
+                        "on-tertiary-fixed": "#23005c",
+                        "on-tertiary": "#3c0091",
+                        "on-primary-fixed": "#001d35",
+                        "surface-container-highest": "#2d3449",
+                        "surface-dim": "#0b1326",
+                        "secondary-fixed": "#62fae3",
+                        "on-secondary-fixed-variant": "#005047",
+                        "secondary": "#44e2cd",
+                        "primary-fixed": "#d1e4ff",
+                        "error": "#ffb4ab",
+                        "surface-bright": "#31394d",
+                        "tertiary-fixed": "#e9ddff",
+                        "inverse-on-surface": "#283044",
+                        "primary-fixed-dim": "#abc9ef",
+                        "on-primary-fixed-variant": "#2a4968",
+                        "on-secondary-fixed": "#00201c",
+                        "surface-container-high": "#222a3d",
+                        "on-primary-container": "#87a5ca",
+                        "outline-variant": "#43474d",
+                        "surface-variant": "#2d3449",
+                        "tertiary-container": "#4600a7",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#c3c6ce",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "on-secondary": "#003731",
+                        "surface": "#0b1326",
+                        "error-container": "#93000a",
+                        "surface-tint": "#abc9ef",
+                        "inverse-surface": "#dae2fd",
+                        "primary-container": "#1b3b5a",
+                        "background": "#0b1326",
+                        "tertiary": "#d0bcff",
+                        "secondary-fixed-dim": "#3cddc7",
+                        "surface-container": "#171f33",
+                        "outline": "#8d9198",
+                        "secondary-container": "#03c6b2",
+                        "on-surface": "#dae2fd",
+                        "surface-container-low": "#131b2e",
+                        "on-background": "#dae2fd",
+                        "surface-container-lowest": "#060e20",
+                        "on-tertiary-container": "#b090ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            background: rgba(45, 52, 73, 0.4);
+        }
+        .ai-gradient {
+            background: linear-gradient(135deg, #d0bcff 0%, #4600a7 100%);
+        }
+        .noise-texture {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased selection:bg-secondary selection:text-on-secondary">
+<!-- TopNavBar -->
+<nav class="bg-[#0B1326] dark:bg-[#0B1326] docked full-width top-0 sticky z-50 shadow-[0_20px_40px_rgba(27,59,90,0.4)]">
+<div class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto font-['Inter'] antialiased tracking-tight">
+<div class="text-2xl font-black tracking-tighter text-white">SubSnap</div>
+<div class="hidden md:flex items-center space-gap-8 gap-x-8">
+<a class="text-slate-400 font-medium hover:text-white transition-colors" href="#">Security</a>
+<a class="text-slate-400 font-medium hover:text-white transition-colors" href="#">How it Works</a>
+<a class="text-slate-400 font-medium hover:text-white transition-colors" href="#">Pricing</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-secondary text-on-secondary px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] scale-95 active:opacity-80">
+                    Scan My Statement — Free
+                </button>
+</div>
+</div>
+</nav>
+<main class="relative overflow-hidden">
+<!-- Hero Section -->
+<section class="relative pt-24 pb-32 px-6">
+<div class="max-w-7xl mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+<div class="lg:col-span-7 space-y-8">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-white/5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-xs font-semibold tracking-widest uppercase text-secondary">Users saved an average of $420/year</span>
+</div>
+<h1 class="text-6xl md:text-8xl font-black tracking-tighter text-white leading-tight">
+                            Your Money.<br/><span class="text-secondary">Reclaimed.</span>
+</h1>
+<p class="text-xl text-on-surface-variant max-w-xl leading-relaxed">
+                            Stop the bleed. Our autonomous agents scan your statements and terminate ghost subscriptions with professional-grade precision.
+                        </p>
+<!-- Upload Box -->
+<div class="relative group p-1 rounded-xl bg-gradient-to-br from-secondary/20 to-tertiary/20">
+<div class="bg-surface-container-low rounded-[1.25rem] border-2 border-dashed border-outline-variant p-12 text-center transition-all duration-300 hover:border-secondary group-hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-5xl text-secondary mb-4">cloud_upload</span>
+<h3 class="text-xl font-bold text-white mb-2">Drop Bank Statement or PDF</h3>
+<p class="text-on-surface-variant text-sm">Drag and drop your file here, or click to browse</p>
+<div class="mt-6 flex justify-center gap-4 items-center">
+<span class="text-[10px] text-outline px-2 py-1 bg-surface rounded uppercase font-bold tracking-widest">Encrypted</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Phone Mockup -->
+<div class="lg:col-span-5 relative">
+<div class="relative w-full aspect-[9/19] max-w-[320px] mx-auto bg-surface-container-highest rounded-[3rem] border-[8px] border-surface-container overflow-hidden shadow-2xl">
+<div class="absolute inset-0 noise-texture"></div>
+<div class="p-6 space-y-6 pt-12">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-xs">9:41</span>
+<div class="flex gap-1">
+<div class="w-4 h-1 bg-on-surface-variant rounded-full"></div>
+<div class="w-1 h-1 bg-on-surface-variant rounded-full"></div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-low rounded-xl border border-white/5 opacity-40">
+<div class="flex justify-between items-center">
+<div>
+<div class="h-3 w-20 bg-outline/20 rounded"></div>
+<div class="h-2 w-12 bg-outline/10 rounded mt-2"></div>
+</div>
+<div class="h-3 w-8 bg-outline/20 rounded"></div>
+</div>
+</div>
+<!-- Active State Interaction -->
+<div class="p-4 bg-surface-container rounded-xl border border-secondary/30 relative overflow-hidden">
+<div class="flex justify-between items-center relative z-10">
+<div>
+<div class="text-xs font-bold text-white">Streaming Pro</div>
+<div class="text-[10px] text-on-surface-variant">Active for 14 months</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-secondary">Canceled!</span>
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-secondary/5"></div>
+</div>
+<div class="p-4 bg-surface-container rounded-xl border border-secondary/30 relative overflow-hidden">
+<div class="flex justify-between items-center relative z-10">
+<div>
+<div class="text-xs font-bold text-white">Cloud Storage</div>
+<div class="text-[10px] text-on-surface-variant">Duplicate plan found</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-secondary">Canceled!</span>
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-secondary/5"></div>
+</div>
+</div>
+<div class="ai-gradient p-4 rounded-xl text-center">
+<div class="text-xs font-black text-on-tertiary mb-1">Total Savings Identified</div>
+<div class="text-2xl font-black text-on-tertiary tracking-tighter">$84.99/mo</div>
+</div>
+</div>
+</div>
+<!-- Floating Glass Card -->
+<div class="absolute -bottom-10 -left-10 glass-panel p-6 rounded-2xl border border-white/10 shadow-2xl hidden md:block">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary">verified_user</span>
+</div>
+<div>
+<div class="text-white font-bold">Bank-Grade Security</div>
+<div class="text-on-surface-variant text-sm">Processed in your browser. Nothing leaves your device.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Advantages -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-6">
+<div class="mb-16">
+<label class="font-['Inter'] text-sm tracking-[0.15em] uppercase font-bold text-secondary">The SubSnap Edge</label>
+<h2 class="text-4xl md:text-5xl font-black text-white mt-4 tracking-tight">Institutional logic for<br/>your personal ledger.</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
+<div class="md:col-span-2 md:row-span-2 bg-surface-container rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group">
+<div class="relative z-10">
+<span class="material-symbols-outlined text-4xl text-secondary mb-6">lock</span>
+<h3 class="text-3xl font-black text-white mb-4">Zero-Knowledge</h3>
+<p class="text-on-surface-variant leading-relaxed">We never see your raw data. Our AI runs entirely in your browser session, encrypting transactions before they ever touch a database. Your privacy isn't just a policy—it's the architecture.</p>
+</div>
+<div class="absolute -right-20 -bottom-20 w-80 h-80 bg-secondary/10 rounded-full blur-3xl group-hover:bg-secondary/20 transition-all duration-700"></div>
+</div>
+<div class="md:col-span-2 bg-surface-container rounded-xl p-8 relative overflow-hidden group">
+<div class="flex gap-6 items-start">
+<span class="material-symbols-outlined text-4xl text-secondary">account_balance_wallet</span>
+<div>
+<h3 class="text-xl font-bold text-white mb-2">The No-Bank Advantage</h3>
+<p class="text-on-surface-variant text-sm">Unlike competitors, we don't need your bank login. Just a simple export. No permanent connections, no security backdoors.</p>
+</div>
+</div>
+</div>
+<div class="md:col-span-1 bg-surface-container rounded-xl p-8 flex flex-col justify-center text-center group border-b-4 border-tertiary">
+<span class="material-symbols-outlined text-4xl text-tertiary mb-4" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<h3 class="text-lg font-bold text-white mb-2">Autonomous Agents</h3>
+<p class="text-on-surface-variant text-xs">AI that identifies dark patterns and hidden trial extensions.</p>
+</div>
+<div class="md:col-span-1 bg-surface-container rounded-xl p-8 flex flex-col justify-center text-center group">
+<span class="material-symbols-outlined text-4xl text-secondary mb-4">visibility</span>
+<h3 class="text-lg font-bold text-white mb-2">Transparency First</h3>
+<p class="text-on-surface-variant text-xs">Full logs for every action. You're always in control of the 'cancel' button.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3-Step Process -->
+<section class="py-24">
+<div class="max-w-7xl mx-auto px-6 text-center">
+<h2 class="text-4xl font-black text-white mb-16 tracking-tight">Financial recovery in 3 clicks.</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="space-y-6">
+<div class="w-20 h-20 bg-surface-container-high rounded-3xl mx-auto flex items-center justify-center text-4xl font-black text-secondary">1</div>
+<h3 class="text-2xl font-bold text-white">Snap</h3>
+<p class="text-on-surface-variant">Upload any digital statement. Our AI instantly maps the recurring merchant signatures.</p>
+</div>
+<div class="space-y-6">
+<div class="w-20 h-20 bg-surface-container-high rounded-3xl mx-auto flex items-center justify-center text-4xl font-black text-secondary">2</div>
+<h3 class="text-2xl font-bold text-white">Review</h3>
+<p class="text-on-surface-variant">Audit the findings. Our system highlights duplicates, price hikes, and forgotten trials.</p>
+</div>
+<div class="space-y-6">
+<div class="w-20 h-20 bg-surface-container-high rounded-3xl mx-auto flex items-center justify-center text-4xl font-black text-secondary">3</div>
+<h3 class="text-2xl font-bold text-white">Done</h3>
+<p class="text-on-surface-variant">Deploy the agents. We handle the cancellation bureaucracy while you keep the cash.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Tiered Execution -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+<div>
+<label class="font-['Inter'] text-sm tracking-[0.15em] uppercase font-bold text-secondary">Control Modes</label>
+<h2 class="text-4xl md:text-5xl font-black text-white mt-4 mb-8">Execute your way.</h2>
+<div class="space-y-6">
+<div class="p-6 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary text-3xl">bolt</span>
+<div>
+<h4 class="text-white font-bold">Full Auto</h4>
+<p class="text-on-surface-variant text-sm">Set saving rules and let SubSnap handle everything in the background.</p>
+</div>
+</div>
+</div>
+<div class="p-6 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group border-l-4 border-tertiary">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-tertiary text-3xl">support_agent</span>
+<div>
+<h4 class="text-white font-bold">Session-Guided</h4>
+<p class="text-on-surface-variant text-sm">Our AI leads you through each cancellation for extra oversight.</p>
+</div>
+</div>
+</div>
+<div class="p-6 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">settings</span>
+<div>
+<h4 class="text-white font-bold">Manual Assist</h4>
+<p class="text-on-surface-variant text-sm">Get the data and cancellation templates, you take the final action.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="relative grid grid-cols-1 gap-4">
+<div class="bg-surface-container-high p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center shadow-xl">
+<span class="text-secondary text-lg font-black mb-1">Tier 1</span>
+<h3 class="text-2xl font-black text-white italic tracking-tighter">Full Auto</h3>
+</div>
+<div class="bg-surface-container-high p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center shadow-xl border-l-4 border-tertiary">
+<span class="text-tertiary text-lg font-black mb-1">Tier 2</span>
+<h3 class="text-2xl font-black text-white italic tracking-tighter">Session-Guided</h3>
+</div>
+<div class="bg-surface-container-high p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center shadow-xl">
+<span class="text-on-surface-variant text-lg font-black mb-1">Tier 3</span>
+<h3 class="text-2xl font-black text-white italic tracking-tighter">Manual Assist</h3>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-32 relative overflow-hidden">
+<div class="absolute inset-0 noise-texture"></div>
+<div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+<h2 class="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter italic">Ready to stop the bleed?</h2>
+<div class="flex flex-col md:flex-row gap-6 justify-center items-center">
+<a class="w-full md:w-auto bg-secondary text-on-secondary px-10 py-5 rounded-full text-xl font-black hover:scale-105 transition-all duration-300 shadow-[0_20px_40px_rgba(68,226,205,0.3)] block" href="/app">
+                        Scan My Statement — Free
+                    </a>
+<button class="w-full md:w-auto text-white border-2 border-white/10 px-10 py-5 rounded-full text-xl font-bold hover:bg-white/5 transition-all">
+                        View Demo
+                    </button>
+</div>
+<p class="mt-8 text-on-surface-variant font-medium">Be among the first to reclaim your money. No credit card required.</p>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#0B1326] dark:bg-[#0B1326] full-width py-12 mt-auto border-t border-white/5">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto font-['Inter'] text-sm tracking-wide uppercase font-semibold">
+<div class="text-lg font-bold text-slate-300 mb-8 md:mb-0">SubSnap</div>
+<div class="flex flex-col md:flex-row gap-8 items-center">
+<div class="flex gap-8">
+<a class="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200" href="#">Privacy Policy</a>
+<a class="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200" href="#">Terms of Service</a>
+<a class="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200" href="#">System Status</a>
+</div>
+<div class="text-slate-500 mt-4 md:mt-0 opacity-80">© 2026 SubSnap. 2026 Compliant.</div>
+</div>
+</div>
+</footer>
+</body></html>

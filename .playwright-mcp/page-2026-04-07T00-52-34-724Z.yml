@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "S SubSnap" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - generic [ref=e7]: S
+          - img [ref=e8]
+        - generic [ref=e10]: SubSnap
+      - link "← Back" [ref=e11] [cursor=pointer]:
+        - /url: /
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "Scan your statement" [level=1] [ref=e15]
+        - paragraph [ref=e16]: Upload a PDF or screenshot — processed locally in your browser.
+      - generic [ref=e17]:
+        - heading "Get cancellation credits" [level=2] [ref=e18]
+        - paragraph [ref=e19]: Your first cancellation is always free.
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - paragraph [ref=e23]: Single Snap
+              - paragraph [ref=e24]: $2.49
+              - paragraph [ref=e25]:
+                - img [ref=e26]
+                - text: 1 credit · $2.49 each
+            - button "Buy now" [ref=e28]
+          - generic [ref=e29]:
+            - generic [ref=e30]: Most Popular
+            - generic [ref=e31]:
+              - paragraph [ref=e32]: Starter Pack
+              - paragraph [ref=e33]: $7.99
+              - paragraph [ref=e34]:
+                - img [ref=e35]
+                - text: 5 credits · $1.60 each
+            - button "Buy now" [ref=e37]
+          - generic [ref=e38]:
+            - generic [ref=e39]:
+              - paragraph [ref=e40]: Pro Pack
+              - paragraph [ref=e41]: $19.99
+              - paragraph [ref=e42]:
+                - img [ref=e43]
+                - text: 15 credits · $1.33 each
+            - button "Buy now" [ref=e45]
