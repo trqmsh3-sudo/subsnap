@@ -54,6 +54,18 @@ export async function POST(req: NextRequest) {
 
     const result = await railwayRes.json()
     console.log('[cancel] Railway result:', result)
+
+    // need_human means the site requires an active login session — treat as manual
+    if (result.message?.toLowerCase().includes('need_human')) {
+      return NextResponse.json({
+        success: true,
+        tier: 'manual',
+        cancelUrl: entry.cancelUrl,
+        notes: entry.notes,
+        message: result.message,
+      })
+    }
+
     return NextResponse.json({ ...result, tier: entry.tier })
 
   } catch (error) {

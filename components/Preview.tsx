@@ -31,13 +31,13 @@ function CancelButton({ entry }: { entry: CancellationEntry }) {
     })
     const data = await res.json()
 
-    if (!data.success) {
-      setStatus('error')
-    } else if (data.tier === 'manual') {
+    if (data.tier === 'manual' || data.message?.toLowerCase().includes('need_human')) {
       setManualUrl(data.cancelUrl ?? entry.cancelUrl)
       setStatus('manual')
     } else if (data.message?.toLowerCase().includes('login')) {
       setStatus('waiting_login')
+    } else if (!data.success) {
+      setStatus('error')
     } else {
       setStatus('done')
     }
