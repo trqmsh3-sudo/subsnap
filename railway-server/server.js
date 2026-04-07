@@ -33,25 +33,51 @@ function logCost(serviceName, model, steps) {
 // ─── Scout ────────────────────────────────────────────────────────────────────
 
 async function scoutDifficulty(screenshotBase64, fallback) {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-    const result = await model.generateContent([
-      { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
-      `Look at this cancellation page screenshot. Rate the complexity: reply with only one word: easy, medium, or hard.
+  // Try Gemini first; fall back to Claude if quota exceeded or unavailable
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      const result = await model.generateContent([
+        { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
+        `Look at this cancellation page screenshot. Rate the complexity: reply with only one word: easy, medium, or hard.
 Easy = direct cancel button visible. Medium = multi-step flow. Hard = chat required, phone required, or heavy dark patterns.`,
-    ])
-    const rating = result.response.text().trim().toLowerCase()
-    console.log(`[scout] raw response: "${rating}"`)
-    if (rating === 'easy' || rating === 'medium' || rating === 'hard') return rating
-    console.warn(`[scout] unexpected rating "${rating}", using fallback: ${fallback}`)
-    return fallback
-  } catch (err) {
-    const status = err?.status ?? 'n/a'
-    const msg = err?.message ?? String(err)
-    console.error(`[scout] FAILED — status=${status} message="${msg}"`)
-    console.warn(`[scout] using manual fallback: ${fallback}`)
-    return fallback
+      ])
+      const rating = result.response.text().trim().toLowerCase()
+      console.log(`[scout] raw response: "${rating}"`)
+      if (rating === 'easy' || rating === 'medium' || rating === 'hard') return rating
+      console.warn(`[scout] unexpected rating "${rating}", using fallback: ${fallback}`)
+      return fallback
+    } catch (err) {
+      const status = err?.status ?? 'n/a'
+      const msg = err?.message ?? String(err)
+      console.error(`[scout] Gemini FAILED — status=${status} message="${msg}"`)
+    }
   }
+
+  // Claude fallback for scout
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 10,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
+            { type: 'text', text: 'Rate this cancellation page complexity: reply with only one word: easy, medium, or hard.' },
+          ],
+        }],
+      })
+      const rating = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim().toLowerCase()
+      console.log(`[scout] Claude fallback response: "${rating}"`)
+      if (rating === 'easy' || rating === 'medium' || rating === 'hard') return rating
+    } catch (err) {
+      console.error(`[scout] Claude fallback FAILED: ${err?.message ?? err}`)
+    }
+  }
+
+  console.warn(`[scout] all models failed, using fallback: ${fallback}`)
+  return fallback
 }
 
 // ─── Action prompt ────────────────────────────────────────────────────────────
@@ -100,18 +126,30 @@ async function getNextActionClaude(screenshotBase64, goal, steps) {
 }
 
 async function getNextActionGemini(screenshotBase64, goal, steps) {
-  if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set in Railway environment')
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-  const result = await model.generateContent([
-    { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
-    buildPrompt(goal, steps),
-  ])
-  const raw = result.response.text()
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn('[gemini] no API key — falling back to Claude')
+    return getNextActionClaude(screenshotBase64, goal, steps)
+  }
   try {
-    return parseAction(raw)
-  } catch {
-    console.error('[gemini] failed to parse JSON:', raw.slice(0, 200))
-    throw new Error(`Gemini returned non-JSON response: ${raw.slice(0, 100)}`)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const result = await model.generateContent([
+      { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
+      buildPrompt(goal, steps),
+    ])
+    const raw = result.response.text()
+    try {
+      return parseAction(raw)
+    } catch {
+      console.error('[gemini] failed to parse JSON:', raw.slice(0, 200))
+      throw new Error(`Gemini returned non-JSON response: ${raw.slice(0, 100)}`)
+    }
+  } catch (err) {
+    // 429 quota exhausted — fall back to Claude
+    if (err?.status === 429 || String(err?.message).includes('429') || String(err?.message).includes('quota')) {
+      console.warn('[gemini] quota exceeded — falling back to Claude')
+      return getNextActionClaude(screenshotBase64, goal, steps)
+    }
+    throw err
   }
 }
 
