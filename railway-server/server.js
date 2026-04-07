@@ -9,6 +9,10 @@ app.use(express.json({ limit: '10mb' }))
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
+// Log env var presence at startup
+console.log('[startup] ANTHROPIC_API_KEY set:', !!process.env.ANTHROPIC_API_KEY)
+console.log('[startup] GEMINI_API_KEY set:', !!process.env.GEMINI_API_KEY)
+
 // ─── Cost constants ───────────────────────────────────────────────────────────
 
 const COST = {
@@ -79,6 +83,7 @@ function parseAction(raw) {
 // ─── AI action getters ────────────────────────────────────────────────────────
 
 async function getNextActionClaude(screenshotBase64, goal, steps) {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not set in Railway environment')
   const response = await anthropic.messages.create({
     model: 'claude-opus-4-5',
     max_tokens: 512,
@@ -95,17 +100,25 @@ async function getNextActionClaude(screenshotBase64, goal, steps) {
 }
 
 async function getNextActionGemini(screenshotBase64, goal, steps) {
+  if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set in Railway environment')
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
   const result = await model.generateContent([
     { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
     buildPrompt(goal, steps),
   ])
-  return parseAction(result.response.text())
+  const raw = result.response.text()
+  try {
+    return parseAction(raw)
+  } catch {
+    console.error('[gemini] failed to parse JSON:', raw.slice(0, 200))
+    throw new Error(`Gemini returned non-JSON response: ${raw.slice(0, 100)}`)
+  }
 }
 
 // ─── Core cancel logic ────────────────────────────────────────────────────────
 
 async function runCancel(cancelUrl, serviceName, difficulty, steps) {
+  console.log(`[playwright] launching browser for ${serviceName}`)
   const browser = await chromium.launch({ headless: true })
   const page = await browser.newPage()
 
@@ -116,8 +129,9 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
   }, timeoutMs)
 
   try {
-    await page.goto(cancelUrl)
-    await page.waitForLoadState('networkidle')
+    console.log(`[playwright] navigating to ${cancelUrl}`)
+    await page.goto(cancelUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+    console.log('[playwright] page loaded, taking screenshot')
 
     const firstShot = await page.screenshot({ type: 'png' })
     const firstBase64 = firstShot.toString('base64')
@@ -131,6 +145,7 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
     let currentBase64 = firstBase64
 
     while (stepCount < maxSteps) {
+      console.log(`[step ${stepCount + 1}] getting next action from ${model}`)
       const action = model === 'claude'
         ? await getNextActionClaude(currentBase64, `Cancel ${serviceName} subscription`, steps)
         : await getNextActionGemini(currentBase64, `Cancel ${serviceName} subscription`, steps)
@@ -176,9 +191,10 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
 
   } catch (error) {
     clearTimeout(timeoutHandle)
-    console.error('[playwright] error:', error)
+    const msg = error?.message ?? String(error)
+    console.error('[playwright] error:', msg)
     await browser.close().catch(() => {})
-    return { success: false, message: 'Automation failed — please complete manually' }
+    return { success: false, message: `Automation error: ${msg}` }
   }
 }
 
@@ -186,6 +202,14 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', ts: new Date().toISOString() })
+})
+
+app.get('/debug', (_req, res) => {
+  res.json({
+    ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+    GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
+    NODE_VERSION: process.version,
+  })
 })
 
 app.post('/cancel', async (req, res) => {
