@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { findCancellationEntry } from '@/lib/cancellationDb'
+import { cancelHourlyRatelimit, cancelBurstRatelimit, logBlocked } from '@/lib/ratelimit'
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+
+  // Check burst limit first (cheaper check), then hourly
+  const [burst, hourly] = await Promise.all([
+    cancelBurstRatelimit.limit(ip),
+    cancelHourlyRatelimit.limit(ip),
+  ])
+
+  if (!burst.success || !hourly.success) {
+    const reset = !burst.success ? burst.reset : hourly.reset
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+    await logBlocked(ip, '/api/cancel', retryAfter)
+    console.warn(`[cancel] rate limited ip=${ip} burst=${burst.success} hourly=${hourly.success} retryAfter=${retryAfter}s`)
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    )
+  }
+
   try {
     const { subscriptionName } = await req.json()
     console.log('[cancel] subscriptionName:', subscriptionName)

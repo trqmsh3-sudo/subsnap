@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { analyzeRatelimit, logBlocked } from '@/lib/ratelimit'
 
 const PROMPT = `You are analyzing a redacted bank statement image. Extract every recurring subscription charge you can identify.
 
@@ -18,6 +19,18 @@ Example output:
 ]`
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+  const { success, reset } = await analyzeRatelimit.limit(ip)
+  if (!success) {
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+    await logBlocked(ip, '/api/analyze', retryAfter)
+    console.warn(`[analyze] rate limited ip=${ip} retryAfter=${retryAfter}s`)
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    )
+  }
+
   try {
     const { imageBase64 } = await req.json()
 
