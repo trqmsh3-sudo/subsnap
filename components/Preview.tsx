@@ -34,7 +34,12 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
         <div className="flex items-center gap-4 shrink-0 ml-4">
           <span className="font-bold text-on-surface">{sub.amount}</span>
           <button
-            onClick={() => setOpen((o) => !o)}
+            onClick={() => {
+              if (open) { setOpen(false) } else {
+                window.open(loginUrl, '_blank', 'noopener,noreferrer')
+                setOpen(true)
+              }
+            }}
             className="text-xs rounded-lg px-4 py-2 font-semibold transition-all hover:scale-[1.02] bg-secondary/10 text-secondary border border-secondary/30 hover:bg-secondary/20"
           >
             {open ? 'Close ✕' : 'Cancel Guide →'}
@@ -45,22 +50,13 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
       {open && (
         <div className="mt-3 w-full rounded-xl bg-surface-container-low border border-outline-variant/20 p-4">
           <p className="text-sm font-semibold text-on-surface mb-3">
-            How to cancel {sub.name}
-          </p>
-          <button
-            onClick={() => window.open(loginUrl, '_blank', 'noopener,noreferrer')}
-            className="w-full text-left text-xs bg-surface-container-highest hover:bg-surface-container-high text-on-surface font-medium rounded-lg px-3 py-2.5 transition-colors"
-          >
-            1. Log in to {sub.name} →
-          </button>
-          <p className="text-xs text-outline text-center my-2">
-            Then come back and click step 2
+            ✓ Login page opened — sign in there, then come back here
           </p>
           <button
             onClick={() => window.open(cancelUrl, '_blank', 'noopener,noreferrer')}
             className="w-full text-left text-xs bg-surface-container-highest hover:bg-surface-container-high text-on-surface font-medium rounded-lg px-3 py-2.5 transition-colors"
           >
-            2. Open cancellation page →
+            I&apos;m logged in → Go to cancel page →
           </button>
         </div>
       )}
