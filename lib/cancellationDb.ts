@@ -1,6 +1,7 @@
 export interface CancellationEntry {
   name: string
   keywords: string[]
+  loginUrl: string
   cancelUrl: string
   method: 'url' | 'phone' | 'chat'
   notes: string
@@ -13,6 +14,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Netflix',
     keywords: ['netflix'],
+    loginUrl: 'https://www.netflix.com/login',
     cancelUrl: 'https://www.netflix.com/cancelplan',
     method: 'url',
     notes: 'Direct cancel page — no chat required',
@@ -22,6 +24,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Spotify',
     keywords: ['spotify'],
+    loginUrl: 'https://accounts.spotify.com/en/login',
     cancelUrl: 'https://www.spotify.com/account/subscription/cancel',
     method: 'url',
     notes: 'Must be logged in',
@@ -31,6 +34,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Adobe',
     keywords: ['adobe', 'creative cloud'],
+    loginUrl: 'https://account.adobe.com/',
     cancelUrl: 'https://account.adobe.com/plans',
     method: 'url',
     notes: 'Early termination fee may apply',
@@ -40,6 +44,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'iCloud',
     keywords: ['icloud', 'apple'],
+    loginUrl: 'https://appleid.apple.com/',
     cancelUrl: 'https://support.apple.com/en-us/118428',
     method: 'url',
     notes: 'Cancel via Apple ID settings',
@@ -49,6 +54,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'ChatGPT Plus',
     keywords: ['chatgpt', 'openai'],
+    loginUrl: 'https://chat.openai.com/',
     cancelUrl: 'https://chat.openai.com/#settings/Subscription',
     method: 'url',
     notes: 'Cancel from subscription settings',
@@ -58,6 +64,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Amazon Prime',
     keywords: ['amazon', 'prime'],
+    loginUrl: 'https://www.amazon.com/ap/signin',
     cancelUrl: 'https://www.amazon.com/gp/primecentral',
     method: 'url',
     notes: 'May offer pause instead of cancel',
@@ -73,6 +80,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'YouTube Premium',
     keywords: ['youtube', 'youtube premium'],
+    loginUrl: 'https://accounts.google.com/',
     cancelUrl: 'https://www.youtube.com/paid_memberships',
     method: 'url',
     notes: 'Cancel from memberships page — requires Google login',
@@ -82,6 +90,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Disney Plus',
     keywords: ['disney', 'disney+'],
+    loginUrl: 'https://www.disneyplus.com/login',
     cancelUrl: 'https://www.disneyplus.com/account',
     method: 'url',
     notes: 'Cancel from account page',
@@ -91,6 +100,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Canva',
     keywords: ['canva'],
+    loginUrl: 'https://www.canva.com/login',
     cancelUrl: 'https://www.canva.com/settings/billing',
     method: 'url',
     notes: 'Cancel from billing settings',
@@ -100,6 +110,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Test Service',
     keywords: ['test', 'test service'],
+    loginUrl: 'http://localhost:3009/',
     cancelUrl: 'http://localhost:3009/test-cancel',
     method: 'url',
     notes: 'Local test cancellation flow',
@@ -109,6 +120,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Test Easy',
     keywords: ['test easy', 'easystream'],
+    loginUrl: 'http://localhost:3009/',
     cancelUrl: 'http://localhost:3009/test-easy',
     method: 'url',
     notes: 'Local easy-flow test — direct cancel button visible',
@@ -118,6 +130,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Test Hard',
     keywords: ['test hard', 'darkstream'],
+    loginUrl: 'http://localhost:3009/',
     cancelUrl: 'http://localhost:3009/test-hard',
     method: 'url',
     notes: 'Local dark-patterns test — retention popup, survey, pause offer',
@@ -137,6 +150,6 @@ export const CANCELLATION_DB: CancellationEntry[] = [
 export function findCancellationEntry(subscriptionName: string): CancellationEntry | null {
   const lower = subscriptionName.toLowerCase()
   return CANCELLATION_DB.find((entry) =>
-    entry.tier === 'auto' && entry.keywords.some((keyword) => lower.includes(keyword))
+    entry.keywords.some((keyword) => lower.includes(keyword))
   ) ?? null
 }
