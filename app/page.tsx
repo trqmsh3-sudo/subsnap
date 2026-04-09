@@ -6,8 +6,8 @@ import { PLANS } from '@/lib/credits'
 function Nav() {
   return (
     <nav className="bg-[#0B1326] top-0 sticky z-50 shadow-[0_20px_40px_rgba(27,59,90,0.4)]">
-      <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
-        <Link href="/" className="text-2xl font-black tracking-tighter text-white no-underline">
+      <div className="flex justify-between items-center px-4 md:px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
+        <Link href="/" className="text-2xl font-black tracking-tighter text-white no-underline shrink-0">
           SubSnap
         </Link>
         <div className="hidden md:flex items-center gap-8">
@@ -21,12 +21,13 @@ function Nav() {
             Pricing
           </a>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           <Link
             href="/app"
-            className="bg-secondary text-on-secondary px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:opacity-80"
+            className="bg-secondary text-on-secondary px-3 md:px-6 py-2.5 min-h-[44px] inline-flex items-center rounded-full font-bold hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:opacity-80 whitespace-nowrap"
           >
-            Scan My Statement — Free
+            <span className="hidden sm:inline">Scan My Statement — Free</span>
+            <span className="sm:hidden">Scan Free</span>
           </Link>
         </div>
       </div>
