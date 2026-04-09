@@ -10,86 +10,47 @@ interface Subscription {
   category: string
 }
 
-type Status = 'idle' | 'preparing' | 'loading' | 'waiting_login' | 'done' | 'manual' | 'error'
+type Status = 'idle' | 'loading' | 'done' | 'manual' | 'error'
 
 function CancelButton({ entry }: { entry: CancellationEntry }) {
   const [status, setStatus] = React.useState<Status>('idle')
   const [manualUrl, setManualUrl] = React.useState('')
 
-  React.useEffect(() => {
-    if (status !== 'preparing') return
-    const timer = setTimeout(() => fireApiCall(), 2000)
-    return () => clearTimeout(timer)
-  }, [status])
-
-  async function fireApiCall() {
+  async function handleCancel() {
     setStatus('loading')
-    const res = await fetch('/api/cancel', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscriptionName: entry.name }),
-    })
-    const data = await res.json()
+    try {
+      const res = await fetch('/api/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriptionName: entry.name }),
+      })
+      const data = await res.json()
 
-    if (data.tier === 'manual' || data.message?.toLowerCase().includes('need_human')) {
-      setManualUrl(data.cancelUrl ?? entry.cancelUrl)
-      setStatus('manual')
-    } else if (data.message?.toLowerCase().includes('login')) {
-      setStatus('waiting_login')
-    } else if (!data.success) {
+      if (data.tier === 'manual' || data.message?.toLowerCase().includes('need_human')) {
+        setManualUrl(data.cancelUrl ?? entry.cancelUrl)
+        setStatus('manual')
+      } else if (!data.success) {
+        setStatus('error')
+      } else {
+        setStatus('done')
+      }
+    } catch {
       setStatus('error')
-    } else {
-      setStatus('done')
     }
   }
 
-  function handleCancel() {
-    if (entry.tier === 'session') {
-      setStatus('preparing')
-    } else {
-      fireApiCall()
-    }
-  }
-
-  // ── Tier 3: manual guide ────────────────────────────────────────────────────
+  // ── Manual fallback (need_human) ────────────────────────────────────────────
   if (status === 'manual') {
     return (
       <div className="mt-3 w-full rounded-xl bg-surface-container-low border border-outline-variant/20 p-4 text-xs text-on-surface-variant">
         <p className="font-semibold text-on-surface mb-2">This service requires manual cancellation</p>
-        <ol className="list-decimal list-inside space-y-0.5 mb-3">
-          <li>Visit the cancellation page</li>
-          <li>Log in to your account</li>
-          <li>Find and confirm cancellation</li>
-        </ol>
         {entry.notes && <p className="text-outline mb-2">{entry.notes}</p>}
-        <a
-          href={manualUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => window.open(manualUrl, '_blank', 'noopener,noreferrer')}
           className="inline-block bg-surface-container-highest hover:bg-surface-container-high text-on-surface font-medium rounded-lg px-3 py-1.5 transition-colors"
         >
           Open cancellation page →
-        </a>
-      </div>
-    )
-  }
-
-  // ── Tier 2: session bridge prep ─────────────────────────────────────────────
-  if (status === 'preparing') {
-    return (
-      <div className="mt-3 w-full rounded-xl border border-tertiary/30 bg-tertiary-container/10 p-4 text-xs text-on-tertiary-container">
-        <p className="font-semibold mb-1">{entry.name} requires you to log in.</p>
-        <p>We'll open the cancellation page directly — just sign in and we'll guide you from there.</p>
-        <p className="mt-1 text-tertiary">Opening browser…</p>
-      </div>
-    )
-  }
-
-  if (status === 'waiting_login') {
-    return (
-      <div className="mt-3 w-full rounded-xl border border-tertiary/30 bg-tertiary-container/10 p-4 text-xs text-on-tertiary-container">
-        <p className="font-semibold">Browser opened → Navigating → Waiting for you…</p>
-        <p className="mt-1 text-tertiary">Complete login in the browser window to continue.</p>
+        </button>
       </div>
     )
   }
@@ -107,7 +68,7 @@ function CancelButton({ entry }: { entry: CancellationEntry }) {
       `}
     >
       {status === 'idle' && 'Cancel →'}
-      {status === 'loading' && (entry.tier === 'auto' ? 'Cancelling…' : 'Opening…')}
+      {status === 'loading' && 'Cancelling…'}
       {status === 'done' && 'Cancelled ✓'}
       {status === 'error' && 'Failed'}
     </button>

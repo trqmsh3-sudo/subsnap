@@ -12,16 +12,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Service not found in database' })
     }
 
-    // Tier 3 — manual only, no browser
-    if (entry.tier === 'manual') {
-      return NextResponse.json({
-        success: true,
-        tier: 'manual',
-        cancelUrl: entry.cancelUrl,
-        notes: entry.notes,
-      })
-    }
-
     const railwayUrl = process.env.RAILWAY_SERVER_URL
     if (!railwayUrl) {
       console.error('[cancel] RAILWAY_SERVER_URL is not set')
@@ -60,7 +50,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         tier: 'manual',
-        cancelUrl: entry.cancelUrl,
+        cancelUrl: result.cancelUrl ?? entry.cancelUrl,
         notes: entry.notes,
         message: result.message,
       })

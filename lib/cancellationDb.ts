@@ -137,6 +137,6 @@ export const CANCELLATION_DB: CancellationEntry[] = [
 export function findCancellationEntry(subscriptionName: string): CancellationEntry | null {
   const lower = subscriptionName.toLowerCase()
   return CANCELLATION_DB.find((entry) =>
-    entry.keywords.some((keyword) => lower.includes(keyword))
+    entry.tier === 'auto' && entry.keywords.some((keyword) => lower.includes(keyword))
   ) ?? null
 }
