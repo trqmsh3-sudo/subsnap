@@ -1,3 +1,5 @@
+import jdmDb from './jdm-db.json'
+
 export interface CancellationEntry {
   name: string
   keywords: string[]
@@ -147,9 +149,15 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
 ]
 
+// JDM entries merged in — our hand-curated entries take priority
+const MERGED_DB: CancellationEntry[] = [
+  ...CANCELLATION_DB,
+  ...(jdmDb as CancellationEntry[]),
+]
+
 export function findCancellationEntry(subscriptionName: string): CancellationEntry | null {
   const lower = subscriptionName.toLowerCase()
-  return CANCELLATION_DB.find((entry) =>
+  return MERGED_DB.find((entry) =>
     entry.keywords.some((keyword) => lower.includes(keyword))
   ) ?? null
 }
