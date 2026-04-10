@@ -15,7 +15,7 @@ export interface CancellationEntry {
 export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Netflix',
-    keywords: ['netflix'],
+    keywords: ['netflix', 'nflx', 'netflix.com', 'netflix international'],
     loginUrl: 'https://www.netflix.com/login',
     cancelUrl: 'https://www.netflix.com/cancelplan',
     method: 'url',
@@ -25,7 +25,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Spotify',
-    keywords: ['spotify'],
+    keywords: ['spotify', 'spotifyusa', 'spotify ab', 'spotify.com', 'spotify usa'],
     loginUrl: 'https://accounts.spotify.com/en/login',
     cancelUrl: 'https://www.spotify.com/account/subscription/cancel',
     method: 'url',
@@ -35,7 +35,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Adobe',
-    keywords: ['adobe', 'creative cloud'],
+    keywords: ['adobe', 'creative cloud', 'adobe systems', 'adobe inc', 'adobe.com'],
     loginUrl: 'https://account.adobe.com/',
     cancelUrl: 'https://account.adobe.com/plans',
     method: 'url',
@@ -45,7 +45,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'iCloud',
-    keywords: ['icloud', 'apple'],
+    keywords: ['icloud', 'apple', 'apple.com', 'apple services', 'apple inc', 'itunes'],
     loginUrl: 'https://appleid.apple.com/',
     cancelUrl: 'https://support.apple.com/en-us/118428',
     method: 'url',
@@ -55,7 +55,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'ChatGPT Plus',
-    keywords: ['chatgpt', 'openai'],
+    keywords: ['chatgpt', 'openai', 'openai.com', 'chat.openai', 'openai *chatgpt'],
     loginUrl: 'https://chat.openai.com/',
     cancelUrl: 'https://chat.openai.com/#settings/Subscription',
     method: 'url',
@@ -65,7 +65,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Amazon Prime',
-    keywords: ['amazon', 'prime'],
+    keywords: ['amazon', 'prime', 'amzn', 'amznprime', 'amazon.com', 'amazon digital', 'prime video', 'amazon prime'],
     loginUrl: 'https://www.amazon.com/ap/signin',
     cancelUrl: 'https://www.amazon.com/gp/primecentral',
     method: 'url',
@@ -81,7 +81,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'YouTube Premium',
-    keywords: ['youtube', 'youtube premium'],
+    keywords: ['youtube', 'youtube premium', 'google youtube', 'yt premium', 'googleyoutube'],
     loginUrl: 'https://accounts.google.com/',
     cancelUrl: 'https://www.youtube.com/paid_memberships',
     method: 'url',
@@ -91,7 +91,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Disney Plus',
-    keywords: ['disney', 'disney+'],
+    keywords: ['disney', 'disney+', 'disneyplus', 'disney plus', 'disney.com', 'dsny+'],
     loginUrl: 'https://www.disneyplus.com/login',
     cancelUrl: 'https://www.disneyplus.com/account',
     method: 'url',
@@ -101,7 +101,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Canva',
-    keywords: ['canva'],
+    keywords: ['canva', 'canva pty', 'canva.com'],
     loginUrl: 'https://www.canva.com/login',
     cancelUrl: 'https://www.canva.com/settings/billing',
     method: 'url',
