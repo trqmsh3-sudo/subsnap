@@ -6,7 +6,7 @@ import { addLocalCredits } from '@/lib/clientCredits'
 
 interface Props {
   credits: number
-  amountTotal: number  // in cents from Stripe
+  amountTotal: number  // in cents
 }
 
 export default function SuccessContent({ credits, amountTotal }: Props) {
@@ -25,16 +25,16 @@ export default function SuccessContent({ credits, amountTotal }: Props) {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-container/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
       <div className="fixed top-1/3 left-1/3 w-[300px] h-[300px] bg-secondary/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-      {/* Simplified header */}
+      {/* Simplified header — no nav links on transactional page */}
       <header className="w-full py-8 flex justify-center sticky top-0 z-50 backdrop-blur-md">
         <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
       </header>
 
-      <main className="flex-grow flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <main className="flex-grow flex items-center justify-center px-4 py-12 relative z-10 overflow-hidden">
         <div className="max-w-xl w-full">
           <div className="glass-card rounded-[2.5rem] p-10 md:p-16 text-center shadow-[0_40px_80px_rgba(0,0,0,0.5)] relative overflow-hidden">
 
-            {/* Confetti SVG elements */}
+            {/* Confetti elements */}
             <svg className="absolute top-[-20px] left-[-20px] w-24 h-24 pointer-events-none" viewBox="0 0 100 100">
               <circle cx="10" cy="10" fill="#44E2CD" opacity="0.6" r="2" />
               <rect fill="#d0bcff" height="4" opacity="0.4" transform="rotate(45 80 20)" width="4" x="80" y="20" />
@@ -70,7 +70,9 @@ export default function SuccessContent({ credits, amountTotal }: Props) {
             {total !== null && (
               <p className="text-sm text-on-surface-variant mb-4">
                 Total balance:{' '}
-                <span className="font-bold text-on-surface">{total} credit{total !== 1 ? 's' : ''}</span>
+                <span className="font-bold text-on-surface">
+                  {total} credit{total !== 1 ? 's' : ''}
+                </span>
               </p>
             )}
 
@@ -93,15 +95,11 @@ export default function SuccessContent({ credits, amountTotal }: Props) {
             {/* Transaction details */}
             <div className="mt-12 pt-8 border-t border-outline-variant/10 grid grid-cols-2 gap-4 text-left">
               <div className="bg-surface-container-low p-4 rounded-xl">
-                <p className="text-[10px] uppercase tracking-widest text-outline mb-1 font-bold">
-                  Amount Paid
-                </p>
+                <p className="text-[10px] uppercase tracking-widest text-outline mb-1 font-bold">Amount Paid</p>
                 <p className="text-xl font-bold text-on-surface">${amountFormatted}</p>
               </div>
               <div className="bg-surface-container-low p-4 rounded-xl">
-                <p className="text-[10px] uppercase tracking-widest text-outline mb-1 font-bold">
-                  Credits Added
-                </p>
+                <p className="text-[10px] uppercase tracking-widest text-outline mb-1 font-bold">Credits Added</p>
                 <p className="text-xl font-bold text-on-surface">+{credits}</p>
               </div>
             </div>
@@ -116,7 +114,7 @@ export default function SuccessContent({ credits, amountTotal }: Props) {
         </div>
       </main>
 
-      <footer className="bg-[#0B1326] py-12 mt-auto border-t border-white/5">
+      <footer className="bg-[#0B1326] py-12 mt-auto border-t border-white/5 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto">
           <span className="text-lg font-bold text-slate-300 mb-4 md:mb-0">SubSnap</span>
           <div className="flex gap-8">
@@ -125,6 +123,9 @@ export default function SuccessContent({ credits, amountTotal }: Props) {
             </Link>
             <Link href="/terms" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
               Terms of Service
+            </Link>
+            <Link href="/refund" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
+              Refund Policy
             </Link>
           </div>
           <p className="text-sm tracking-wide uppercase font-semibold text-slate-500 mt-4 md:mt-0">

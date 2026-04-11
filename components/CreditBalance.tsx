@@ -36,7 +36,7 @@ export default function CreditBalance() {
           {credits !== 1 ? 's' : ''} remaining
         </span>
       ) : (
-        <span>No credits — your first cancellation is free</span>
+        <span>No credits — your first cancel guide is free</span>
       )}
     </div>
   )

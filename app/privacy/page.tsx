@@ -6,10 +6,16 @@ function Nav() {
       <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
         <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
         <div className="hidden md:flex items-center space-x-8">
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#security">Security</a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">How it Works</a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">Pricing</a>
-          <Link href="/app" className="bg-secondary text-on-secondary px-6 py-2 rounded-xl font-bold hover:scale-105 active:opacity-80 transition-all duration-300">
+          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">
+            How it Works
+          </Link>
+          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">
+            Pricing
+          </Link>
+          <Link
+            href="/app"
+            className="bg-secondary text-on-secondary px-6 py-2 rounded-xl font-bold hover:scale-105 active:opacity-80 transition-all duration-300"
+          >
             Get Started
           </Link>
         </div>
@@ -38,6 +44,9 @@ function Footer() {
           <Link href="/terms" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
             Terms of Service
           </Link>
+          <Link href="/refund" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
+            Refund Policy
+          </Link>
         </div>
       </div>
     </footer>
@@ -51,6 +60,7 @@ export default function PrivacyPage() {
       <Nav />
 
       <main className="relative z-10 flex-grow max-w-5xl mx-auto px-6 py-16 md:py-24">
+
         {/* Header */}
         <header className="mb-20">
           <div className="inline-block px-3 py-1 mb-6 rounded-full bg-surface-container-high border border-outline-variant/15">
@@ -62,8 +72,8 @@ export default function PrivacyPage() {
             Privacy as an <span className="text-secondary">Architecture.</span>
           </h1>
           <p className="text-xl md:text-2xl text-on-surface-variant max-w-2xl leading-relaxed font-medium">
-            At SubSnap, your financial data is treated as a high-fidelity instrument. We don't just
-            "protect" your data; we architected our platform so we can never see it.
+            At SubSnap, your financial data is treated as a high-fidelity instrument. We don&apos;t
+            just &ldquo;protect&rdquo; your data; we architected our platform so we can never see it.
           </p>
         </header>
 
@@ -74,13 +84,11 @@ export default function PrivacyPage() {
               <span className="material-symbols-outlined text-[120px]">verified_user</span>
             </div>
             <div className="relative z-10 max-w-2xl">
-              <h2 className="text-3xl font-bold tracking-tight text-white mb-4">
-                In-Browser Analysis
-              </h2>
+              <h2 className="text-3xl font-bold tracking-tight text-white mb-4">In-Browser Analysis</h2>
               <p className="text-on-surface-variant text-lg leading-relaxed mb-6">
-                Your bank statement is processed in your browser session. We extract only
-                subscription names and amounts — no account numbers, no personal details. SubSnap
-                employees cannot, under any circumstances, access your raw financial data.
+                Your bank statement is processed in your browser session. We extract only subscription
+                names and amounts — no account numbers, no personal details. SubSnap employees cannot,
+                under any circumstances, access your raw financial data.
               </p>
               <div className="flex items-center gap-4 text-secondary">
                 <span
@@ -90,21 +98,19 @@ export default function PrivacyPage() {
                   lock
                 </span>
                 <span className="font-bold tracking-wider text-xs uppercase">
-                  Local Processing: Your data is processed locally in your browser and never stored
-                  on our servers.
+                  Local Processing: Your data is processed locally in your browser and never stored on our servers.
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bento policy content */}
+        {/* Policy content grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-          {/* Sidebar nav */}
+
+          {/* Sidebar navigation */}
           <aside className="hidden md:block md:col-span-3 space-y-4 sticky top-32 h-fit">
-            <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-outline mb-6">
-              Contents
-            </div>
+            <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-outline mb-6">Contents</div>
             <nav className="flex flex-col gap-3">
               <a href="#data-collection" className="text-sm font-semibold text-secondary flex items-center gap-2">
                 <div className="w-1 h-1 rounded-full bg-secondary" />
@@ -124,18 +130,16 @@ export default function PrivacyPage() {
 
           {/* Legal sections */}
           <div className="md:col-span-9 space-y-24">
-            {/* 01. Data Collection */}
+
             <section id="data-collection" className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="h-[2px] w-12 bg-secondary/30" />
-                <h3 className="text-sm font-bold tracking-tight text-white uppercase tracking-widest">
-                  01. Data Collection
-                </h3>
+                <h3 className="text-sm font-bold tracking-widest text-white uppercase">01. Data Collection</h3>
               </div>
               <div className="bg-surface-container-low p-8 md:p-12 rounded-xl">
                 <p className="text-on-surface-variant text-lg leading-relaxed mb-6">
-                  We prioritize the "Principle of Least Privilege." We only collect metadata
-                  necessary to maintain your account stability and subscription status.
+                  We prioritize the &ldquo;Principle of Least Privilege.&rdquo; We only collect metadata necessary
+                  to maintain your account stability and subscription status.
                 </p>
                 <ul className="space-y-4">
                   <li className="flex gap-4">
@@ -147,39 +151,32 @@ export default function PrivacyPage() {
                   <li className="flex gap-4">
                     <span className="text-secondary font-bold shrink-0">No Bank Connection:</span>
                     <span className="text-on-surface-variant">
-                      We never connect to your bank. You upload a PDF or screenshot — that's it.
+                      We never connect to your bank. You upload a PDF or screenshot — that&apos;s it.
                     </span>
                   </li>
                 </ul>
               </div>
             </section>
 
-            {/* 02. Local Redaction */}
             <section id="redaction" className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="h-[2px] w-12 bg-secondary/30" />
-                <h3 className="text-sm font-bold tracking-tight text-white uppercase tracking-widest">
-                  02. Local Redaction Policy
-                </h3>
+                <h3 className="text-sm font-bold tracking-widest text-white uppercase">02. Local Redaction Policy</h3>
               </div>
               <div className="bg-surface-container-low p-8 md:p-12 rounded-xl border-l-4 border-secondary">
                 <h4 className="text-white font-bold text-xl mb-4">Edge-First Processing</h4>
                 <p className="text-on-surface-variant text-lg leading-relaxed">
-                  Our proprietary "Redact-on-Edge" technology scrubs PII (Personally Identifiable
-                  Information) directly on your device. Any transaction strings sent to our AI
-                  engines are stripped of names, locations, and specific account numbers before
-                  transmission.
+                  Our proprietary &ldquo;Redact-on-Edge&rdquo; technology scrubs PII (Personally Identifiable
+                  Information) directly on your device. Any transaction strings sent to our AI engines
+                  are stripped of names, locations, and specific account numbers before transmission.
                 </p>
               </div>
             </section>
 
-            {/* 03. AI Models */}
             <section id="ai-models" className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="h-[2px] w-12 bg-secondary/30" />
-                <h3 className="text-sm font-bold tracking-tight text-white uppercase tracking-widest">
-                  03. Third-Party AI Models
-                </h3>
+                <h3 className="text-sm font-bold tracking-widest text-white uppercase">03. Third-Party AI Models</h3>
               </div>
               <div className="bg-surface-container p-8 md:p-12 rounded-xl relative overflow-hidden">
                 <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
@@ -188,8 +185,8 @@ export default function PrivacyPage() {
                 <div className="relative z-10">
                   <p className="text-on-surface-variant text-lg leading-relaxed mb-8">
                     To provide financial insights, we utilize state-of-the-art LLMs. Our agreement
-                    with these providers (including Claude (Anthropic) and Gemini (Google))
-                    explicitly prohibits the use of your data for model training.
+                    with these providers (including Claude (Anthropic) and Gemini (Google)) explicitly
+                    prohibits the use of your data for model training.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-surface-container-high p-4 rounded-lg flex items-center gap-3">
@@ -201,18 +198,15 @@ export default function PrivacyPage() {
               </div>
             </section>
 
-            {/* 04. Your Rights */}
             <section id="rights" className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="h-[2px] w-12 bg-secondary/30" />
-                <h3 className="text-sm font-bold tracking-tight text-white uppercase tracking-widest">
-                  04. Your Rights
-                </h3>
+                <h3 className="text-sm font-bold tracking-widest text-white uppercase">04. Your Rights</h3>
               </div>
               <div className="bg-surface-container-low p-8 md:p-12 rounded-xl">
                 <p className="text-on-surface-variant text-lg leading-relaxed mb-8">
-                  You maintain total ownership of your digital footprint. At any time, you can
-                  invoke the following via your Dashboard:
+                  You maintain total ownership of your digital footprint. At any time, you can invoke
+                  the following via your Dashboard:
                 </p>
                 <div className="space-y-2">
                   <div className="text-white font-bold flex items-center gap-2">
@@ -232,6 +226,7 @@ export default function PrivacyPage() {
                 </div>
               </div>
             </section>
+
           </div>
         </div>
 
@@ -249,8 +244,8 @@ export default function PrivacyPage() {
             <span className="material-symbols-outlined text-sm">mail</span>
           </a>
         </div>
-      </main>
 
+      </main>
       <Footer />
     </div>
   )

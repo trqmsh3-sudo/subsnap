@@ -38,31 +38,19 @@ export async function useFreeCancel(userId: string): Promise<void> {
   await redis.set(freeKey(userId), true)
 }
 
-// ─── Plans ────────────────────────────────────────────────────────────────────
+// ─── Plan ─────────────────────────────────────────────────────────────────────
 
 export const PLANS = [
   {
-    id: 'single',
-    name: 'Single Snap',
-    price: 2.49,
+    id: 'scan',
+    name: 'Full Scan',
+    price: 5,
     credits: 1,
-    popular: false,
-    priceId: 'price_single_snap',
-  },
-  {
-    id: 'starter',
-    name: 'Starter Pack',
-    price: 7.99,
-    credits: 5,
     popular: true,
-    priceId: 'price_starter_pack',
-  },
-  {
-    id: 'pro',
-    name: 'Pro Pack',
-    price: 19.99,
-    credits: 15,
-    popular: false,
-    priceId: 'price_pro_pack',
+    variantId: '1518339',
   },
 ] as const
+
+export const CREDITS_BY_VARIANT: Record<string, number> = {
+  '1518339': 1,
+}

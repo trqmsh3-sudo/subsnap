@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { analyzeRatelimit, logBlocked } from '@/lib/ratelimit'
 
 const PROMPT = `You are analyzing a redacted bank statement image. Extract every recurring subscription charge you can identify.
@@ -38,29 +38,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ subscriptions: [] })
     }
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash-lite' })
 
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: 'image/png', data: imageBase64 },
-            },
-            {
-              type: 'text',
-              text: PROMPT,
-            },
-          ],
-        },
-      ],
-    })
+    const result = await model.generateContent([
+      PROMPT,
+      { inlineData: { mimeType: 'image/png', data: imageBase64 } },
+    ])
 
-    const raw = response.content[0].type === 'text' ? response.content[0].text : '[]'
+    const raw = result.response.text()
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const subscriptions = JSON.parse(cleaned)
 

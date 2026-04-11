@@ -10,7 +10,7 @@ import PricingCards from '@/components/PricingCards'
 const FileUpload = dynamic(() => import('@/components/FileUpload'), { ssr: false })
 const Redactor = dynamic(() => import('@/components/Redactor'), { ssr: false })
 
-// ─── Shared Nav ───────────────────────────────────────────────────────────────
+// ─── Nav ──────────────────────────────────────────────────────────────────────
 
 function Nav() {
   return (
@@ -18,9 +18,12 @@ function Nav() {
       <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
         <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
         <div className="hidden md:flex items-center space-x-8">
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#security">Security</a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">How it Works</a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">Pricing</a>
+          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">
+            How it Works
+          </Link>
+          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">
+            Pricing
+          </Link>
           <Link
             href="/app"
             className="bg-secondary text-on-secondary px-6 py-2 rounded-full font-bold hover:scale-105 active:opacity-80 transition-all"
@@ -33,6 +36,8 @@ function Nav() {
   )
 }
 
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
 function Footer() {
   return (
     <footer className="bg-[#0B1326] mt-auto">
@@ -44,6 +49,9 @@ function Footer() {
           </Link>
           <Link href="/terms" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
             Terms of Service
+          </Link>
+          <Link href="/refund" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
+            Refund Policy
           </Link>
         </div>
         <div className="text-sm tracking-wide uppercase font-semibold text-slate-500">© 2026 SubSnap</div>
@@ -94,13 +102,14 @@ export default function AppPage() {
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col relative overflow-x-hidden">
-      <div className="fixed inset-0 noise-texture z-[-1]" />
+      <div className="fixed inset-0 noise-texture z-[-1] pointer-events-none" />
       <Nav />
 
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-12 space-y-12">
-        {/* Page header */}
-        <header className="space-y-3">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-on-surface">
+
+        {/* Header */}
+        <header className="space-y-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface">
             Financial Command
           </h1>
           <p className="text-lg text-on-surface-variant max-w-2xl leading-relaxed">
@@ -115,7 +124,7 @@ export default function AppPage() {
         {/* Bento grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* ── Upload (7 cols) ──────────────────────────────────────────────── */}
+          {/* Upload (7 cols) */}
           <div className="lg:col-span-7 bg-surface-container rounded-[1.5rem] p-8 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none select-none">
               <span className="material-symbols-outlined text-[120px]">cloud_upload</span>
@@ -143,7 +152,7 @@ export default function AppPage() {
             </div>
           </div>
 
-          {/* ── AI Scout (5 cols) ────────────────────────────────────────────── */}
+          {/* AI Scout (5 cols) */}
           <div className="lg:col-span-5 bg-surface-container rounded-[1.5rem] p-8 flex flex-col justify-between relative overflow-hidden">
             <div className="ai-gradient absolute inset-0 opacity-5 pointer-events-none" />
             <div className="relative z-10 space-y-8 h-full flex flex-col">
@@ -181,7 +190,7 @@ export default function AppPage() {
             </div>
           </div>
 
-          {/* ── Subscription intelligence (8 cols) ──────────────────────────── */}
+          {/* Subscription intelligence (8 cols) */}
           <div className="lg:col-span-8 bg-surface-container rounded-[1.5rem] p-8 space-y-6">
             <div className="flex items-center space-x-3">
               <span className="material-symbols-outlined text-secondary">list_alt</span>
@@ -193,9 +202,7 @@ export default function AppPage() {
             {subscriptions.length === 0 ? (
               <div className="min-h-[300px] flex flex-col items-center justify-center text-center space-y-4 border border-outline-variant/10 rounded-xl bg-surface-container-low/30">
                 <div className="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-surface-variant text-3xl">
-                    search_off
-                  </span>
+                  <span className="material-symbols-outlined text-on-surface-variant text-3xl">search_off</span>
                 </div>
                 <div className="space-y-1">
                   <p className="font-bold text-on-surface">No subscriptions detected yet</p>
@@ -207,7 +214,7 @@ export default function AppPage() {
             )}
           </div>
 
-          {/* ── Execution Phase (4 cols) ─────────────────────────────────────── */}
+          {/* Execution Phase (4 cols) */}
           <div className="lg:col-span-4 bg-surface-container rounded-[1.5rem] p-8 flex flex-col gap-6">
             <div className="flex items-center space-x-3">
               <span
@@ -245,6 +252,7 @@ export default function AppPage() {
               <PricingCards />
             </div>
           </div>
+
         </div>
       </main>
 

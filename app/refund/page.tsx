@@ -6,10 +6,16 @@ function Nav() {
       <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
         <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
         <div className="hidden md:flex items-center space-x-8">
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#security">Security</a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">How it Works</a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">Pricing</a>
-          <Link href="/app" className="bg-secondary text-on-secondary px-6 py-2 rounded-xl font-bold hover:scale-105 active:opacity-80 transition-all duration-300">
+          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">
+            How it Works
+          </Link>
+          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">
+            Pricing
+          </Link>
+          <Link
+            href="/app"
+            className="bg-secondary text-on-secondary px-6 py-2 rounded-xl font-bold hover:scale-105 active:opacity-80 transition-all duration-300"
+          >
             Get Started
           </Link>
         </div>
@@ -53,9 +59,7 @@ export default function RefundPage() {
       <main className="relative z-10 flex-grow max-w-3xl mx-auto px-6 py-16 md:py-24">
         <header className="mb-12">
           <div className="inline-block px-3 py-1 mb-6 rounded-full bg-surface-container-high border border-outline-variant/15">
-            <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-secondary">
-              Policy
-            </span>
+            <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-secondary">Policy</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-on-surface leading-none">
             Refund Policy
