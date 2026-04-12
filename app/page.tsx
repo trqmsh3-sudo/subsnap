@@ -118,7 +118,7 @@ export default function HomePage() {
               {/* Dashboard screenshot from Stitch export */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/dashboard-preview.png"
+                src="/dashboard-preview.jpg"
                 alt="SubSnap dashboard showing identified subscriptions"
                 className="absolute bottom-0 right-0 w-3/4 translate-x-10 translate-y-10 rounded-tl-3xl shadow-2xl opacity-80 pointer-events-none"
               />
