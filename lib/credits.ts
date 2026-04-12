@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+export { PLANS, CREDITS_BY_VARIANT } from './plans'
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -38,19 +39,3 @@ export async function useFreeCancel(userId: string): Promise<void> {
   await redis.set(freeKey(userId), true)
 }
 
-// ─── Plan ─────────────────────────────────────────────────────────────────────
-
-export const PLANS = [
-  {
-    id: 'scan',
-    name: 'Full Scan',
-    price: 5,
-    credits: 1,
-    popular: true,
-    variantId: '1518339',
-  },
-] as const
-
-export const CREDITS_BY_VARIANT: Record<string, number> = {
-  '1518339': 1,
-}

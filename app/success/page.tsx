@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import SuccessContent from '@/components/SuccessContent'
-import { CREDITS_BY_VARIANT } from '@/lib/credits'
+import { CREDITS_BY_VARIANT } from '@/lib/plans'
 
 interface Props {
   searchParams: Promise<{ order_id?: string }>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { PLANS } from '@/lib/credits'
+import { PLANS } from '@/lib/plans'
 
 const plan = PLANS[0]
 
