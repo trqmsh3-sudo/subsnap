@@ -12,7 +12,7 @@ const Redactor = dynamic(() => import('@/components/Redactor'), { ssr: false })
 
 function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
+    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
       <Link href="/" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
         <span className="material-symbols-outlined text-[24px]">home</span>
         <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Home</span>
