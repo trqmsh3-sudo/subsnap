@@ -115,84 +115,13 @@ export default function HomePage() {
                   Open Dashboard
                 </Link>
               </div>
-              {/* Phone mockup SVG */}
-              <svg
-                viewBox="0 0 220 400"
-                xmlns="http://www.w3.org/2000/svg"
-                className="absolute bottom-0 right-0 w-48 md:w-56 translate-x-6 translate-y-6 opacity-90 drop-shadow-2xl pointer-events-none"
-                aria-hidden="true"
-              >
-                <defs>
-                  <linearGradient id="heroCard" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#69ffe9" />
-                    <stop offset="100%" stopColor="#44e2cd" />
-                  </linearGradient>
-                  <clipPath id="screenClip">
-                    <rect x="14" y="18" width="192" height="364" rx="20" />
-                  </clipPath>
-                </defs>
-                {/* Phone shell */}
-                <rect x="4" y="4" width="212" height="392" rx="30" fill="#2d3449" />
-                {/* Side buttons */}
-                <rect x="0" y="100" width="4" height="28" rx="2" fill="#222a3e" />
-                <rect x="0" y="136" width="4" height="28" rx="2" fill="#222a3e" />
-                <rect x="216" y="120" width="4" height="40" rx="2" fill="#222a3e" />
-                {/* Screen bg */}
-                <rect x="14" y="18" width="192" height="364" rx="20" fill="#0b1326" />
-                {/* Notch */}
-                <rect x="74" y="22" width="72" height="12" rx="6" fill="#2d3449" />
-
-                {/* ── Screen content ── */}
-                <g clipPath="url(#screenClip)">
-                  {/* Header bar */}
-                  <rect x="14" y="18" width="192" height="44" fill="#131b2e" />
-                  <text x="30" y="45" fontFamily="Inter, sans-serif" fontSize="13" fontWeight="700" fill="#44E2CD" letterSpacing="-0.4">SubSnap</text>
-                  <circle cx="192" cy="40" r="10" fill="#222a3e" />
-
-                  {/* Hero savings card */}
-                  <rect x="22" y="72" width="176" height="86" rx="18" fill="url(#heroCard)" />
-                  <text x="36" y="94" fontFamily="Inter, sans-serif" fontSize="6.5" fontWeight="700" fill="#003731" letterSpacing="1.2">TOTAL SAVINGS</text>
-                  <text x="36" y="122" fontFamily="Inter, sans-serif" fontSize="26" fontWeight="900" fill="#003731" letterSpacing="-1">$142.50</text>
-                  <rect x="36" y="130" width="106" height="18" rx="9" fill="rgba(0,55,49,0.18)" />
-                  <text x="46" y="142" fontFamily="Inter, sans-serif" fontSize="7.5" fontWeight="700" fill="#003731">✦  8 active subscriptions</text>
-
-                  {/* Section label */}
-                  <text x="26" y="178" fontFamily="Inter, sans-serif" fontSize="7" fontWeight="700" fill="#bacac6" letterSpacing="1.4">SUBSCRIPTIONS</text>
-
-                  {/* Card 1 — streaming */}
-                  <rect x="22" y="186" width="176" height="48" rx="14" fill="#131b2e" />
-                  <rect x="32" y="196" width="28" height="28" rx="8" fill="#222a3e" />
-                  <text x="46" y="215" fontFamily="sans-serif" fontSize="13" textAnchor="middle" fill="#d4bcf5">▶</text>
-                  <text x="72" y="208" fontFamily="Inter, sans-serif" fontSize="10" fontWeight="700" fill="#dbe2fd">StreamPro</text>
-                  <text x="72" y="220" fontFamily="Inter, sans-serif" fontSize="8" fill="#bacac6">Monthly</text>
-                  <text x="192" y="208" fontFamily="Inter, sans-serif" fontSize="10" fontWeight="700" fill="#dbe2fd" textAnchor="end">$19.99</text>
-                  <rect x="164" y="214" width="30" height="13" rx="6.5" fill="#222a3e" />
-                  <text x="179" y="223.5" fontFamily="Inter, sans-serif" fontSize="6" fontWeight="800" fill="#69ffe9" textAnchor="middle" letterSpacing="0.5">CANCEL</text>
-
-                  {/* Card 2 — music */}
-                  <rect x="22" y="242" width="176" height="48" rx="14" fill="#131b2e" />
-                  <rect x="32" y="252" width="28" height="28" rx="8" fill="#222a3e" />
-                  <text x="46" y="271" fontFamily="sans-serif" fontSize="14" textAnchor="middle" fill="#69ffe9">♪</text>
-                  <text x="72" y="264" fontFamily="Inter, sans-serif" fontSize="10" fontWeight="700" fill="#dbe2fd">MusicPlus</text>
-                  <text x="72" y="276" fontFamily="Inter, sans-serif" fontSize="8" fill="#bacac6">Monthly</text>
-                  <text x="192" y="264" fontFamily="Inter, sans-serif" fontSize="10" fontWeight="700" fill="#dbe2fd" textAnchor="end">$9.99</text>
-                  <rect x="164" y="270" width="30" height="13" rx="6.5" fill="#222a3e" />
-                  <text x="179" y="279.5" fontFamily="Inter, sans-serif" fontSize="6" fontWeight="800" fill="#69ffe9" textAnchor="middle" letterSpacing="0.5">CANCEL</text>
-
-                  {/* Card 3 — cloud */}
-                  <rect x="22" y="298" width="176" height="48" rx="14" fill="#131b2e" />
-                  <rect x="32" y="308" width="28" height="28" rx="8" fill="#222a3e" />
-                  <text x="46" y="327" fontFamily="sans-serif" fontSize="13" textAnchor="middle" fill="#dde8ff">☁</text>
-                  <text x="72" y="320" fontFamily="Inter, sans-serif" fontSize="10" fontWeight="700" fill="#dbe2fd">CloudStore</text>
-                  <text x="72" y="332" fontFamily="Inter, sans-serif" fontSize="8" fill="#bacac6">Monthly</text>
-                  <text x="192" y="320" fontFamily="Inter, sans-serif" fontSize="10" fontWeight="700" fill="#dbe2fd" textAnchor="end">$4.99</text>
-                  <rect x="164" y="326" width="30" height="13" rx="6.5" fill="#222a3e" />
-                  <text x="179" y="335.5" fontFamily="Inter, sans-serif" fontSize="6" fontWeight="800" fill="#69ffe9" textAnchor="middle" letterSpacing="0.5">CANCEL</text>
-
-                  {/* Home indicator */}
-                  <rect x="84" y="366" width="52" height="4" rx="2" fill="#2d3449" />
-                </g>
-              </svg>
+              {/* Dashboard screenshot from Stitch export */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/dashboard-preview.png"
+                alt="SubSnap dashboard showing identified subscriptions"
+                className="absolute bottom-0 right-0 w-3/4 translate-x-10 translate-y-10 rounded-tl-3xl shadow-2xl opacity-80 pointer-events-none"
+              />
             </div>
 
             {/* Security Highlight */}
