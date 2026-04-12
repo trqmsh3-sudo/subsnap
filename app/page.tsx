@@ -1,498 +1,214 @@
 import Link from 'next/link'
 
-// ─── Shared Nav ───────────────────────────────────────────────────────────────
-
-function Nav() {
+function BottomNav() {
   return (
-    <nav className="bg-[#0B1326] top-0 sticky z-50 shadow-[0_20px_40px_rgba(27,59,90,0.4)]">
-      <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
-        <Link href="/" className="text-2xl font-black tracking-tighter text-white">
-          SubSnap
-        </Link>
-        <div className="hidden md:flex items-center gap-8">
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="#how-it-works">
-            How it Works
-          </a>
-          <a className="text-slate-400 font-medium hover:text-white transition-colors" href="#pricing">
-            Pricing
-          </a>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/app"
-            className="bg-secondary text-on-secondary px-6 py-2.5 rounded-full font-bold hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:opacity-80"
-          >
-            Scan My Statement — Free
-          </Link>
-        </div>
-      </div>
+    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
+      <Link href="/" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-5 py-2 transition-transform duration-150 active:scale-90">
+        <span className="material-symbols-outlined">dashboard</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Overview</span>
+      </Link>
+      <Link href="/app" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
+        <span className="material-symbols-outlined">subscriptions</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Subscriptions</span>
+      </Link>
+      <Link href="/#how-it-works" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
+        <span className="material-symbols-outlined">analytics</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Insights</span>
+      </Link>
+      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
+        <span className="material-symbols-outlined">settings</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Pricing</span>
+      </Link>
     </nav>
   )
 }
 
-// ─── Shared Footer ────────────────────────────────────────────────────────────
-
 function Footer() {
   return (
-    <footer className="bg-[#0B1326] py-12 mt-auto border-t border-white/5">
-      <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto text-sm tracking-wide uppercase font-semibold">
-        <Link href="/" className="text-lg font-bold text-slate-300 mb-8 md:mb-0">SubSnap</Link>
-        <div className="flex flex-col md:flex-row gap-8 items-center">
-          <div className="flex gap-8">
-            <Link href="/privacy" className="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
-              Terms of Service
-            </Link>
-            <Link href="/refund" className="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
-              Refund Policy
-            </Link>
-          </div>
-          <div className="text-slate-500 mt-4 md:mt-0 opacity-80">© 2026 SubSnap. 2026 Compliant.</div>
+    <footer className="bg-[#060d20] w-full py-12 px-8 border-t border-[#3c4a47]/15">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
+        <div className="flex flex-col items-center md:items-start gap-2">
+          <div className="text-[#69ffe9] font-black text-xl">SubSnap</div>
+          <div className="text-[#dbe2fd]/60 text-[0.75rem] uppercase tracking-[0.1em] font-medium">© 2026 SubSnap. All rights reserved.</div>
+        </div>
+        <div className="flex flex-wrap justify-center gap-8">
+          <Link href="/privacy" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Terms of Service</Link>
+          <Link href="/refund" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Refund Policy</Link>
         </div>
       </div>
     </footer>
   )
 }
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-
-function Hero() {
+export default function HomePage() {
   return (
-    <section className="relative pt-24 pb-32 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-
-          {/* Left column */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-white/5">
-              <span className="w-2 h-2 rounded-full bg-secondary" />
-              <span className="text-xs font-semibold tracking-widest uppercase text-secondary">
-                Users saved an average of $420/year
-              </span>
-            </div>
-
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-tight">
-              Your Money.<br />
-              <span className="text-secondary">Reclaimed.</span>
-            </h1>
-
-            <p className="text-xl text-on-surface-variant max-w-xl leading-relaxed">
-              Upload your bank statement — we find every hidden subscription instantly.
-            </p>
-
-            {/* Upload CTA Box */}
-            <div className="relative group p-1 rounded-xl bg-gradient-to-br from-secondary/20 to-tertiary/20">
-              <Link
-                href="/app"
-                className="block bg-surface-container-low rounded-[1.25rem] border-2 border-dashed border-outline-variant p-12 text-center transition-all duration-300 hover:border-secondary group-hover:bg-surface-container-high"
-              >
-                <span className="material-symbols-outlined text-5xl text-secondary mb-4 block">
-                  cloud_upload
-                </span>
-                <h3 className="text-xl font-bold text-white mb-2">Drop Bank Statement or PDF</h3>
-                <p className="text-on-surface-variant text-sm">
-                  Drag and drop your file here, or click to browse
-                </p>
-                <div className="mt-6 flex justify-center gap-4 items-center">
-                  <span className="text-[10px] text-outline px-2 py-1 bg-surface rounded uppercase font-bold tracking-widest">
-                    Encrypted
-                  </span>
-                </div>
-              </Link>
-            </div>
+    <div className="bg-surface text-on-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+      {/* Header */}
+      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)]">
+        <div className="flex items-center justify-between px-6 py-4 w-full max-w-7xl mx-auto">
+          <div className="flex items-center gap-2">
+            <h1 className="font-bold tracking-tighter text-2xl text-[#44E2CD]">SubSnap</h1>
           </div>
-
-          {/* Right column – phone mockup */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative w-full aspect-[9/19] max-w-[320px] mx-auto bg-surface-container-highest rounded-[3rem] border-[8px] border-surface-container overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 noise-texture pointer-events-none" />
-              <div className="p-6 space-y-6 pt-12">
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant text-xs">9:41</span>
-                  <div className="flex gap-1">
-                    <div className="w-4 h-1 bg-on-surface-variant rounded-full" />
-                    <div className="w-1 h-1 bg-on-surface-variant rounded-full" />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="p-4 bg-surface-container-low rounded-xl border border-white/5 opacity-40">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="h-3 w-20 bg-outline/20 rounded" />
-                        <div className="h-2 w-12 bg-outline/10 rounded mt-2" />
-                      </div>
-                      <div className="h-3 w-8 bg-outline/20 rounded" />
-                    </div>
-                  </div>
-                  <div className="p-4 bg-surface-container rounded-xl border border-secondary/30 relative overflow-hidden">
-                    <div className="flex justify-between items-center relative z-10">
-                      <div>
-                        <div className="text-xs font-bold text-white">Streaming Pro</div>
-                        <div className="text-[10px] text-on-surface-variant">Active for 14 months</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-secondary">Canceled!</span>
-                        <span
-                          className="material-symbols-outlined text-secondary text-sm"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          check_circle
-                        </span>
-                      </div>
-                    </div>
-                    <div className="absolute inset-0 bg-secondary/5" />
-                  </div>
-                  <div className="p-4 bg-surface-container rounded-xl border border-secondary/30 relative overflow-hidden">
-                    <div className="flex justify-between items-center relative z-10">
-                      <div>
-                        <div className="text-xs font-bold text-white">Cloud Storage</div>
-                        <div className="text-[10px] text-on-surface-variant">Duplicate plan found</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-secondary">Canceled!</span>
-                        <span
-                          className="material-symbols-outlined text-secondary text-sm"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          check_circle
-                        </span>
-                      </div>
-                    </div>
-                    <div className="absolute inset-0 bg-secondary/5" />
-                  </div>
-                </div>
-                <div className="ai-gradient p-4 rounded-xl text-center">
-                  <div className="text-xs font-black text-on-tertiary mb-1">Total Savings Identified</div>
-                  <div className="text-2xl font-black text-on-tertiary tracking-tighter">$84.99/mo</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Floating glass card */}
-            <div className="absolute -bottom-10 -left-10 glass-panel p-6 rounded-2xl border border-white/10 shadow-2xl hidden md:block">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-secondary">verified_user</span>
-                </div>
-                <div>
-                  <div className="text-white font-bold">Bank-Grade Security</div>
-                  <div className="text-on-surface-variant text-sm">
-                    Processed in your browser. Nothing leaves your device.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Bento Advantages ─────────────────────────────────────────────────────────
-
-function BentoAdvantages() {
-  return (
-    <section className="py-24 bg-surface-container-low">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="mb-16">
-          <p className="text-sm tracking-[0.15em] uppercase font-bold text-secondary">The SubSnap Edge</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white mt-4 tracking-tight">
-            Institutional logic for<br />your personal ledger.
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
-          {/* Large card */}
-          <div className="md:col-span-2 md:row-span-2 bg-surface-container rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group">
-            <div className="relative z-10">
-              <span className="material-symbols-outlined text-4xl text-secondary mb-6 block">lock</span>
-              <h3 className="text-3xl font-black text-white mb-4">Zero-Knowledge</h3>
-              <p className="text-on-surface-variant leading-relaxed">
-                We never see your raw data. Our AI runs entirely in your browser session,
-                encrypting transactions before they ever touch a database. Your privacy
-                isn&apos;t just a policy—it&apos;s the architecture.
-              </p>
-            </div>
-            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-secondary/10 rounded-full blur-3xl group-hover:bg-secondary/20 transition-all duration-700" />
-          </div>
-
-          {/* No-bank card */}
-          <div className="md:col-span-2 bg-surface-container rounded-xl p-8 relative overflow-hidden group">
-            <div className="flex gap-6 items-start">
-              <span className="material-symbols-outlined text-4xl text-secondary">account_balance_wallet</span>
-              <div>
-                <h3 className="text-xl font-bold text-white mb-2">The No-Bank Advantage</h3>
-                <p className="text-on-surface-variant text-sm">
-                  Unlike competitors, we don&apos;t need your bank login. Just a simple export.
-                  No permanent connections, no security backdoors.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* AI agents card */}
-          <div className="md:col-span-1 bg-surface-container rounded-xl p-8 flex flex-col justify-center text-center group border-b-4 border-tertiary">
-            <span
-              className="material-symbols-outlined text-4xl text-tertiary mb-4 block"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              smart_toy
-            </span>
-            <h3 className="text-lg font-bold text-white mb-2">Autonomous Agents</h3>
-            <p className="text-on-surface-variant text-xs">
-              AI that identifies dark patterns and hidden trial extensions.
-            </p>
-          </div>
-
-          {/* Transparency card */}
-          <div className="md:col-span-1 bg-surface-container rounded-xl p-8 flex flex-col justify-center text-center group">
-            <span className="material-symbols-outlined text-4xl text-secondary mb-4 block">visibility</span>
-            <h3 className="text-lg font-bold text-white mb-2">Transparency First</h3>
-            <p className="text-on-surface-variant text-xs">
-              Full logs for every action. You&apos;re always in control of the &apos;cancel&apos; button.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── 3-Step Process ───────────────────────────────────────────────────────────
-
-function ThreeSteps() {
-  return (
-    <section className="py-24" id="how-it-works">
-      <div className="max-w-7xl mx-auto px-6 text-center">
-        <h2 className="text-4xl font-black text-white mb-16 tracking-tight">
-          Financial recovery in 3 clicks.
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {[
-            {
-              n: 1,
-              title: 'Snap',
-              body: 'Upload any digital statement. Our AI instantly maps the recurring merchant signatures.',
-            },
-            {
-              n: 2,
-              title: 'Review',
-              body: 'Audit the findings. Our system highlights duplicates, price hikes, and forgotten trials.',
-            },
-            {
-              n: 3,
-              title: 'Done',
-              body: 'Deploy the agents. We handle the cancellation bureaucracy while you keep the cash.',
-            },
-          ].map(({ n, title, body }) => (
-            <div key={n} className="space-y-6">
-              <div className="w-20 h-20 bg-surface-container-high rounded-3xl mx-auto flex items-center justify-center text-4xl font-black text-secondary">
-                {n}
-              </div>
-              <h3 className="text-2xl font-bold text-white">{title}</h3>
-              <p className="text-on-surface-variant">{body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Tiered Execution ─────────────────────────────────────────────────────────
-
-function TieredExecution() {
-  const modes = [
-    {
-      icon: 'bolt',
-      color: 'text-secondary',
-      name: 'Full Auto',
-      desc: 'Set saving rules and let SubSnap handle everything in the background.',
-      accent: false,
-    },
-    {
-      icon: 'support_agent',
-      color: 'text-tertiary',
-      name: 'Session-Guided',
-      desc: 'Our AI leads you through each cancellation for extra oversight.',
-      accent: true,
-    },
-    {
-      icon: 'settings',
-      color: 'text-on-surface-variant',
-      name: 'Manual Assist',
-      desc: 'Get the data and cancellation templates, you take the final action.',
-      accent: false,
-    },
-  ]
-
-  return (
-    <section className="py-24 bg-surface-container-low">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div>
-            <p className="text-sm tracking-[0.15em] uppercase font-bold text-secondary">Control Modes</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white mt-4 mb-8">Execute your way.</h2>
-            <div className="space-y-6">
-              {modes.map((m) => (
-                <div
-                  key={m.name}
-                  className={`p-6 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group${m.accent ? ' border-l-4 border-tertiary' : ''}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className={`material-symbols-outlined ${m.color} text-3xl`}>{m.icon}</span>
-                    <div>
-                      <h4 className="text-white font-bold">{m.name}</h4>
-                      <p className="text-on-surface-variant text-sm">{m.desc}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative grid grid-cols-1 gap-4">
-            {[
-              { label: 'Tier 1', name: 'Full Auto', color: 'text-secondary', accent: false },
-              { label: 'Tier 2', name: 'Session-Guided', color: 'text-tertiary', accent: true },
-              { label: 'Tier 3', name: 'Manual Assist', color: 'text-on-surface-variant', accent: false },
-            ].map((t) => (
-              <div
-                key={t.label}
-                className={`bg-surface-container-high p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center shadow-xl${t.accent ? ' border-l-4 border-tertiary' : ''}`}
-              >
-                <span className={`${t.color} text-lg font-black mb-1`}>{t.label}</span>
-                <h3 className="text-2xl font-black text-white italic tracking-tighter">{t.name}</h3>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Pricing ──────────────────────────────────────────────────────────────────
-
-const PAID_FEATURES = [
-  'Full statement scan',
-  'Unlimited cancel guides',
-  'Full browser automation',
-  'AI routing for fastest path',
-  'Dark-pattern detection',
-]
-
-function Pricing() {
-  return (
-    <section className="py-24 px-6" id="pricing">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          <p className="text-sm tracking-[0.15em] uppercase font-bold text-secondary">Pricing</p>
-          <h2 className="text-4xl font-black text-white mt-4 tracking-tight">Simple pricing.</h2>
-          <p className="text-on-surface-variant mt-2 text-lg">No subscription irony here.</p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-6">
-          {/* Free tier */}
-          <div className="relative flex flex-col rounded-2xl p-7 border border-white/5 bg-surface-container transition-all duration-200 hover:-translate-y-1">
-            <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-outline mb-1.5">Try it out</p>
-              <p className="text-3xl font-black text-white">Free</p>
-            </div>
-            <ul className="flex flex-col gap-3 mb-7 flex-1">
-              {['First scan free', 'Full browser automation', 'No account needed'].map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-on-surface-variant">
-                  <span className="material-symbols-outlined text-secondary text-base">check_circle</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/app"
-              className="text-center text-sm font-bold py-3 rounded-xl bg-surface-container-highest text-on-surface hover:bg-surface-container-high transition-all hover:scale-[1.02] block"
-            >
-              Start free
+          <div className="hidden md:flex items-center gap-8">
+            <a className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm" href="#how-it-works">How it Works</a>
+            <a className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm" href="#pricing">Pricing</a>
+            <Link href="/app" className="bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] px-6 py-2 rounded-full font-bold hover:scale-105 active:opacity-80 transition-all">
+              Get Started
             </Link>
           </div>
-
-          {/* Paid tier */}
-          <div className="relative flex flex-col rounded-2xl p-7 border border-secondary/50 bg-surface-container-high shadow-[0_0_40px_rgba(68,226,205,0.12)] transition-all duration-200 hover:-translate-y-1">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-secondary text-on-secondary text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
-              One-time
-            </div>
-            <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-outline mb-1.5">Full scan</p>
-              <p className="text-3xl font-black text-white">$5</p>
-            </div>
-            <ul className="flex flex-col gap-3 mb-7 flex-1">
-              {PAID_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-on-surface-variant">
-                  <span className="material-symbols-outlined text-secondary text-base">check_circle</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/app"
-              className="text-center text-sm font-bold py-3 rounded-xl bg-secondary text-on-secondary transition-all hover:scale-[1.02] block"
-            >
-              Get full access
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Final CTA ────────────────────────────────────────────────────────────────
-
-function FinalCTA() {
-  return (
-    <section className="py-32 relative overflow-hidden">
-      <div className="absolute inset-0 noise-texture pointer-events-none" />
-      <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-        <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter italic">
-          Ready to stop the bleed?
-        </h2>
-        <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
-          <Link
-            href="/app"
-            className="w-full md:w-auto bg-secondary text-on-secondary px-10 py-5 rounded-full text-xl font-black hover:scale-105 transition-all duration-300 shadow-[0_20px_40px_rgba(68,226,205,0.3)] block text-center"
-          >
-            Scan My Statement — Free
+          <Link href="/app" className="md:hidden bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] px-4 py-2 rounded-full font-bold text-sm active:opacity-80 transition-all">
+            Get Started
           </Link>
-          <button className="w-full md:w-auto text-white border-2 border-white/10 px-10 py-5 rounded-full text-xl font-bold hover:bg-white/5 transition-all">
-            View Demo
-          </button>
         </div>
-        <p className="mt-8 text-on-surface-variant font-medium">
-          Be among the first to reclaim your money. No credit card required.
-        </p>
-      </div>
-    </section>
-  )
-}
+      </header>
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+      <main className="pt-24 pb-32 px-6">
+        {/* Hero Section */}
+        <section className="max-w-4xl mx-auto mt-8 mb-16 text-center">
+          <h2 className="text-[3.5rem] leading-none font-extrabold tracking-tight text-on-surface mb-6 -ml-1">
+            Your Money, Reclaimed.
+          </h2>
+          <p className="text-on-surface-variant font-medium mb-10 max-w-xl mx-auto leading-relaxed">
+            Upload your bank statement — we find every hidden subscription instantly.
+          </p>
 
-export default function LandingPage() {
-  return (
-    <>
-      <Nav />
-      <main className="relative overflow-hidden">
-        <Hero />
-        <BentoAdvantages />
-        <ThreeSteps />
-        <TieredExecution />
-        <Pricing />
-        <FinalCTA />
+          {/* Upload Area */}
+          <div className="relative group mt-12">
+            <div className="absolute -inset-1 bg-gradient-to-br from-primary to-primary-container rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000" />
+            <Link href="/app" className="relative block bg-surface-container-low rounded-[2rem] p-12 border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center min-h-[320px] cursor-pointer hover:border-primary/50 transition-all duration-300">
+              <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-primary text-3xl">upload_file</span>
+              </div>
+              <h3 className="text-xl font-bold text-on-surface mb-2">Upload Bank Statement</h3>
+              <p className="text-on-surface-variant mb-8 font-medium">Drag &amp; Drop or Browse</p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
+                  <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                  <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">ZERO BANK LOGIN</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
+                  <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>encrypted</span>
+                  <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">Processed in-browser</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+          <p className="text-sm text-on-surface-variant font-medium mt-6">
+            First cancellation guide — free. No credit card needed to scan.
+          </p>
+        </section>
+
+        {/* Insights Bento Grid */}
+        <section id="pricing" className="max-w-4xl mx-auto mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* App Preview Card */}
+            <div className="bg-surface-container-high rounded-[2rem] p-8 overflow-hidden relative min-h-[300px] md:row-span-2">
+              <div className="relative z-10">
+                <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary mb-4 block">Dashboard</span>
+                <h3 className="text-2xl font-bold text-on-surface mb-4">Precision Analysis</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+                  Get direct cancellation links for every subscription found.
+                </p>
+                <Link href="/app" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors">
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  Open Dashboard
+                </Link>
+              </div>
+              <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            </div>
+
+            {/* Security Highlight */}
+            <div className="bg-surface-container-low rounded-[2rem] p-8 flex flex-col justify-between">
+              <div>
+                <span className="material-symbols-outlined text-secondary text-3xl mb-4 block" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <h3 className="text-xl font-bold text-on-surface mb-2">Privacy First</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed">
+                  Your PDF is processed entirely in your browser. We never see your raw bank data.
+                </p>
+              </div>
+            </div>
+
+            {/* Pricing Card */}
+            <div className="bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] rounded-[2rem] p-8 flex flex-col justify-between text-[#003731]">
+              <div>
+                <h3 className="text-2xl font-black mb-1">Simple Pricing</h3>
+                <p className="font-bold opacity-80">Full statement scan</p>
+              </div>
+              <div className="flex items-baseline gap-1 mt-8">
+                <span className="text-4xl font-black">$5</span>
+                <span className="font-bold">/one-time scan</span>
+              </div>
+            </div>
+            <p className="text-center text-[11px] text-on-surface-variant/70 px-4 leading-tight -mt-2">
+              Not happy? If nothing was found or a technical issue occurred, email{' '}
+              <a className="underline" href="mailto:contact@subsnap.net">contact@subsnap.net</a>{' '}
+              for a full refund.
+            </p>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section id="how-it-works" className="max-w-4xl mx-auto mb-20">
+          <div className="flex flex-col items-center text-center mb-12">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-secondary mb-2">The Process</span>
+            <h2 className="text-3xl font-bold text-on-surface">Three Steps to Freedom</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="bg-surface-container-lowest p-8 rounded-[2rem] flex items-center gap-6">
+              <span className="text-4xl font-black text-outline-variant/30">01</span>
+              <div>
+                <h4 className="font-bold text-on-surface">Upload Statement</h4>
+                <p className="text-on-surface-variant text-sm">Securely provide your PDF or CSV bank record.</p>
+              </div>
+            </div>
+            <div className="bg-surface-container-low p-8 rounded-[2rem] flex items-center gap-6">
+              <span className="text-4xl font-black text-outline-variant/30">02</span>
+              <div>
+                <h4 className="font-bold text-on-surface">AI Detection</h4>
+                <p className="text-on-surface-variant text-sm">Our AI identifies all recurring charges in your statement.</p>
+              </div>
+            </div>
+            <div className="bg-surface-container-high p-8 rounded-[2rem] flex items-center gap-6">
+              <span className="text-4xl font-black text-outline-variant/30">03</span>
+              <div>
+                <h4 className="font-bold text-on-surface">Reclaim &amp; Cancel</h4>
+                <p className="text-on-surface-variant text-sm">Get direct cancellation links for every subscription found.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Section */}
+        <section className="max-w-4xl mx-auto bg-surface-container-high rounded-[3rem] p-8 md:p-12 overflow-hidden shadow-2xl">
+          <div className="text-center mb-10">
+            <h3 className="text-2xl font-bold text-on-surface mb-2">Uncover Hidden Costs</h3>
+            <p className="text-on-surface-variant text-sm max-w-md mx-auto">
+              Beautiful insights that make managing finances feel like a concierge service.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
+              <span className="material-symbols-outlined text-primary mb-3 block">search</span>
+              <h4 className="font-bold text-on-surface mb-1">Smart Detection</h4>
+              <p className="text-xs text-on-surface-variant">Identifies subscriptions even with obscure billing names.</p>
+            </div>
+            <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
+              <span className="material-symbols-outlined text-secondary mb-3 block">link</span>
+              <h4 className="font-bold text-on-surface mb-1">Direct Cancel Links</h4>
+              <p className="text-xs text-on-surface-variant">Jump straight to each service's cancellation page.</p>
+            </div>
+            <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
+              <span className="material-symbols-outlined text-tertiary mb-3 block">shield</span>
+              <h4 className="font-bold text-on-surface mb-1">Zero Data Storage</h4>
+              <p className="text-xs text-on-surface-variant">Your statement never leaves your device.</p>
+            </div>
+          </div>
+        </section>
       </main>
+
       <Footer />
-    </>
+      <BottomNav />
+    </div>
   )
 }

@@ -1,48 +1,18 @@
 import Link from 'next/link'
 
-function Nav() {
-  return (
-    <header className="bg-[#0B1326] top-0 sticky z-50 shadow-[0_20px_40px_rgba(27,59,90,0.4)] antialiased tracking-tight">
-      <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-        <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
-        <nav className="hidden md:flex items-center gap-8">
-          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">
-            How it Works
-          </Link>
-          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">
-            Pricing
-          </Link>
-        </nav>
-        <div className="flex items-center gap-6">
-          <Link
-            href="/app"
-            className="bg-secondary text-on-secondary px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:opacity-80"
-          >
-            Get Started
-          </Link>
-        </div>
-      </div>
-    </header>
-  )
-}
-
 function Footer() {
   return (
-    <footer className="bg-[#0B1326] py-12 mt-auto border-t border-white/5 text-sm tracking-wide uppercase font-semibold">
-      <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto">
-        <Link href="/" className="text-lg font-bold text-slate-300 mb-6 md:mb-0">SubSnap</Link>
-        <div className="flex flex-wrap justify-center gap-8 mb-6 md:mb-0">
-          <Link href="/privacy" className="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="text-white hover:text-[#44E2CD] transition-colors duration-200">
-            Terms of Service
-          </Link>
-          <Link href="/refund" className="text-slate-500 hover:text-[#44E2CD] transition-colors duration-200">
-            Refund Policy
-          </Link>
+    <footer className="bg-[#060d20] w-full py-12 px-8 border-t border-[#3c4a47]/15">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-2">
+          <span className="text-[#69ffe9] font-black text-xl">SubSnap</span>
+          <span className="text-[#dbe2fd]/60 text-[0.75rem] uppercase tracking-[0.1em] font-medium">© 2026 SubSnap. All rights reserved.</span>
         </div>
-        <div className="text-slate-500">© 2026 SubSnap. 2026 Compliant.</div>
+        <div className="flex flex-wrap justify-center gap-8">
+          <Link href="/privacy" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium">Terms of Service</Link>
+          <Link href="/refund" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Refund Policy</Link>
+        </div>
       </div>
     </footer>
   )
@@ -50,199 +20,159 @@ function Footer() {
 
 export default function TermsPage() {
   return (
-    <div className="bg-surface text-on-surface selection:bg-secondary/30">
-      <Nav />
-
-      <main className="min-h-screen pt-12 pb-24 px-6">
-        <div className="max-w-4xl mx-auto">
-
-          {/* Header */}
-          <div className="mb-16 text-center md:text-left">
-            <div className="inline-block px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant/15 mb-4">
-              <span className="text-secondary text-[10px] uppercase font-bold tracking-[0.2em]">Legal Document</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-6">Terms of Service</h1>
-            <div className="flex flex-col md:flex-row md:items-center gap-4 text-on-surface-variant">
-              <p>Last Updated: October 24, 2026</p>
-              <span className="hidden md:inline opacity-30">•</span>
-              <p>Effective Date: January 01, 2026</p>
-            </div>
+    <div className="bg-surface text-on-surface min-h-screen selection:bg-primary selection:text-on-primary">
+      {/* TopAppBar */}
+      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)]">
+        <div className="flex items-center justify-between px-6 h-16 w-full">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-[#69ffe9] active:scale-95 duration-200 transition-transform">
+              <span className="material-symbols-outlined">arrow_back</span>
+            </Link>
+            <span className="text-xl font-bold tracking-tight text-[#69ffe9]">SubSnap</span>
           </div>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/#how-it-works" className="text-[#dbe2fd] opacity-70 hover:opacity-100 transition-opacity text-sm font-medium">Features</Link>
+            <Link href="/terms" className="text-[#69ffe9] font-semibold text-sm">Legal</Link>
+          </div>
+          <Link href="/" className="text-[#69ffe9] active:scale-95 duration-200 transition-transform md:hidden">
+            <span className="material-symbols-outlined">menu</span>
+          </Link>
+        </div>
+      </header>
 
-          {/* Agreement overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <div className="bg-surface-container-low rounded-xl p-8 border border-outline-variant/10 shadow-lg flex flex-col justify-between md:col-span-3">
+      <main className="pt-32 pb-24 px-6 md:px-12 max-w-5xl mx-auto">
+        {/* Editorial Header */}
+        <div className="mb-20">
+          <span className="text-[0.75rem] uppercase tracking-[0.1em] font-medium text-secondary mb-4 block">Legal Framework</span>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-on-surface leading-none mb-6">
+            Terms of Service
+          </h1>
+          <p className="text-on-surface-variant text-lg max-w-2xl leading-relaxed">
+            Last updated: April 2026. These terms govern your use of SubSnap&rsquo;s subscription
+            intelligence platform. By accessing our services, you agree to these conditions.
+          </p>
+        </div>
+
+        {/* Bento Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          {/* Acceptance of Terms */}
+          <section className="md:col-span-12 bg-surface-container-high rounded-xl p-8 md:p-12 border border-outline-variant/15">
+            <div className="flex items-start gap-6">
+              <div className="bg-primary/10 p-4 rounded-full shrink-0">
+                <span className="material-symbols-outlined text-primary text-3xl">gavel</span>
+              </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-4">Agreement Overview</h3>
-                <p className="text-on-surface-variant leading-relaxed mb-6">
-                  By accessing or using SubSnap, you agree to be bound by these Terms of Service.
-                  This agreement governs your use of our automated subscription management and
-                  cancellation optimization tools.
+                <h2 className="text-2xl font-bold text-on-surface mb-4 tracking-tight">1. Acceptance of Terms</h2>
+                <div className="space-y-4 text-on-surface-variant leading-relaxed">
+                  <p>
+                    By accessing or using the SubSnap website and application, you acknowledge that you have read,
+                    understood, and agree to be bound by these Terms of Service. If you do not agree to these terms,
+                    you must immediately cease all use of our platform.
+                  </p>
+                  <p>
+                    We reserve the right to modify these terms at any time. Your continued use of the service
+                    following any changes constitutes your acceptance of the new terms.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Description of Service */}
+          <section className="md:col-span-7 bg-surface-container-low rounded-xl p-8 border border-outline-variant/15">
+            <h2 className="text-xl font-bold text-on-surface mb-6 flex items-center gap-3">
+              <span className="material-symbols-outlined text-secondary">analytics</span>
+              2. Description of Service
+            </h2>
+            <div className="space-y-4 text-on-surface-variant text-sm leading-relaxed">
+              <p>
+                SubSnap provides a high-fidelity &ldquo;One-time bank statement scan&rdquo; utility. Our technology
+                processes your uploaded financial PDF documents to identify recurring subscription patterns
+                and provides editorial-grade spending insights.
+              </p>
+              <p className="bg-surface-container-lowest p-4 rounded-xl italic">
+                &ldquo;The service is strictly a retrospective analysis tool. We do not maintain live bank
+                connections or process active financial transactions.&rdquo;
+              </p>
+            </div>
+          </section>
+
+          {/* User Obligations */}
+          <section className="md:col-span-5 bg-surface-container-high rounded-xl p-8 border border-outline-variant/15">
+            <h2 className="text-xl font-bold text-on-surface mb-6 flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary">person_check</span>
+              3. User Obligations
+            </h2>
+            <ul className="space-y-4 text-on-surface-variant text-sm">
+              {[
+                'You must provide accurate, current, and complete information during the upload process.',
+                'You are solely responsible for maintaining the confidentiality of your personal data.',
+                'You must only upload bank statements for which you have legal ownership or explicit authorization.',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Limitation of Liability */}
+          <section className="md:col-span-12 bg-surface-variant/60 backdrop-blur-xl rounded-xl p-8 md:p-12 border border-outline-variant/15 shadow-2xl relative overflow-hidden">
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold text-primary mb-6 tracking-tight">4. Limitation of Liability</h2>
+              <div className="grid md:grid-cols-2 gap-8 text-on-surface-variant text-sm leading-relaxed">
+                <p>
+                  To the maximum extent permitted by law, SubSnap shall not be liable for any indirect,
+                  incidental, special, consequential, or punitive damages, or any loss of profits or revenues,
+                  whether incurred directly or indirectly, or any loss of data, use, goodwill, or other
+                  intangible losses.
+                </p>
+                <p>
+                  Our analysis is based on automated scanning technology. While we strive for 100% accuracy,
+                  we do not warrant that the results of our scan will be error-free. Financial decisions based
+                  on SubSnap data are made at the user&rsquo;s own risk.
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-secondary">
-                <span className="material-symbols-outlined">gavel</span>
-                <span className="text-sm font-bold tracking-widest uppercase">Legally Binding Agreement</span>
+            </div>
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+          </section>
+
+          {/* Termination */}
+          <section className="md:col-span-12 bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/15">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div className="max-w-xl">
+                <h2 className="text-xl font-bold text-on-surface mb-2">5. Termination</h2>
+                <p className="text-on-surface-variant text-sm">
+                  We may terminate or suspend your access to the service immediately, without prior notice
+                  or liability, for any reason whatsoever, including without limitation if you breach the Terms.
+                </p>
+              </div>
+              <div className="bg-error/10 border border-error/20 p-4 rounded-xl shrink-0">
+                <span className="text-error font-semibold flex items-center gap-2">
+                  <span className="material-symbols-outlined">block</span>
+                  Account Revocation Policy
+                </span>
               </div>
             </div>
-          </div>
+          </section>
+        </div>
 
-          {/* Sections */}
-          <div className="space-y-16">
-
-            <section id="acceptance" className="group">
-              <div className="flex items-start gap-6">
-                <span className="text-secondary font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">01.</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Acceptance of Terms</h2>
-                  <div className="space-y-4 text-on-surface-variant leading-relaxed">
-                    <p>
-                      By creating a SubSnap account, you confirm that you are at least 18 years of
-                      age and possess the legal authority to enter into this binding agreement. If you
-                      are using SubSnap on behalf of an entity, you represent that you have the
-                      authority to bind that entity to these terms.
-                    </p>
-                    <p>
-                      We reserve the right to update these terms at any time. Significant changes will
-                      be communicated via the email address associated with your account or through a
-                      prominent notice within the application shell.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section id="cancellation" className="relative">
-              <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary/50 to-transparent rounded-full opacity-20" />
-              <div className="flex items-start gap-6">
-                <span className="text-secondary font-black text-2xl opacity-50">02.</span>
-                <div className="w-full">
-                  <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">
-                    Cancellation Service (Best Effort &amp; Tiered Logic)
-                  </h2>
-                  <div className="bg-surface-container rounded-xl p-8 border border-outline-variant/10 mb-6">
-                    <h4 className="text-secondary text-xs font-bold uppercase tracking-widest mb-4">
-                      Service Optimization Logic
-                    </h4>
-                    <div className="space-y-6">
-                      <div className="flex gap-4">
-                        <div className="h-8 w-8 rounded-lg bg-primary-container flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-primary text-sm">bolt</span>
-                        </div>
-                        <div>
-                          <h5 className="text-white font-semibold mb-1">Tiered Execution</h5>
-                          <p className="text-sm text-on-surface-variant">
-                            SubSnap employs multi-tiered automation logic to execute cancellations.
-                            We prioritize API-based direct integration, followed by automated form
-                            submission, and manual &ldquo;Best Effort&rdquo; intervention for legacy providers.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-4">
-                        <div className="h-8 w-8 rounded-lg bg-primary-container flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-primary text-sm">verified_user</span>
-                        </div>
-                        <div>
-                          <h5 className="text-white font-semibold mb-1">Guarantee Limitation</h5>
-                          <p className="text-sm text-on-surface-variant">
-                            We strive for the highest success rate possible but cannot guarantee
-                            cancellation on all platforms. Our service is provided on a &ldquo;Best Effort&rdquo; basis.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section id="payments" className="group">
-              <div className="flex items-start gap-6">
-                <span className="text-secondary font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">03.</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Payments &amp; Billing</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <p className="text-on-surface-variant leading-relaxed">
-                      Subscription fees are billed in advance on a monthly or annual basis and are
-                      non-refundable except where required by law. By providing a payment method, you
-                      authorize SubSnap to charge the applicable fees to that payment instrument.
-                    </p>
-                    <div className="bg-surface-container-high rounded-xl p-6 border border-secondary/10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="material-symbols-outlined text-secondary">info</span>
-                        <span className="text-white font-bold">Refund Policy</span>
-                      </div>
-                      <p className="text-xs text-on-surface-variant">
-                        Credits are non-refundable once used. Unused credits may be refunded within
-                        7 days of purchase by contacting{' '}
-                        <a href="mailto:support@subsnap.com" className="text-primary hover:underline">
-                          support@subsnap.com
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section id="privacy" className="group">
-              <div className="flex items-start gap-6">
-                <span className="text-secondary font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">04.</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Privacy &amp; Data Transmission</h2>
-                  <p className="text-on-surface-variant leading-relaxed mb-6">
-                    Your privacy is managed under our Privacy Policy. By using SubSnap, you acknowledge
-                    that we process your uploaded bank statement locally in your browser to identify
-                    recurring subscriptions. We never store your bank login credentials.
-                  </p>
-                  <Link
-                    href="/privacy"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container rounded-lg border border-outline-variant/10 hover:bg-surface-container-high transition-colors cursor-pointer"
-                  >
-                    <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                      Read Full Privacy Policy
-                    </span>
-                    <span className="material-symbols-outlined text-primary text-sm">arrow_forward</span>
-                  </Link>
-                </div>
-              </div>
-            </section>
-
-            <section id="liability" className="group">
-              <div className="flex items-start gap-6">
-                <span className="text-secondary font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">05.</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">Limitation of Liability</h2>
-                  <p className="text-on-surface-variant leading-relaxed italic border-l-2 border-outline-variant/20 pl-6">
-                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, SUBSNAP SHALL NOT BE LIABLE FOR ANY
-                    INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF
-                    PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA,
-                    USE, GOODWILL, OR OTHER INTANGIBLE LOSSES RESULTING FROM YOUR ACCESS TO OR USE OF
-                    THE SERVICE.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-          </div>
-
-          {/* Contact callout */}
-          <div className="mt-24 bg-gradient-to-br from-primary-container to-surface-container-high rounded-2xl p-12 text-center relative overflow-hidden">
-            <h3 className="text-3xl font-black text-white mb-4">Questions about these terms?</h3>
-            <p className="text-primary mb-8 max-w-xl mx-auto">
-              Our legal and support teams (support@subsnap.com) are here to provide clarity on how
-              we protect your financial interests.
-            </p>
-            <a
-              href="mailto:legal@subsnap.com"
-              className="bg-secondary text-on-secondary px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform duration-300 inline-block"
-            >
-              Contact Legal
-            </a>
-          </div>
-
+        {/* Trust Anchor */}
+        <div className="mt-20 p-12 bg-surface-container-high rounded-[3rem] flex flex-col items-center text-center">
+          <h3 className="text-2xl font-bold text-on-surface mb-4">Questions about these terms?</h3>
+          <p className="text-on-surface-variant mb-8">
+            Email <a href="mailto:contact@subsnap.net" className="text-primary hover:underline">contact@subsnap.net</a>
+          </p>
+          <a
+            href="mailto:contact@subsnap.net"
+            className="bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold py-4 px-10 rounded-full active:scale-95 transition-all shadow-[0_0_20px_rgba(105,255,233,0.2)] inline-block"
+          >
+            Contact Legal Support
+          </a>
         </div>
       </main>
+
       <Footer />
     </div>
   )

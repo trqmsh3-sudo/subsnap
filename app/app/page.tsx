@@ -10,57 +10,28 @@ import PricingCards from '@/components/PricingCards'
 const FileUpload = dynamic(() => import('@/components/FileUpload'), { ssr: false })
 const Redactor = dynamic(() => import('@/components/Redactor'), { ssr: false })
 
-// ─── Nav ──────────────────────────────────────────────────────────────────────
-
-function Nav() {
+function BottomNav() {
   return (
-    <nav className="bg-[#0B1326] sticky top-0 z-50 shadow-[0_20px_40px_rgba(27,59,90,0.4)]">
-      <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto antialiased tracking-tight">
-        <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
-        <div className="hidden md:flex items-center space-x-8">
-          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#how-it-works">
-            How it Works
-          </Link>
-          <Link className="text-slate-400 font-medium hover:text-white transition-colors" href="/#pricing">
-            Pricing
-          </Link>
-          <Link
-            href="/app"
-            className="bg-secondary text-on-secondary px-6 py-2 rounded-full font-bold hover:scale-105 active:opacity-80 transition-all"
-          >
-            Get Started
-          </Link>
-        </div>
-      </div>
+    <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
+      <Link href="/" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
+        <span className="material-symbols-outlined text-[24px]">home</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Home</span>
+      </Link>
+      <Link href="/app" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-5 py-2 active:scale-90 transition-transform duration-150">
+        <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Dashboard</span>
+      </Link>
+      <Link href="/privacy" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
+        <span className="material-symbols-outlined text-[24px]">shield</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Privacy</span>
+      </Link>
+      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
+        <span className="material-symbols-outlined text-[24px]">payments</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Pricing</span>
+      </Link>
     </nav>
   )
 }
-
-// ─── Footer ───────────────────────────────────────────────────────────────────
-
-function Footer() {
-  return (
-    <footer className="bg-[#0B1326] mt-auto">
-      <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto border-t border-white/5">
-        <Link href="/" className="text-lg font-bold text-slate-300 mb-4 md:mb-0">SubSnap</Link>
-        <div className="flex flex-wrap justify-center gap-6 mb-4 md:mb-0">
-          <Link href="/privacy" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
-            Terms of Service
-          </Link>
-          <Link href="/refund" className="text-sm tracking-wide uppercase font-semibold text-slate-500 hover:text-[#44E2CD] transition-colors">
-            Refund Policy
-          </Link>
-        </div>
-        <div className="text-sm tracking-wide uppercase font-semibold text-slate-500">© 2026 SubSnap</div>
-      </div>
-    </footer>
-  )
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AppPage() {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
@@ -92,171 +63,143 @@ export default function AppPage() {
     }
   }, [])
 
-  const scoutStatus = analyzing
-    ? 'Scanning...'
-    : analyzed && subscriptions.length > 0
-    ? 'Complete'
-    : analyzed
-    ? 'None Found'
-    : 'Waiting...'
+  const totalMonthly = subscriptions.reduce((sum, s) => sum + (s.monthly ?? s.amount ?? 0), 0)
 
   return (
-    <div className="bg-background text-on-background min-h-screen flex flex-col relative overflow-x-hidden">
-      <div className="fixed inset-0 noise-texture z-[-1] pointer-events-none" />
-      <Nav />
+    <div className="bg-background text-on-background min-h-screen pb-32 selection:bg-primary selection:text-on-primary">
+      {/* TopAppBar */}
+      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)] flex items-center justify-between px-6 py-4">
+        <Link href="/" className="text-[#44E2CD] active:scale-95 transition-transform">
+          <span className="material-symbols-outlined">arrow_back</span>
+        </Link>
+        <h1 className="tracking-tighter text-2xl font-bold text-[#44E2CD]">SubSnap</h1>
+        <div className="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center">
+          <span className="material-symbols-outlined text-on-surface-variant text-xl">person</span>
+        </div>
+      </header>
 
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-12 space-y-12">
+      <main className="pt-24 px-6 max-w-2xl mx-auto space-y-8">
 
-        {/* Header */}
-        <header className="space-y-2">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface">
-            Financial Command
-          </h1>
-          <p className="text-lg text-on-surface-variant max-w-2xl leading-relaxed">
-            Upload your bank statement and let our AI Scout dismantle unwanted recurring charges
-            with surgical precision.
-          </p>
-          <div className="pt-1">
-            <CreditBalance />
-          </div>
-        </header>
-
-        {/* Bento grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-          {/* Upload (7 cols) */}
-          <div className="lg:col-span-7 bg-surface-container rounded-[1.5rem] p-8 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none select-none">
-              <span className="material-symbols-outlined text-[120px]">cloud_upload</span>
-            </div>
-            <div className="relative z-10 space-y-6">
-              <div className="flex items-center space-x-3">
-                <span
-                  className="material-symbols-outlined text-secondary"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  security
-                </span>
-                <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">
-                  Secure Upload Cluster
-                </span>
-              </div>
-              <FileUpload onFileProcessed={handleFileProcessed} />
-              {canvas && (
-                <Redactor
-                  sourceCanvas={canvas}
-                  textItems={textItems}
-                  onRedacted={handleRedacted}
-                />
-              )}
+        {/* Hero Section: Total Savings */}
+        <section className="relative overflow-hidden rounded-[2.5rem] p-8 bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731]">
+          <div className="relative z-10">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-2">
+              {analyzed ? 'Total Savings Identified' : 'Statement Scanner'}
+            </p>
+            <h2 className="text-5xl font-black tracking-tighter -ml-1 mb-6">
+              {analyzed && totalMonthly > 0
+                ? `$${totalMonthly.toFixed(2)}`
+                : analyzed
+                ? '$0.00'
+                : 'Ready.'}
+            </h2>
+            <div className="flex items-center gap-2 bg-[#003731]/10 w-fit px-4 py-2 rounded-full backdrop-blur-md">
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              <span className="text-xs font-bold tracking-tight">
+                {analyzing
+                  ? 'Scanning your statement…'
+                  : analyzed
+                  ? `${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''} found`
+                  : 'Upload a statement to begin'}
+              </span>
             </div>
           </div>
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#003731]/5 rounded-full blur-2xl" />
+        </section>
 
-          {/* AI Scout (5 cols) */}
-          <div className="lg:col-span-5 bg-surface-container rounded-[1.5rem] p-8 flex flex-col justify-between relative overflow-hidden">
-            <div className="ai-gradient absolute inset-0 opacity-5 pointer-events-none" />
-            <div className="relative z-10 space-y-8 h-full flex flex-col">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <span className="material-symbols-outlined text-tertiary">query_stats</span>
-                  <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">
-                    AI Scout Engine
-                  </span>
-                </div>
-                <div
-                  className={`px-3 py-1 rounded-full bg-surface-container-highest border border-outline-variant/20 text-[10px] font-black tracking-tighter uppercase ${
-                    analyzing ? 'text-secondary' : 'text-on-surface-variant'
-                  }`}
-                >
-                  {scoutStatus}
-                </div>
-              </div>
-              <div
-                className={`flex-grow flex flex-col items-center justify-center text-center space-y-4 transition-opacity ${
-                  analyzing || analyzed ? 'opacity-100' : 'opacity-40'
-                }`}
-              >
-                <span className="material-symbols-outlined text-6xl text-tertiary">psychology</span>
-                <p className="text-sm text-on-surface-variant">
-                  {analyzing
-                    ? 'Analyzing statement with AI…'
-                    : subscriptions.length > 0
-                    ? `Found ${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''}`
-                    : analyzed
-                    ? 'No subscriptions detected.'
-                    : 'Awaiting statement analysis…'}
+        {/* Credit Balance */}
+        <div className="bg-surface-container-low rounded-[2rem] p-6">
+          <CreditBalance />
+        </div>
+
+        {/* Upload Section */}
+        <section className="bg-surface-container-low rounded-[2rem] p-8 space-y-6">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>upload_file</span>
+            <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">Upload Statement</span>
+          </div>
+          <FileUpload onFileProcessed={handleFileProcessed} />
+          {canvas && (
+            <Redactor
+              sourceCanvas={canvas}
+              textItems={textItems}
+              onRedacted={handleRedacted}
+            />
+          )}
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest rounded-full border border-outline-variant/10">
+              <span className="material-symbols-outlined text-secondary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">Zero Bank Login</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest rounded-full border border-outline-variant/10">
+              <span className="material-symbols-outlined text-secondary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>encrypted</span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">Processed in-browser</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Subscription Results */}
+        {analyzed && (
+          <section className="space-y-6">
+            <div className="flex items-end justify-between px-2">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight">Identified Subscriptions</h3>
+                <p className="text-xs text-on-surface-variant tracking-wide">
+                  Found {subscriptions.length} recurring charge{subscriptions.length !== 1 ? 's' : ''}
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Subscription intelligence (8 cols) */}
-          <div className="lg:col-span-8 bg-surface-container rounded-[1.5rem] p-8 space-y-6">
-            <div className="flex items-center space-x-3">
-              <span className="material-symbols-outlined text-secondary">list_alt</span>
-              <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">
-                Subscription Intelligence
-              </span>
             </div>
 
             {subscriptions.length === 0 ? (
-              <div className="min-h-[300px] flex flex-col items-center justify-center text-center space-y-4 border border-outline-variant/10 rounded-xl bg-surface-container-low/30">
-                <div className="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-surface-variant text-3xl">search_off</span>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-bold text-on-surface">No subscriptions detected yet</p>
-                  <p className="text-sm text-on-surface-variant">Upload a statement to begin.</p>
-                </div>
+              <div className="bg-surface-container-low p-8 rounded-[2rem] flex flex-col items-center text-center gap-4">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant">search_off</span>
+                <p className="font-bold text-on-surface">No subscriptions detected</p>
+                <p className="text-sm text-on-surface-variant">Try uploading a different statement.</p>
               </div>
             ) : (
-              <Preview subscriptions={subscriptions} />
+              <div className="space-y-4">
+                <Preview subscriptions={subscriptions} />
+              </div>
             )}
-          </div>
+          </section>
+        )}
 
-          {/* Execution Phase (4 cols) */}
-          <div className="lg:col-span-4 bg-surface-container rounded-[1.5rem] p-8 flex flex-col gap-6">
-            <div className="flex items-center space-x-3">
-              <span
-                className="material-symbols-outlined text-secondary"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                bolt
-              </span>
-              <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">
-                Execution Phase
-              </span>
-            </div>
-
-            <div className="relative w-full aspect-square flex items-center justify-center max-w-[200px] mx-auto">
-              <div
-                className={`absolute inset-0 border-[12px] rounded-full ${
-                  subscriptions.length > 0 ? 'border-secondary/30' : 'border-surface-container-highest'
-                }`}
-              />
-              <div className="text-center">
-                <p
-                  className={`text-5xl font-black ${
-                    subscriptions.length > 0 ? 'text-secondary' : 'text-on-surface-variant opacity-20'
-                  }`}
-                >
-                  {subscriptions.length > 0 ? subscriptions.length : '--'}
-                </p>
-                <p className="text-xs text-on-surface-variant opacity-40 mt-1">
-                  {subscriptions.length > 0 ? 'Detected' : 'Idle'}
-                </p>
+        {/* Insights Summary (when subscriptions found) */}
+        {subscriptions.length > 0 && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-surface-container-low p-6 rounded-[2rem] flex flex-col justify-between aspect-square">
+              <span className="material-symbols-outlined text-secondary">payments</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Monthly Spend</p>
+                <p className="text-2xl font-bold tracking-tight">${totalMonthly.toFixed(2)}</p>
               </div>
             </div>
-
-            <div className="bg-surface-container-low p-4 rounded-xl">
-              <PricingCards />
+            <div className="bg-surface-container-highest/40 backdrop-blur-sm p-6 rounded-[2rem] flex flex-col justify-between aspect-square">
+              <span className="material-symbols-outlined text-primary">query_stats</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Subscriptions</p>
+                <p className="text-2xl font-bold tracking-tight">{subscriptions.length}</p>
+              </div>
             </div>
           </div>
+        )}
 
+        {/* Pricing */}
+        <section className="bg-surface-container-low rounded-[2rem] p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+            <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">Get Cancel Credits</span>
+          </div>
+          <PricingCards />
+        </section>
+
+        <div className="pb-8 flex flex-col items-center">
+          <div className="w-12 h-1 bg-surface-container-highest rounded-full" />
         </div>
       </main>
 
-      <Footer />
+      <BottomNav />
     </div>
   )
 }

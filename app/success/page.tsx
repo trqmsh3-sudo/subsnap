@@ -43,16 +43,14 @@ export default async function SuccessPage({ searchParams }: Props) {
 
 function ErrorCard({ message }: { message: string }) {
   return (
-    <div className="min-h-screen bg-surface flex flex-col noise-overlay">
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-container/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
-
-      <header className="w-full py-8 flex justify-center sticky top-0 z-50 backdrop-blur-md">
-        <Link href="/" className="text-2xl font-black tracking-tighter text-white">SubSnap</Link>
+    <div className="min-h-screen bg-surface text-on-surface flex flex-col selection:bg-primary selection:text-on-primary">
+      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)] flex items-center justify-center px-6 py-4">
+        <Link href="/" className="text-2xl font-bold tracking-tighter text-[#44E2CD]">SubSnap</Link>
       </header>
 
-      <main className="flex-grow flex items-center justify-center px-4 py-12 relative z-10">
-        <div className="glass-card rounded-[2.5rem] p-10 md:p-16 text-center max-w-md w-full shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
-          <div className="w-20 h-20 bg-error-container/20 rounded-full flex items-center justify-center mx-auto mb-8">
+      <main className="flex-grow flex items-center justify-center px-6 py-24 relative z-10">
+        <div className="bg-surface-container-low rounded-[2rem] p-10 md:p-16 text-center max-w-md w-full border border-outline-variant/10">
+          <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-8">
             <span className="material-symbols-outlined text-error text-5xl">error</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-on-surface mb-4">
@@ -61,7 +59,7 @@ function ErrorCard({ message }: { message: string }) {
           <p className="text-on-surface-variant mb-8">{message}</p>
           <Link
             href="/"
-            className="inline-block bg-secondary text-on-secondary px-8 py-3 rounded-xl font-bold hover:scale-105 transition-all"
+            className="inline-block bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-3 rounded-full font-bold active:scale-95 transition-all"
           >
             Back to Home
           </Link>
