@@ -79,8 +79,7 @@ function Hero() {
             </h1>
 
             <p className="text-xl text-on-surface-variant max-w-xl leading-relaxed">
-              Stop the bleed. Our autonomous agents scan your statements and terminate ghost
-              subscriptions with professional-grade precision.
+              Upload your bank statement — we find every hidden subscription instantly.
             </p>
 
             {/* Upload CTA Box */}

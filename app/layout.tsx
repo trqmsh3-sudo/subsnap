@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'SubSnap | Your Money. Reclaimed.',
   description:
-    'Stop the bleed. Our AI scanner finds and guides you to cancel subscriptions with professional-grade precision.',
+    'Upload your bank statement — we find every hidden subscription instantly.',
 }
 
 export default function RootLayout({
