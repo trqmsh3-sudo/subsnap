@@ -2,22 +2,22 @@ import Link from 'next/link'
 
 function BottomNav() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-      <Link href="/" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-5 py-2 transition-transform duration-150 active:scale-90">
-        <span className="material-symbols-outlined">dashboard</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Overview</span>
+    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
+      <Link href="/" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-4 py-2 transition-transform duration-150 active:scale-90">
+        <span className="material-symbols-outlined text-[22px]">dashboard</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal">Overview</span>
       </Link>
-      <Link href="/app" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
-        <span className="material-symbols-outlined">subscriptions</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Subscriptions</span>
+      <Link href="/app" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
+        <span className="material-symbols-outlined text-[22px]">subscriptions</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal">Scans</span>
       </Link>
-      <Link href="/#how-it-works" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
-        <span className="material-symbols-outlined">analytics</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Insights</span>
+      <Link href="/#how-it-works" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
+        <span className="material-symbols-outlined text-[22px]">bar_chart</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal">Insights</span>
       </Link>
-      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
-        <span className="material-symbols-outlined">settings</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em]">Pricing</span>
+      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
+        <span className="material-symbols-outlined text-[22px]">settings</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal">Pricing</span>
       </Link>
     </nav>
   )
@@ -46,7 +46,7 @@ export default function HomePage() {
     <div className="bg-surface text-on-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container">
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)]">
-        <div className="flex items-center justify-between px-6 py-4 w-full max-w-7xl mx-auto">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 w-full max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
             <h1 className="font-bold tracking-tighter text-2xl text-[#44E2CD]">SubSnap</h1>
           </div>
@@ -63,31 +63,31 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="pt-24 pb-32 px-6">
+      <main className="pt-20 pb-32 px-4 sm:px-6">
         {/* Hero Section */}
-        <section className="max-w-4xl mx-auto mt-8 mb-16 text-center">
-          <h2 className="text-[3.5rem] leading-none font-extrabold tracking-tight text-on-surface mb-6 -ml-1">
+        <section className="max-w-4xl mx-auto mt-4 sm:mt-8 mb-8 sm:mb-16 text-center">
+          <h2 className="text-[2rem] sm:text-[3.5rem] leading-tight sm:leading-none font-extrabold tracking-tight text-on-surface mb-3 sm:mb-6">
             Your Money, Reclaimed.
           </h2>
-          <p className="text-on-surface-variant font-medium mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-on-surface-variant font-medium mb-6 sm:mb-10 max-w-xl mx-auto leading-relaxed text-sm sm:text-base">
             Upload your bank statement — we find every hidden subscription instantly.
           </p>
 
           {/* Upload Area */}
-          <div className="relative group mt-12">
+          <div className="relative group mt-6 sm:mt-12">
             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-primary-container rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000" />
-            <Link href="/app" className="relative block bg-surface-container-low rounded-[2rem] p-12 border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center min-h-[320px] cursor-pointer hover:border-primary/50 transition-all duration-300">
-              <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-6">
-                <span className="material-symbols-outlined text-primary text-3xl">upload_file</span>
+            <Link href="/app" className="relative block bg-surface-container-low rounded-[2rem] p-6 sm:p-12 border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] cursor-pointer hover:border-primary/50 transition-all duration-300">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-3 sm:mb-6">
+                <span className="material-symbols-outlined text-primary text-2xl sm:text-3xl">upload_file</span>
               </div>
-              <h3 className="text-xl font-bold text-on-surface mb-2">Upload Bank Statement</h3>
-              <p className="text-on-surface-variant mb-8 font-medium">Drag &amp; Drop or Browse</p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
+              <h3 className="text-base sm:text-xl font-bold text-on-surface mb-1 sm:mb-2">Upload Bank Statement</h3>
+              <p className="text-on-surface-variant mb-4 sm:mb-8 font-medium text-sm">Drag &amp; Drop or Browse</p>
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
                   <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
                   <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">ZERO BANK LOGIN</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
                   <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>encrypted</span>
                   <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">Processed in-browser</span>
                 </div>
@@ -202,7 +202,7 @@ export default function HomePage() {
             <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
               <span className="material-symbols-outlined text-secondary mb-3 block">link</span>
               <h4 className="font-bold text-on-surface mb-1">Direct Cancel Links</h4>
-              <p className="text-xs text-on-surface-variant">Jump straight to each service's cancellation page.</p>
+              <p className="text-xs text-on-surface-variant">Jump straight to each service&apos;s cancellation page.</p>
             </div>
             <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
               <span className="material-symbols-outlined text-tertiary mb-3 block">shield</span>
