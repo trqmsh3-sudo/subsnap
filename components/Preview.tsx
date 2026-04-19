@@ -72,8 +72,8 @@ export default function Preview({ subscriptions }: { subscriptions: Subscription
       <p className="text-sm font-semibold text-on-surface-variant uppercase tracking-widest">
         {subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''} detected
       </p>
-      {subscriptions.map((sub) => (
-        <SubscriptionCard key={sub.name} sub={sub} />
+      {subscriptions.map((sub, i) => (
+        <SubscriptionCard key={`${sub.name}-${i}`} sub={sub} />
       ))}
     </div>
   )

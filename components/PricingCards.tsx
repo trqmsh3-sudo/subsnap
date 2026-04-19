@@ -17,7 +17,15 @@ export default function PricingCards({ userId }: { userId?: string }) {
         body: JSON.stringify({ planId: plan.id, userId: userId ?? 'anonymous' }),
       })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
+      const url = data?.url
+      if (!url) {
+        alert('Checkout unavailable. Please try again.')
+        return
+      }
+      window.location.href = url
+    } catch (err) {
+      console.error('[checkout] error:', err)
+      alert('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }

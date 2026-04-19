@@ -10,9 +10,11 @@ interface FileUploadProps {
 export default function FileUpload({ onFileProcessed }: FileUploadProps) {
   const [dragging, setDragging] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFile(file: File) {
+    setError(null)
     setLoading(true)
     try {
       if (file.type === 'application/pdf') {
@@ -21,7 +23,11 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       } else if (file.type.startsWith('image/')) {
         const { canvas } = await imageFileToCanvas(file)
         onFileProcessed(canvas, [])
+      } else {
+        setError('Please upload a PDF or image file.')
       }
+    } catch {
+      setError('Failed to read file. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -35,6 +41,7 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
   }
 
   return (
+    <>
     <div
       onDrop={onDrop}
       onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
@@ -74,5 +81,9 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
         </div>
       )}
     </div>
+    {error && (
+      <p className="text-red-400 text-sm text-center mt-2">{error}</p>
+    )}
+    </>
   )
 }

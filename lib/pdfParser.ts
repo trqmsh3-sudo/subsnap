@@ -19,7 +19,7 @@ export async function parsePdfToCanvas(
   canvas.width = viewport.width
   canvas.height = viewport.height
 
-  await page.render({ canvas, viewport }).promise
+  await page.render({ canvas, canvasContext: canvas.getContext('2d')!, viewport }).promise
 
   const textContent = await page.getTextContent()
   const textItems = textContent.items.filter((item: any) => 'str' in item)
