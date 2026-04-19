@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PLANS } from '@/lib/credits'
+import { PLANS } from '@/lib/plans'
 
 const LS_API = 'https://api.lemonsqueezy.com/v1'
 const STORE_ID = '341528'
