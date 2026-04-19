@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import CreditBalance from '@/components/CreditBalance'
@@ -39,6 +39,11 @@ export default function AppPage() {
   const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzed, setAnalyzed] = useState(false)
+  const [userId, setUserId] = useState<string>('anonymous')
+
+  useEffect(() => {
+    import('@/lib/userId').then(({ getUserId }) => setUserId(getUserId()))
+  }, [])
 
   function handleFileProcessed(c: HTMLCanvasElement, items: any[]) {
     setCanvas(c)
@@ -53,15 +58,21 @@ export default function AppPage() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64 }),
+        body: JSON.stringify({ imageBase64: base64, userId }),
       })
+      if (res.status === 402) {
+        setSubscriptions([])
+        setAnalyzed(true)
+        alert('You\'ve used your free scan. Purchase a credit to scan again.')
+        return
+      }
       const data = await res.json()
       setSubscriptions(data.subscriptions ?? [])
     } finally {
       setAnalyzing(false)
       setAnalyzed(true)
     }
-  }, [])
+  }, [userId])
 
   const totalMonthly = subscriptions.reduce((sum, s) => sum + (s.monthly ?? s.amount ?? 0), 0)
 
@@ -191,7 +202,7 @@ export default function AppPage() {
             <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
             <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">Get Cancel Credits</span>
           </div>
-          <PricingCards />
+          <PricingCards userId={userId} />
         </section>
 
         <div className="pb-8 flex flex-col items-center">
