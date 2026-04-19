@@ -12,22 +12,22 @@ const Redactor = dynamic(() => import('@/components/Redactor'), { ssr: false })
 
 function BottomNav() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-      <Link href="/" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
-        <span className="material-symbols-outlined text-[24px]">home</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Home</span>
+    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
+      <Link href="/" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
+        <span className="material-symbols-outlined text-[22px]">home</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal mt-0.5">Home</span>
       </Link>
-      <Link href="/app" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-5 py-2 active:scale-90 transition-transform duration-150">
-        <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Dashboard</span>
+      <Link href="/app" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-4 py-2 active:scale-90 transition-transform duration-150">
+        <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal mt-0.5">Dashboard</span>
       </Link>
-      <Link href="/privacy" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
-        <span className="material-symbols-outlined text-[24px]">shield</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Privacy</span>
+      <Link href="/privacy" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
+        <span className="material-symbols-outlined text-[22px]">shield</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal mt-0.5">Privacy</span>
       </Link>
-      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-5 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
-        <span className="material-symbols-outlined text-[24px]">payments</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.1em] mt-0.5">Pricing</span>
+      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90 duration-150">
+        <span className="material-symbols-outlined text-[22px]">payments</span>
+        <span className="text-[9px] font-medium uppercase tracking-normal mt-0.5">Pricing</span>
       </Link>
     </nav>
   )
@@ -68,7 +68,7 @@ export default function AppPage() {
   return (
     <div className="bg-background text-on-background min-h-screen pb-32 selection:bg-primary selection:text-on-primary">
       {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)] flex items-center justify-between px-6 py-4">
+      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)] flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
         <Link href="/" className="text-[#44E2CD] active:scale-95 transition-transform">
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
@@ -78,15 +78,15 @@ export default function AppPage() {
         </div>
       </header>
 
-      <main className="pt-24 px-6 max-w-2xl mx-auto space-y-8">
+      <main className="pt-20 pb-32 px-4 sm:px-6 max-w-2xl mx-auto space-y-5 sm:space-y-8">
 
         {/* Hero Section: Total Savings */}
-        <section className="relative overflow-hidden rounded-[2.5rem] p-8 bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731]">
+        <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731]">
           <div className="relative z-10">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-2">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-1 sm:mb-2">
               {analyzed ? 'Total Savings Identified' : 'Statement Scanner'}
             </p>
-            <h2 className="text-5xl font-black tracking-tighter -ml-1 mb-6">
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter -ml-1 mb-4 sm:mb-6">
               {analyzed && totalMonthly > 0
                 ? `$${totalMonthly.toFixed(2)}`
                 : analyzed
@@ -109,12 +109,12 @@ export default function AppPage() {
         </section>
 
         {/* Credit Balance */}
-        <div className="bg-surface-container-low rounded-[2rem] p-6">
+        <div className="bg-surface-container-low rounded-[2rem] p-4 sm:p-6">
           <CreditBalance />
         </div>
 
         {/* Upload Section */}
-        <section className="bg-surface-container-low rounded-[2rem] p-8 space-y-6">
+        <section className="bg-surface-container-low rounded-[2rem] p-5 sm:p-8 space-y-4 sm:space-y-6">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>upload_file</span>
             <span className="text-xs font-semibold tracking-widest text-on-surface-variant uppercase">Upload Statement</span>
