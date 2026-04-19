@@ -8,8 +8,10 @@ const redis = new Redis({
 
 // ─── Key helpers ──────────────────────────────────────────────────────────────
 
-function creditsKey(userId: string) { return `credits:${userId}` }
-function freeKey(userId: string)    { return `free_used:${userId}` }
+function creditsKey(userId: string)  { return `credits:${userId}` }
+function freeKey(userId: string)     { return `free_used:${userId}` }
+function freeScanKey(userId: string) { return `free_scan:${userId}` }
+function scanLogKey(userId: string)  { return `scan_log:${userId}` }
 
 // ─── Credit operations ────────────────────────────────────────────────────────
 
@@ -42,26 +44,26 @@ export async function useFreeCancel(userId: string): Promise<void> {
 // ─── Free scan (one per user, separate from free cancel) ─────────────────────
 
 export async function hasFreeScan(userId: string): Promise<boolean> {
-  const used = await redis.get<boolean>(`free_scan:${userId}`)
+  const used = await redis.get<boolean>(freeScanKey(userId))
   return !used
 }
 
 export async function useFreeScan(userId: string): Promise<void> {
-  await redis.set(`free_scan:${userId}`, true)
+  await redis.set(freeScanKey(userId), true)
 }
 
 // ─── Scan result logging (for refund verification) ────────────────────────────
 
 export async function logScanResult(userId: string, count: number): Promise<void> {
   const entry = JSON.stringify({ count, at: new Date().toISOString() })
-  await redis.lpush(`scan_log:${userId}`, entry)
-  await redis.ltrim(`scan_log:${userId}`, 0, 19)
+  await redis.lpush(scanLogKey(userId), entry)
+  await redis.ltrim(scanLogKey(userId), 0, 19)
 }
 
 export async function getScanLog(userId: string): Promise<Array<{ count: number; at: string }>> {
-  const raw = await redis.lrange<string>(`scan_log:${userId}`, 0, 19)
-  return raw.map((r) => {
-    try { return JSON.parse(r) } catch { return { count: 0, at: '' } }
+  const raw = await redis.lrange<string>(scanLogKey(userId), 0, 19)
+  return raw.flatMap((r) => {
+    try { return [JSON.parse(r)] } catch { return [] }
   })
 }
 
