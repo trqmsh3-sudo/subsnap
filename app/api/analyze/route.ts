@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { analyzeRatelimit, logBlocked } from '@/lib/ratelimit'
-import { hasFreeScan, useFreeScan, deductCredit, getCredits, logScanResult } from '@/lib/credits'
+import { hasFreeScan, useFreeScan, deductCredit, logScanResult } from '@/lib/credits'
 
 const PROMPT = `You are analyzing a redacted bank statement image. Extract every recurring subscription charge you can identify.
 
