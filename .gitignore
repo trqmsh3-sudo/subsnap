@@ -42,3 +42,9 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# playwright audit screenshots
+.playwright-mcp/
+
+# claude worktrees
+.claude/worktrees/

@@ -13,7 +13,6 @@ const Redactor = dynamic(() => import('@/components/Redactor'), { ssr: false })
 export default function AppShell() {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
   const [textItems, setTextItems] = useState<any[]>([])
-  const [redactedBase64, setRedactedBase64] = useState<string | null>(null)
   const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [analyzing, setAnalyzing] = useState(false)
 
@@ -21,11 +20,9 @@ export default function AppShell() {
     setCanvas(c)
     setTextItems(items)
     setSubscriptions([])
-    setRedactedBase64(null)
   }
 
   const handleRedacted = useCallback(async (base64: string) => {
-    setRedactedBase64(base64)
     setAnalyzing(true)
     try {
       const res = await fetch('/api/analyze', {
