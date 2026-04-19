@@ -56,13 +56,24 @@ function ErrorCard({ message }: { message: string }) {
           <h1 className="text-3xl font-extrabold tracking-tight text-on-surface mb-4">
             Something went wrong
           </h1>
-          <p className="text-on-surface-variant mb-8">{message}</p>
-          <Link
-            href="/"
-            className="inline-block bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-3 rounded-full font-bold active:scale-95 transition-all"
-          >
-            Back to Home
-          </Link>
+          <p className="text-on-surface-variant mb-4">{message}</p>
+          <p className="text-on-surface-variant/60 text-sm mb-8">
+            To see your order confirmation, complete a purchase from the dashboard.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/app"
+              className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
+            >
+              Go to Dashboard
+            </Link>
+            <Link
+              href="/"
+              className="inline-block bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-3 rounded-full font-bold active:scale-95 transition-all"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
       </main>
     </div>

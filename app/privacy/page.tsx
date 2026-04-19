@@ -22,24 +22,12 @@ export default function PrivacyPage() {
   return (
     <div className="bg-surface text-on-surface min-h-screen selection:bg-primary/30">
       {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)]">
-        <div className="flex items-center justify-between px-6 h-16 w-full">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-[#69ffe9] active:scale-95 duration-200 transition-transform">
-              <span className="material-symbols-outlined">arrow_back</span>
-            </Link>
-            <h1 className="text-xl font-bold tracking-tight text-[#69ffe9]">SubSnap</h1>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <nav className="flex gap-6">
-              <Link href="/app" className="text-[#dbe2fd] opacity-70 hover:opacity-100 transition-opacity text-sm font-medium">Dashboard</Link>
-              <Link href="/app" className="text-[#dbe2fd] opacity-70 hover:opacity-100 transition-opacity text-sm font-medium">Subscriptions</Link>
-              <Link href="/privacy" className="text-[#69ffe9] font-semibold text-sm">Privacy</Link>
-            </nav>
-          </div>
-          <Link href="/" className="text-[#69ffe9] active:scale-95 duration-200 transition-transform md:hidden">
-            <span className="material-symbols-outlined">menu</span>
-          </Link>
+      <header className="fixed top-0 w-full z-50 bg-[#0b1326]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 py-4">
+        <Link href="/" className="text-[#69ffe9] font-black text-xl">SubSnap</Link>
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="/" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Home</Link>
+          <Link href="/app" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Dashboard</Link>
+          <Link href="/#pricing" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Pricing</Link>
         </div>
       </header>
 
