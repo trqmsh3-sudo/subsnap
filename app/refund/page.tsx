@@ -23,12 +23,17 @@ export default function RefundPage() {
     <div className="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50 bg-[#0b1326]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 py-4">
-        <Link href="/" className="text-[#69ffe9] font-black text-xl">SubSnap</Link>
-        <div className="hidden md:flex items-center gap-8">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="md:hidden text-[#44E2CD] active:scale-95 transition-transform">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </Link>
+          <Link href="/" className="text-[#69ffe9] font-black text-xl">SubSnap</Link>
+        </div>
+        <nav className="hidden md:flex items-center gap-8">
           <Link href="/" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Home</Link>
           <Link href="/app" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Dashboard</Link>
           <Link href="/#pricing" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Pricing</Link>
-        </div>
+        </nav>
       </header>
 
       <main className="pt-32 pb-24 px-6 md:px-12 max-w-5xl mx-auto min-h-screen">
