@@ -147,6 +147,36 @@ export const CANCELLATION_DB: CancellationEntry[] = [
       'Click "Confirm cancellation" to complete',
     ],
   },
+  {
+    name: 'Dropbox',
+    keywords: ['dropbox', 'dropbox inc', 'dropbox.com'],
+    loginUrl: 'https://www.dropbox.com/login',
+    cancelUrl: 'https://www.dropbox.com/account/plan',
+    method: 'url',
+    notes: 'Downgrade to the free plan to cancel paid subscription',
+    difficulty: 'easy',
+    tier: 'manual',
+    steps: [
+      'Sign in to your Dropbox account',
+      'Go to Account → Plan',
+      'Click "Change plan" and select the free plan to cancel',
+    ],
+  },
+  {
+    name: 'Google One',
+    keywords: ['google one', 'google one storage', 'google storage'],
+    loginUrl: 'https://one.google.com',
+    cancelUrl: 'https://one.google.com/storage',
+    method: 'url',
+    notes: 'Downgrade to the free 15GB tier to cancel paid plan',
+    difficulty: 'easy',
+    tier: 'manual',
+    steps: [
+      'Go to one.google.com and sign in',
+      'Click "Manage" next to your storage plan',
+      'Select "Downgrade" and choose the free tier',
+    ],
+  },
 ]
 
 // JDM entries merged in — our hand-curated entries take priority
