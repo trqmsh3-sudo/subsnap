@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ subscriptions: list })
   } catch (error) {
     console.error('[analyze] error:', error)
+    await logScanResult(uid, 0).catch(() => {})
     return NextResponse.json({ subscriptions: [] })
   }
 }
