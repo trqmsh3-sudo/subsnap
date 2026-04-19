@@ -39,3 +39,29 @@ export async function useFreeCancel(userId: string): Promise<void> {
   await redis.set(freeKey(userId), true)
 }
 
+// ─── Free scan (one per user, separate from free cancel) ─────────────────────
+
+export async function hasFreeScan(userId: string): Promise<boolean> {
+  const used = await redis.get<boolean>(`free_scan:${userId}`)
+  return !used
+}
+
+export async function useFreeScan(userId: string): Promise<void> {
+  await redis.set(`free_scan:${userId}`, true)
+}
+
+// ─── Scan result logging (for refund verification) ────────────────────────────
+
+export async function logScanResult(userId: string, count: number): Promise<void> {
+  const entry = JSON.stringify({ count, at: new Date().toISOString() })
+  await redis.lpush(`scan_log:${userId}`, entry)
+  await redis.ltrim(`scan_log:${userId}`, 0, 19)
+}
+
+export async function getScanLog(userId: string): Promise<Array<{ count: number; at: string }>> {
+  const raw = await redis.lrange<string>(`scan_log:${userId}`, 0, 19)
+  return raw.map((r) => {
+    try { return JSON.parse(r) } catch { return { count: 0, at: '' } }
+  })
+}
+
