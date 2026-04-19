@@ -32,7 +32,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { imageBase64, userId } = await req.json()
+  let imageBase64: string | undefined
+  let userId: string | undefined
+  try {
+    const body = await req.json()
+    imageBase64 = body.imageBase64
+    userId = body.userId
+  } catch {
+    return NextResponse.json({ subscriptions: [] }, { status: 400 })
+  }
 
   if (!imageBase64) {
     return NextResponse.json({ subscriptions: [] })
@@ -45,14 +53,13 @@ export async function POST(req: NextRequest) {
   if (free) {
     await useFreeScan(uid)
   } else {
-    const credits = await getCredits(uid)
-    if (credits <= 0) {
+    const debited = await deductCredit(uid)
+    if (!debited) {
       return NextResponse.json(
         { error: 'No credits', message: 'Purchase a scan credit to continue.' },
         { status: 402 }
       )
     }
-    await deductCredit(uid)
   }
 
   // ── AI analysis ───────────────────────────────────────────────────────────
