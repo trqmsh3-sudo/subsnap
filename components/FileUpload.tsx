@@ -26,7 +26,8 @@ export default function FileUpload({ onFileProcessed }: FileUploadProps) {
       } else {
         setError('Please upload a PDF or image file.')
       }
-    } catch {
+    } catch (err) {
+      console.error('[fileUpload] parse error:', err)
       setError('Failed to read file. Please try again.')
     } finally {
       setLoading(false)
