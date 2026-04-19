@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { analyzeRatelimit, logBlocked } from '@/lib/ratelimit'
+import { hasFreeScan, useFreeScan, deductCredit, getCredits, logScanResult } from '@/lib/credits'
 
 const PROMPT = `You are analyzing a redacted bank statement image. Extract every recurring subscription charge you can identify.
 
@@ -19,25 +20,43 @@ Example output:
 ]`
 
 export async function POST(req: NextRequest) {
+  // ── Rate limit by IP ──────────────────────────────────────────────────────
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
   const { success, reset } = await analyzeRatelimit.limit(ip)
   if (!success) {
     const retryAfter = Math.ceil((reset - Date.now()) / 1000)
     await logBlocked(ip, '/api/analyze', retryAfter)
-    console.warn(`[analyze] rate limited ip=${ip} retryAfter=${retryAfter}s`)
     return NextResponse.json(
       { error: 'Too many requests', retryAfter },
       { status: 429, headers: { 'Retry-After': String(retryAfter) } }
     )
   }
 
-  try {
-    const { imageBase64 } = await req.json()
+  const { imageBase64, userId } = await req.json()
 
-    if (!imageBase64) {
-      return NextResponse.json({ subscriptions: [] })
+  if (!imageBase64) {
+    return NextResponse.json({ subscriptions: [] })
+  }
+
+  // ── Credit gate ───────────────────────────────────────────────────────────
+  const uid = typeof userId === 'string' && userId.length > 0 ? userId : 'anonymous'
+
+  const free = await hasFreeScan(uid)
+  if (free) {
+    await useFreeScan(uid)
+  } else {
+    const credits = await getCredits(uid)
+    if (credits <= 0) {
+      return NextResponse.json(
+        { error: 'No credits', message: 'Purchase a scan credit to continue.' },
+        { status: 402 }
+      )
     }
+    await deductCredit(uid)
+  }
 
+  // ── AI analysis ───────────────────────────────────────────────────────────
+  try {
     const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
     const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
@@ -49,8 +68,12 @@ export async function POST(req: NextRequest) {
     const raw = result.response.text()
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const subscriptions = JSON.parse(cleaned)
+    const list = Array.isArray(subscriptions) ? subscriptions : []
 
-    return NextResponse.json({ subscriptions: Array.isArray(subscriptions) ? subscriptions : [] })
+    // Log result for refund verification
+    await logScanResult(uid, list.length)
+
+    return NextResponse.json({ subscriptions: list })
   } catch (error) {
     console.error('[analyze] error:', error)
     return NextResponse.json({ subscriptions: [] })
