@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { analyzeRatelimit, logBlocked } from '@/lib/ratelimit'
-import { hasFreeScan, useFreeScan, deductCredit, logScanResult } from '@/lib/credits'
+import { hasFreeScan, consumeFreeScan, deductCredit, logScanResult } from '@/lib/credits'
 
 const PROMPT = `You are analyzing a redacted bank statement image. Extract every recurring subscription charge you can identify.
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
   const free = await hasFreeScan(uid)
   if (free) {
-    await useFreeScan(uid)
+    await consumeFreeScan(uid)
   } else {
     const debited = await deductCredit(uid)
     if (!debited) {

@@ -48,7 +48,7 @@ export async function hasFreeScan(userId: string): Promise<boolean> {
   return !used
 }
 
-export async function useFreeScan(userId: string): Promise<void> {
+export async function consumeFreeScan(userId: string): Promise<void> {
   await redis.set(freeScanKey(userId), true)
 }
 
