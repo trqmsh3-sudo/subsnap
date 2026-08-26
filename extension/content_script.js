@@ -6,43 +6,42 @@
     url.includes('subscription') ||
     url.includes('premium') ||
     url.includes('billing') ||
-    url.includes('primecentral') ||
+    url.includes('manage') ||
     url.includes('account.adobe.com/plans')
 
   if (!isCancelPage) return
-
-  // Avoid injecting multiple times
   if (document.getElementById('subsnap-helper-widget')) return
 
   const widget = document.createElement('div')
   widget.id = 'subsnap-helper-widget'
   widget.style.position = 'fixed'
-  widget.style.bottom = '20px'
-  widget.style.right = '20px'
-  widget.style.zIndex = '999999'
-  widget.style.backgroundColor = '#0f172a'
-  widget.style.color = '#ffffff'
-  widget.style.border = '2px solid #44e2cd'
-  widget.style.borderRadius = '16px'
-  widget.style.padding = '14px 18px'
-  widget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(68, 226, 205, 0.3)'
-  widget.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  widget.style.bottom = '24px'
+  widget.style.left = '24px'
+  widget.style.zIndex = '9999999'
+  widget.style.backgroundColor = '#ffffff'
+  widget.style.color = '#0f172a'
+  widget.style.border = '2px solid #059669'
+  widget.style.borderRadius = '18px'
+  widget.style.padding = '16px 20px'
+  widget.style.boxShadow = '0 12px 35px -5px rgba(0, 0, 0, 0.15), 0 0 15px rgba(5, 150, 105, 0.15)'
+  widget.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Heebo", sans-serif'
   widget.style.fontSize = '13px'
-  widget.style.maxWidth = '300px'
+  widget.style.maxWidth = '320px'
+  widget.style.direction = 'rtl'
   widget.style.transition = 'all 0.3s ease'
 
   widget.innerHTML = `
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-      <span style="font-weight:800; color:#44e2cd; display:flex; align-items:center; gap:4px;">
+      <span style="font-weight:900; color:#059669; display:flex; align-items:center; gap:6px; font-size:14px;">
         ⚡ SubSnap Assistant
       </span>
-      <button id="subsnap-close" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px;">✕</button>
+      <button id="subsnap-close" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px;">✕</button>
     </div>
-    <div style="font-size:12px; color:#cbd5e1; line-height:1.4; margin-bottom:10px;">
-      Cancellation page detected. Click below to highlight cancel buttons or auto-guide.
+    <div id="subsnap-status" style="font-size:12px; color:#475569; line-height:1.4; margin-bottom:12px;">
+      עמוד ביטול זוהה! לחץ למטה לאיתור והדגשת כפתור הביטול המדויק בעמוד זה.
     </div>
-    <button id="subsnap-highlight" style="width:100%; background:linear-gradient(135deg, #44e2cd, #69ffe9); color:#003731; border:none; padding:7px; border-radius:8px; font-weight:700; font-size:11px; cursor:pointer;">
-      Find Cancel Button 🎯
+    <button id="subsnap-action-btn" style="width:100%; background:#059669; color:#ffffff; border:none; padding:9px 12px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer; transition:background 0.15s;">
+      אתר והדגש כפתור ביטול 🎯
     </button>
   `
 
@@ -52,27 +51,43 @@
     widget.style.display = 'none'
   })
 
-  document.getElementById('subsnap-highlight')?.addEventListener('click', () => {
-    const keywords = ['cancel', 'unsubscribe', 'end membership', 'downgrade', 'manage subscription', 'ביטול', 'בטל מנוי']
-    const elements = document.querySelectorAll('button, a, div[role="button"]')
-    let found = false
+  document.getElementById('subsnap-action-btn')?.addEventListener('click', () => {
+    const keywords = [
+      'cancel subscription', 'cancel plan', 'cancel membership', 'end membership', 
+      'manage subscription', 'downgrade', 'cancel my subscription', 'end subscription',
+      'בטל מנוי', 'ביטול מנוי', 'סיום מנוי', 'הפסקת מנוי', 'בטל תוכנית'
+    ]
+    const elements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'))
+    let foundEl = null
 
-    elements.forEach(el => {
-      const text = (el.innerText || el.textContent || '').toLowerCase()
+    for (const el of elements) {
+      const text = (el.innerText || el.textContent || '').toLowerCase().trim()
       if (keywords.some(k => text.includes(k))) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.style.outline = '3px solid #44e2cd'
-        el.style.boxShadow = '0 0 20px #44e2cd'
-        el.style.transition = 'all 0.3s ease'
-        found = true
+        foundEl = el
+        break
       }
-    })
+    }
 
-    const statusEl = widget.querySelector('div:nth-child(2)')
-    if (statusEl) {
-      statusEl.innerHTML = found
-        ? '<span style="color:#44e2cd; font-weight:bold;">✓ Found & highlighted cancel button!</span>'
-        : '<span>No direct button found. Scroll or look under Account/Billing options.</span>'
+    const statusEl = document.getElementById('subsnap-status')
+    const actionBtn = document.getElementById('subsnap-action-btn')
+
+    if (foundEl) {
+      foundEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      foundEl.style.outline = '4px solid #059669'
+      foundEl.style.boxShadow = '0 0 25px rgba(5, 150, 105, 0.8)'
+      foundEl.style.transition = 'all 0.3s ease'
+
+      if (statusEl) {
+        statusEl.innerHTML = '<span style="color:#059669; font-weight:bold;">✓ כפתור הביטול אותר והודגש בירוק על המסך!</span>'
+      }
+      if (actionBtn) {
+        actionBtn.innerText = 'לחץ על הכפתור המסומן להשלמת הביטול 👆'
+        actionBtn.style.background = '#047857'
+      }
+    } else {
+      if (statusEl) {
+        statusEl.innerHTML = '<span>גלול בעמוד או חפש תחת לשונית Billing / Plans / Subscription.</span>'
+      }
     }
   })
 })()

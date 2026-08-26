@@ -2,68 +2,56 @@ const TOP_SERVICES = [
   {
     name: 'Grok / X Premium',
     keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר'],
-    cancelUrl: 'https://x.com/settings/premium',
-    notes: 'Manage and cancel via X subscription preferences'
+    cancelUrl: 'https://x.com/settings/manage_subscriptions',
+    notes: 'ניהול וביטול ישיר בהגדרות X/Grok'
   },
   {
     name: 'Netflix',
     keywords: ['netflix', 'nflx', 'נטפליקס'],
     cancelUrl: 'https://www.netflix.com/cancelplan',
-    notes: 'Direct 1-click cancel page'
+    notes: 'מעבר ישיר לעמוד אישור ביטול נטפליקס'
   },
   {
     name: 'Spotify',
     keywords: ['spotify', 'ספוטיפיי'],
-    cancelUrl: 'https://www.spotify.com/account/subscription/cancel',
-    notes: 'Cancel Spotify Premium plan'
+    cancelUrl: 'https://www.spotify.com/account/subscription/change/',
+    notes: 'עמוד שינוי וביטול מנוי Spotify Premium'
   },
   {
     name: 'Adobe Creative Cloud',
     keywords: ['adobe', 'creative cloud', 'photoshop', 'אדובי'],
     cancelUrl: 'https://account.adobe.com/plans',
-    notes: 'Manage Adobe subscription and plans'
+    notes: 'עמוד ניהול התוכניות והביטול של אדובי'
   },
   {
     name: 'ChatGPT Plus',
     keywords: ['chatgpt', 'openai', 'צ\'אט ג\'יפיטי', 'chat gpt'],
-    cancelUrl: 'https://chat.openai.com/#settings/Subscription',
-    notes: 'Cancel from OpenAI account settings'
+    cancelUrl: 'https://chatgpt.com/#settings/Subscription',
+    notes: 'עמוד ניהול מנוי בהגדרות ChatGPT'
   },
   {
-    name: 'Canva',
+    name: 'Canva Pro',
     keywords: ['canva', 'קנבה', 'קנווה'],
-    cancelUrl: 'https://www.canva.com/settings/billing',
-    notes: 'Cancel Canva Pro from billing settings'
+    cancelUrl: 'https://www.canva.com/settings/billing-and-teams',
+    notes: 'עמוד חיובים וביטול מנוי ב-Canva'
+  },
+  {
+    name: 'Apple / iCloud / App Store',
+    keywords: ['apple', 'icloud', 'itunes', 'אפל', 'אייקלאוד'],
+    cancelUrl: 'https://apps.apple.com/account/subscriptions',
+    notes: 'פותח ישירות את רשימת המנויים של Apple ID'
+  },
+  {
+    name: 'Google Play / Android',
+    keywords: ['google play', 'android', 'גוגל פליי'],
+    cancelUrl: 'https://play.google.com/store/account/subscriptions',
+    notes: 'ניהול וביטול כל מנויי Google Play'
   },
   {
     name: 'Amazon Prime',
     keywords: ['amazon', 'prime', 'אמזון', 'אמזון פריים'],
-    cancelUrl: 'https://www.amazon.com/gp/primecentral',
-    notes: 'End Prime membership'
-  },
-  {
-    name: 'YouTube Premium',
-    keywords: ['youtube', 'יוטיוב', 'yt premium'],
-    cancelUrl: 'https://www.youtube.com/paid_memberships',
-    notes: 'Cancel memberships from Google account'
-  },
-  {
-    name: 'Disney Plus',
-    keywords: ['disney', 'disney+', 'דיסני'],
-    cancelUrl: 'https://www.disneyplus.com/account',
-    notes: 'Cancel Disney+ membership'
-  },
-  {
-    name: 'Dropbox',
-    keywords: ['dropbox', 'דרופבוקס'],
-    cancelUrl: 'https://www.dropbox.com/account/plan',
-    notes: 'Downgrade to free storage plan'
-  },
-  {
-    name: 'Google One',
-    keywords: ['google one', 'google storage', 'גוגל וואן'],
-    cancelUrl: 'https://one.google.com/storage',
-    notes: 'Downgrade storage plan to free tier'
+    cancelUrl: 'https://www.amazon.com/mc/manage',
+    notes: 'עמוד ניהול וסיום מנוי Prime'
   }
 ]
 
