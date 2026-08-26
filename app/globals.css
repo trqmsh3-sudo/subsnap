@@ -1,81 +1,82 @@
 @import "tailwindcss";
 
-/* ── Design token palette (Nocturnal Curator) ──────────────────────────────── */
+/* ── Light Calming Palette (Trust & Relief) ────────────────────────────────── */
 @theme {
-  /* Surface layers */
-  --color-surface: #0b1326;
-  --color-surface-dim: #0b1326;
-  --color-surface-bright: #31394e;
-  --color-surface-container: #171f33;
-  --color-surface-container-lowest: #060d20;
-  --color-surface-container-low: #131b2e;
-  --color-surface-container-high: #222a3e;
-  --color-surface-container-highest: #2d3449;
-  --color-surface-variant: #2d3449;
-  --color-surface-tint: #3cddc8;
+  /* Surface layers - Crisp, airy & soothing */
+  --color-surface: #f8fafc;
+  --color-surface-dim: #f1f5f9;
+  --color-surface-bright: #ffffff;
+  --color-surface-container: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container-high: #f1f5f9;
+  --color-surface-container-highest: #e2e8f0;
+  --color-surface-variant: #e2e8f0;
+  --color-surface-tint: #059669;
 
-  /* On-surface */
-  --color-on-surface: #dbe2fd;
-  --color-on-surface-variant: #bacac6;
+  /* Text & Readability */
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
 
-  /* Primary – Electric Mint (#69ffe9) */
-  --color-primary: #69ffe9;
-  --color-primary-container: #44e2cd;
-  --color-on-primary: #003731;
-  --color-on-primary-container: #006157;
-  --color-primary-fixed: #62fae4;
-  --color-primary-fixed-dim: #3cddc8;
-  --color-on-primary-fixed: #00201c;
-  --color-on-primary-fixed-variant: #005047;
-  --color-inverse-primary: #006b5f;
+  /* Primary – Calming Emerald & Fresh Mint */
+  --color-primary: #059669;
+  --color-primary-container: #d1fae5;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #065f46;
+  --color-primary-fixed: #10b981;
+  --color-primary-fixed-dim: #059669;
+  --color-on-primary-fixed: #ffffff;
+  --color-on-primary-fixed-variant: #047857;
+  --color-inverse-primary: #6ee7b7;
 
-  /* Secondary – Lavender (#d4bcf5) */
-  --color-secondary: #d4bcf5;
-  --color-secondary-container: #534070;
-  --color-on-secondary: #392755;
-  --color-on-secondary-container: #c5aee6;
-  --color-secondary-fixed: #ecdcff;
-  --color-secondary-fixed-dim: #d4bcf5;
-  --color-on-secondary-fixed: #23113f;
-  --color-on-secondary-fixed-variant: #503e6d;
+  /* Secondary – Reassuring Indigo / Blue */
+  --color-secondary: #0284c7;
+  --color-secondary-container: #e0f2fe;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #0369a1;
+  --color-secondary-fixed: #38bdf8;
+  --color-secondary-fixed-dim: #0284c7;
+  --color-on-secondary-fixed: #ffffff;
+  --color-on-secondary-fixed-variant: #075985;
 
-  /* Tertiary – Soft blue */
-  --color-tertiary: #dde8ff;
-  --color-tertiary-container: #b7cdf1;
-  --color-on-tertiary: #1b314e;
-  --color-on-tertiary-container: #425775;
-  --color-tertiary-fixed: #d4e3ff;
-  --color-tertiary-fixed-dim: #b2c8eb;
-  --color-on-tertiary-fixed: #031c38;
-  --color-on-tertiary-fixed-variant: #334865;
+  /* Tertiary – Soft Warm Amber/Teal */
+  --color-tertiary: #0d9488;
+  --color-tertiary-container: #ccfbf1;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #115e59;
+  --color-tertiary-fixed: #14b8a6;
+  --color-tertiary-fixed-dim: #0d9488;
+  --color-on-tertiary-fixed: #ffffff;
+  --color-on-tertiary-fixed-variant: #0f766e;
 
   /* Error */
-  --color-error: #ffb4ab;
-  --color-error-container: #93000a;
-  --color-on-error: #690005;
-  --color-on-error-container: #ffdad6;
+  --color-error: #ef4444;
+  --color-error-container: #fee2e2;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #991b1b;
 
   /* Outline */
-  --color-outline: #859490;
-  --color-outline-variant: #3c4a47;
+  --color-outline: #cbd5e1;
+  --color-outline-variant: #e2e8f0;
 
   /* Background */
-  --color-background: #0b1326;
-  --color-on-background: #dbe2fd;
+  --color-background: #f8fafc;
+  --color-on-background: #0f172a;
 
   /* Inverse */
-  --color-inverse-surface: #dbe2fd;
-  --color-inverse-on-surface: #283044;
+  --color-inverse-surface: #0f172a;
+  --color-inverse-on-surface: #f8fafc;
 
   /* Font */
-  --font-sans: var(--font-inter, 'Inter', sans-serif);
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Heebo', sans-serif;
 }
 
-/* ── Global base ────────────────────────────────────────────────────────────── */
+/* ── Global Base ───────────────────────────────────────────────────────────── */
 body {
-  font-family: var(--font-inter, 'Inter', sans-serif);
-  background-color: #0b1326;
-  color: #dbe2fd;
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+  direction: rtl;
 }
 
 /* ── Material Symbols ───────────────────────────────────────────────────────── */
@@ -86,26 +87,29 @@ body {
   line-height: 1;
 }
 
-/* ── Glass surfaces ─────────────────────────────────────────────────────────── */
-.glass-panel {
-  backdrop-filter: blur(20px);
-  background: rgba(45, 52, 73, 0.6);
+/* ── Soothing Cards & Shadows ──────────────────────────────────────────────── */
+.calm-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  border-radius: 1.5rem;
 }
 
-.glass-card {
-  background: rgba(45, 52, 73, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(60, 74, 71, 0.15);
+.calm-card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.calm-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
+  border-color: #cbd5e1;
 }
 
-/* ── Primary text glow ──────────────────────────────────────────────────────── */
-.text-glow-primary {
-  text-shadow: 0 0 15px rgba(105, 255, 233, 0.3);
+.calm-gradient {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #f8fafc 100%);
 }
 
-/* ── Noise texture (kept for legacy use) ────────────────────────────────────── */
-.noise-texture {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
+.calm-pill {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }

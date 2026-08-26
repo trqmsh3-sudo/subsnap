@@ -1,42 +1,57 @@
 import Link from 'next/link'
 import QuickCancelBar from '@/components/QuickCancelBar'
 
-function BottomNav() {
+function Header() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-6 pt-3 bg-[#2d3449]/60 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-      <Link href="/" className="flex flex-col items-center justify-center bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] rounded-full px-4 py-2 transition-transform duration-150 active:scale-90">
-        <span className="material-symbols-outlined text-[22px]">dashboard</span>
-        <span className="text-[9px] font-medium uppercase tracking-normal">Overview</span>
-      </Link>
-      <Link href="/app" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
-        <span className="material-symbols-outlined text-[22px]">subscriptions</span>
-        <span className="text-[9px] font-medium uppercase tracking-normal">Scans</span>
-      </Link>
-      <Link href="/#how-it-works" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
-        <span className="material-symbols-outlined text-[22px]">bar_chart</span>
-        <span className="text-[9px] font-medium uppercase tracking-normal">Insights</span>
-      </Link>
-      <Link href="/#pricing" className="flex flex-col items-center justify-center text-[#dbe2fd]/50 px-3 py-2 hover:text-[#44E2CD] transition-all active:scale-90">
-        <span className="material-symbols-outlined text-[22px]">settings</span>
-        <span className="text-[9px] font-medium uppercase tracking-normal">Pricing</span>
-      </Link>
-    </nav>
+    <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+      <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 max-w-6xl mx-auto">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-xs">
+            <span className="material-symbols-outlined text-xl">bolt</span>
+          </div>
+          <span className="font-black text-2xl tracking-tight text-slate-900">SubSnap</span>
+        </Link>
+        <div className="flex items-center gap-3 sm:gap-6">
+          <a href="#how-it-works" className="hidden sm:inline-block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+            איך זה עובד?
+          </a>
+          <a href="#security" className="hidden sm:inline-block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+            פרטיות ואבטחה
+          </a>
+          <Link
+            href="/app"
+            className="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-xs transition-all flex items-center gap-1.5"
+          >
+            <span>סורק תדפיסים</span>
+            <span className="material-symbols-outlined text-sm">arrow_back</span>
+          </Link>
+        </div>
+      </div>
+    </header>
   )
 }
 
 function Footer() {
   return (
-    <footer className="bg-[#060d20] w-full py-12 px-8 border-t border-[#3c4a47]/15">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center md:items-start gap-2">
-          <div className="text-[#69ffe9] font-black text-xl">SubSnap</div>
-          <div className="text-[#dbe2fd]/60 text-[0.75rem] uppercase tracking-[0.1em] font-medium">© 2026 SubSnap. All rights reserved.</div>
+    <footer className="bg-slate-900 text-slate-400 py-12 px-6 border-t border-slate-800">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col items-center md:items-start gap-1">
+          <div className="text-white font-black text-xl flex items-center gap-1.5">
+            <span className="text-emerald-400">⚡</span> SubSnap
+          </div>
+          <p className="text-xs text-slate-400">
+            הכסף שלך חוזר אליך — מערכת חכמה לביטול מנויים וחיובים חוזרים.
+          </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-8">
-          <Link href="/privacy" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Privacy Policy</Link>
-          <Link href="/terms" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Terms of Service</Link>
-          <Link href="/refund" className="text-[#dbe2fd]/60 hover:text-[#69ffe9] text-[0.75rem] uppercase tracking-[0.1em] font-medium transition-colors">Refund Policy</Link>
+        <div className="flex flex-wrap justify-center gap-6 text-xs font-medium">
+          <Link href="/privacy" className="hover:text-white transition-colors">מדיניות פרטיות</Link>
+          <Link href="/terms" className="hover:text-white transition-colors">תנאי שימוש</Link>
+          <Link href="/refund" className="hover:text-white transition-colors">מדיניות החזרים</Link>
+          <Link href="/app" className="hover:text-white transition-colors">סורק תדפיסים</Link>
         </div>
+      </div>
+      <div className="text-center text-[11px] text-slate-400 mt-8 pt-8 border-t border-slate-800">
+        © 2026 SubSnap. כל הזכויות שמורות. נבנה למען חיסכון צרכני חכם ופרטיות מלאה.
       </div>
     </footer>
   )
@@ -44,195 +59,165 @@ function Footer() {
 
 export default function HomePage() {
   return (
-    <div className="bg-surface text-on-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-[#131b2e] shadow-[0_24px_40px_rgba(219,226,253,0.06)]">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 w-full max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
-            <h1 className="font-bold tracking-tighter text-2xl text-[#44E2CD]">SubSnap</h1>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <a className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm" href="#how-it-works">How it Works</a>
-            <a className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm" href="#pricing">Pricing</a>
-            <Link href="/app" className="bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] px-6 py-2 rounded-full font-bold hover:scale-105 active:opacity-80 transition-all">
-              Get Started
-            </Link>
-          </div>
-          <Link href="/app" className="md:hidden bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] text-[#003731] px-4 py-2 rounded-full font-bold text-sm active:opacity-80 transition-all">
-            Get Started
-          </Link>
-        </div>
-      </header>
+    <div className="bg-[#f8fafc] text-slate-900 min-h-screen">
+      <Header />
 
-      <main className="pt-20 pb-32 px-4 sm:px-6">
+      <main className="pt-28 pb-20 px-4 sm:px-6 max-w-5xl mx-auto space-y-16">
         {/* Hero Section */}
-        <section className="max-w-4xl mx-auto mt-4 sm:mt-8 mb-8 sm:mb-16 text-center">
-          <h2 className="text-[2rem] sm:text-[3.5rem] leading-tight sm:leading-none font-extrabold tracking-tight text-on-surface mb-3 sm:mb-6">
-            Your Money, Reclaimed.
-          </h2>
-          <p className="text-on-surface-variant font-medium mb-6 sm:mb-10 max-w-xl mx-auto leading-relaxed text-sm sm:text-base">
-            Upload your bank statement — we find every hidden subscription instantly.
-          </p>
-
-          {/* Upload Area */}
-          <div className="relative group mt-6 sm:mt-12">
-            <div className="absolute -inset-1 bg-gradient-to-br from-primary to-primary-container rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000" />
-            <Link href="/app" className="relative block bg-surface-container-low rounded-[2rem] p-6 sm:p-12 border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] cursor-pointer hover:border-primary/50 transition-all duration-300">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-3 sm:mb-6">
-                <span className="material-symbols-outlined text-primary text-2xl sm:text-3xl">upload_file</span>
-              </div>
-              <h3 className="text-base sm:text-xl font-bold text-on-surface mb-1 sm:mb-2">Upload Bank Statement</h3>
-              <p className="text-on-surface-variant mb-4 sm:mb-8 font-medium text-sm">Drag &amp; Drop or Browse</p>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
-                  <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                  <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">ZERO BANK LOGIN</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-surface-container-lowest rounded-full border border-outline-variant/10">
-                  <span className="material-symbols-outlined text-secondary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>encrypted</span>
-                  <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-on-surface-variant">Processed in-browser</span>
-                </div>
-              </div>
-            </Link>
+        <section className="text-center space-y-4 pt-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-bold mb-2 shadow-2xs">
+            <span className="text-emerald-600">✨</span>
+            <span>חינם לחלוטין · ללא צורך בסיסמאות · 100% פרטיות</span>
           </div>
-          <p className="text-sm text-on-surface-variant font-medium mt-6">
-            First cancellation guide — free. No credit card needed to scan.
+
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.15]">
+            מפסיקים לשלם על מנויים<br className="hidden sm:inline" /> ששכחתם מהם.
+          </h1>
+
+          <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+            מקלידים שם שירות לביטול מהיר — או מעלים פירוט אשראי כדי לגלות את כל החיובים החבויים בלחיצה אחת.
           </p>
 
-          {/* Instant Prompt Bar */}
+          {/* Average Savings Callout */}
+          <div className="inline-block bg-white border border-slate-200 px-5 py-2 rounded-2xl shadow-xs text-xs sm:text-sm font-semibold text-slate-700">
+            💰 המשתמש הממוצע חוסך <span className="text-emerald-600 font-extrabold">1,840 ₪ בשנה</span> על מנויים לא פעילים
+          </div>
+        </section>
+
+        {/* Feature 1: Instant Quick Cancel Bar */}
+        <section>
           <QuickCancelBar />
         </section>
 
-        {/* Insights Bento Grid */}
-        <section id="pricing" className="max-w-4xl mx-auto mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* App Preview Card */}
-            <div className="bg-surface-container-high rounded-[2rem] p-8 overflow-hidden relative min-h-[300px] md:row-span-2">
-              <div className="relative z-10">
-                <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary mb-4 block">Dashboard</span>
-                <h3 className="text-2xl font-bold text-on-surface mb-4">Precision Analysis</h3>
-                <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                  Get direct cancellation links for every subscription found.
-                </p>
-                <Link href="/app" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors">
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  Open Dashboard
-                </Link>
-              </div>
-              {/* Dashboard screenshot from Stitch export */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/dashboard-preview.jpg"
-                alt="SubSnap dashboard showing identified subscriptions"
-                className="absolute bottom-0 right-0 w-3/4 translate-x-10 translate-y-10 rounded-tl-3xl shadow-2xl opacity-80 pointer-events-none"
-              />
-            </div>
-
-            {/* Security Highlight */}
-            <div className="bg-surface-container-low rounded-[2rem] p-8 flex flex-col justify-between">
-              <div>
-                <span className="material-symbols-outlined text-secondary text-3xl mb-4 block" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-                <h3 className="text-xl font-bold text-on-surface mb-2">Privacy First</h3>
-                <p className="text-on-surface-variant text-sm leading-relaxed">
-                  Your PDF is processed entirely in your browser. We never see your raw bank data.
-                </p>
-              </div>
-            </div>
-
-            {/* Chrome Extension Card */}
-            <div className="bg-surface-container-low rounded-[2rem] p-8 flex flex-col justify-between border border-[#44e2cd]/30">
-              <div>
-                <span className="material-symbols-outlined text-[#44e2cd] text-3xl mb-4 block">extension</span>
-                <h3 className="text-xl font-bold text-on-surface mb-2">Chrome Extension</h3>
-                <p className="text-on-surface-variant text-sm leading-relaxed mb-4">
-                  Cancel any service in 1-click directly while browsing. No logins or forms needed.
-                </p>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#44e2cd]/10 text-[#44e2cd] text-xs font-bold">
-                  ⚡ Ready for Chrome Web Store
+        {/* Feature 2: Bank Statement Scanner Card */}
+        <section className="bg-gradient-to-br from-emerald-50 via-white to-slate-50 border border-emerald-200/60 rounded-3xl p-6 sm:p-10 shadow-xs">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-3 text-right">
+              <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-full">
+                גילוי מנויים מלא
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+                רוצה לדעת על מה עוד אתה משלם?
+              </h2>
+              <p className="text-sm text-slate-600 max-w-md leading-relaxed">
+                העלה צילום מסך או קובץ PDF של פירוט האשראי. ה-AI יזהה עבורך את כל החיובים החוזרים (נטפליקס, חדרי כושר, ענן, אפליקציות) תוך 3 שניות.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <span className="text-xs font-semibold px-3 py-1 bg-white border border-slate-200 rounded-full text-slate-700 flex items-center gap-1">
+                  🔒 פרטים רגישים מושחרים מקומית
+                </span>
+                <span className="text-xs font-semibold px-3 py-1 bg-white border border-slate-200 rounded-full text-slate-700 flex items-center gap-1">
+                  ⚡ סריקה חינמית
                 </span>
               </div>
             </div>
-
-            {/* Pricing Card */}
-            <div className="bg-gradient-to-br from-[#69ffe9] to-[#44e2cd] rounded-[2rem] p-8 flex flex-col justify-between text-[#003731]">
-              <div>
-                <h3 className="text-2xl font-black mb-1">Simple Pricing</h3>
-                <p className="font-bold opacity-80">Full statement scan</p>
-              </div>
-              <div className="flex items-baseline gap-1 mt-8">
-                <span className="text-4xl font-black">$5</span>
-                <span className="font-bold">/one-time scan</span>
-              </div>
-            </div>
-            <p className="text-center text-[11px] text-on-surface-variant/70 px-4 leading-tight -mt-2">
-              Not happy? If nothing was found or a technical issue occurred, email{' '}
-              <a className="underline" href="mailto:contact@subsnap.net">contact@subsnap.net</a>{' '}
-              for a full refund.
-            </p>
+            <Link
+              href="/app"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 shrink-0 active:scale-98"
+            >
+              <span>פתח את סורק התדפיסים</span>
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
+            </Link>
           </div>
         </section>
 
-        {/* How It Works */}
-        <section id="how-it-works" className="max-w-4xl mx-auto mb-20">
-          <div className="flex flex-col items-center text-center mb-12">
-            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-secondary mb-2">The Process</span>
-            <h2 className="text-3xl font-bold text-on-surface">Three Steps to Freedom</h2>
+        {/* Security & Trust Bento Grid */}
+        <section id="security" className="space-y-6">
+          <div className="text-center space-y-1">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900">למה אלפי משתמשים בוחרים ב-SubSnap?</h3>
+            <p className="text-sm text-slate-600">פרטיות וביטחון מלא הם היסוד של כל מה שאנחנו בונים.</p>
           </div>
-          <div className="space-y-4">
-            <div className="bg-surface-container-lowest p-8 rounded-[2rem] flex items-center gap-6">
-              <span className="text-4xl font-black text-outline-variant/30">01</span>
-              <div>
-                <h4 className="font-bold text-on-surface">Upload Statement</h4>
-                <p className="text-on-surface-variant text-sm">Securely provide your PDF or CSV bank record.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-xl">shield</span>
               </div>
+              <h4 className="font-bold text-lg text-slate-900">100% פרטיות מובטחת</h4>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                הקובץ מעובד ישירות בדפדפן שלך. מספרי חשבון ושמות מושחרים מקומית לפני הניתוח, ושום מידע לא נשמר בשרת.
+              </p>
             </div>
-            <div className="bg-surface-container-low p-8 rounded-[2rem] flex items-center gap-6">
-              <span className="text-4xl font-black text-outline-variant/30">02</span>
-              <div>
-                <h4 className="font-bold text-on-surface">AI Detection</h4>
-                <p className="text-on-surface-variant text-sm">Our AI identifies all recurring charges in your statement.</p>
+
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-xl">key_off</span>
               </div>
+              <h4 className="font-bold text-lg text-slate-900">אפס סיסמאות</h4>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                אנחנו לעולם לא מבקשים ממך סיסמאות או פרטי כניסה. הכל מתבצע דרך החיבור הטבעי והמאובטח שלך בדפדפן.
+              </p>
             </div>
-            <div className="bg-surface-container-high p-8 rounded-[2rem] flex items-center gap-6">
-              <span className="text-4xl font-black text-outline-variant/30">03</span>
-              <div>
-                <h4 className="font-bold text-on-surface">Reclaim &amp; Cancel</h4>
-                <p className="text-on-surface-variant text-sm">Get direct cancellation links for every subscription found.</p>
+
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                <span className="material-symbols-outlined text-xl">extension</span>
               </div>
+              <h4 className="font-bold text-lg text-slate-900">תוסף כרום חכם</h4>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                מתקינים את תוסף הכרום ומבטלים מנויים בלחיצה אחת ישירות מתוך הדפדפן, בלי לחפש בתפריטים ובלי שאלונים.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Feature Section */}
-        <section className="max-w-4xl mx-auto bg-surface-container-high rounded-[3rem] p-8 md:p-12 overflow-hidden shadow-2xl">
-          <div className="text-center mb-10">
-            <h3 className="text-2xl font-bold text-on-surface mb-2">Uncover Hidden Costs</h3>
-            <p className="text-on-surface-variant text-sm max-w-md mx-auto">
-              Beautiful insights that make managing finances feel like a concierge service.
-            </p>
+        {/* How It Works Steps */}
+        <section id="how-it-works" className="bg-white border border-slate-200/80 rounded-3xl p-8 sm:p-12 shadow-xs space-y-8">
+          <div className="text-center space-y-2">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full">
+              תהליך פשוט
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900">איך זה עובד? ב-3 שלבים קלים</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
-              <span className="material-symbols-outlined text-primary mb-3 block">search</span>
-              <h4 className="font-bold text-on-surface mb-1">Smart Detection</h4>
-              <p className="text-xs text-on-surface-variant">Identifies subscriptions even with obscure billing names.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            <div className="space-y-2">
+              <div className="text-3xl font-black text-emerald-600/40">01</div>
+              <h4 className="font-bold text-base text-slate-900">בוחרים מה לבטל</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                מקלידים את שם השירות בשורת החיפוש או מעלים תדפיס אשראי כדי לראות את כל המנויים במקום אחד.
+              </p>
             </div>
-            <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
-              <span className="material-symbols-outlined text-secondary mb-3 block">link</span>
-              <h4 className="font-bold text-on-surface mb-1">Direct Cancel Links</h4>
-              <p className="text-xs text-on-surface-variant">Jump straight to each service&apos;s cancellation page.</p>
+
+            <div className="space-y-2">
+              <div className="text-3xl font-black text-emerald-600/40">02</div>
+              <h4 className="font-bold text-base text-slate-900">מקבלים קישור ישיר</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                המערכת עוקפת מסכי שימור ומלכודות שירות, ומביאה אותך ישירות לעמוד הביטול המדויק עם הסבר שלב-אחר-שלב.
+              </p>
             </div>
-            <div className="bg-surface-container-highest/50 backdrop-blur-md rounded-[1.5rem] p-6 border border-outline-variant/20">
-              <span className="material-symbols-outlined text-tertiary mb-3 block">shield</span>
-              <h4 className="font-bold text-on-surface mb-1">Zero Data Storage</h4>
-              <p className="text-xs text-on-surface-variant">Your statement never leaves your device.</p>
+
+            <div className="space-y-2">
+              <div className="text-3xl font-black text-emerald-600/40">03</div>
+              <h4 className="font-bold text-base text-slate-900">הכסף נשאר אצלך</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                מאשרים את הביטול — ומפסיקים לשלם מאות שקלים בחודש על שירותים שלא בשימוש.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="space-y-4">
+          <h3 className="text-2xl font-extrabold text-slate-900 text-center mb-6">שאלות נפוצות</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-2">
+              <h4 className="font-bold text-sm text-slate-900">האם זה באמת בחינם?</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                כן לחלוטין! חיפוש ביטול ישיר וסריקות התדפיסים זמינים בחינם לכל משתמש.
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-2">
+              <h4 className="font-bold text-sm text-slate-900">האם האתר שומר את פרטי הבנק שלי?</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                בשום אופן לא. הקבצים מעובדים מקומית במכשיר שלך בלבד, ופרטים מזהים מושחרים אוטומטית.
+              </p>
             </div>
           </div>
         </section>
       </main>
 
       <Footer />
-      <BottomNav />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { redactCanvas, canvasToBase64 } from '@/lib/redact'
 
 interface RedactorProps {
   sourceCanvas: HTMLCanvasElement
-  textItems: any[]
+  textItems: unknown[]
   onRedacted: (base64: string) => void
 }
 
@@ -13,7 +13,7 @@ export default function Redactor({ sourceCanvas, textItems, onRedacted }: Redact
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    const redacted = redactCanvas(sourceCanvas, textItems)
+    const redacted = redactCanvas(sourceCanvas, textItems as any[])
     const ctx = canvasRef.current?.getContext('2d')
     if (ctx && canvasRef.current) {
       canvasRef.current.width = redacted.width
@@ -24,13 +24,14 @@ export default function Redactor({ sourceCanvas, textItems, onRedacted }: Redact
   }, [sourceCanvas, textItems, onRedacted])
 
   return (
-    <div className="mt-4">
-      <p className="text-xs text-gray-400 mb-2">
-        Sensitive data has been masked — this is what gets sent for analysis
-      </p>
+    <div className="mt-4 p-3 bg-emerald-50/40 rounded-2xl border border-emerald-100/60">
+      <div className="flex items-center gap-1.5 text-xs text-emerald-800 font-semibold mb-2">
+        <span className="material-symbols-outlined text-sm">visibility_off</span>
+        <span>נתונים רגישים הושחרו מקומית בדפדפן לפני שליחה לניתוח</span>
+      </div>
       <canvas
         ref={canvasRef}
-        className="w-full rounded-xl border border-gray-200 shadow-sm"
+        className="w-full rounded-xl border border-slate-200 shadow-xs"
       />
     </div>
   )

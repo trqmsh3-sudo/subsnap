@@ -20,44 +20,71 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
     ?? `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + sub.name + ' subscription')}`
 
   return (
-    <div className="bg-surface-container-high rounded-xl px-5 py-4 border border-outline-variant/10 hover:border-secondary/20 transition-colors">
-      <div className="flex items-center justify-between">
+    <div className="bg-slate-50/70 rounded-2xl p-4 sm:p-5 border border-slate-200/80 hover:border-emerald-300 transition-all shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="font-semibold text-on-surface">{sub.name}</p>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            {sub.frequency} · {sub.category}
-          </p>
-          {entry?.notes && (
-            <p className="text-xs text-outline mt-0.5">{entry.notes}</p>
+          <div className="flex items-center gap-2">
+            <h4 className="font-bold text-base text-slate-900">{sub.name}</h4>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+              {sub.frequency === 'monthly' ? 'חודשי' : sub.frequency === 'yearly' ? 'שנתי' : sub.frequency}
+            </span>
+          </div>
+          {entry?.notes ? (
+            <p className="text-xs text-slate-500 mt-1">{entry.notes}</p>
+          ) : (
+            <p className="text-xs text-slate-400 mt-1">{sub.category}</p>
           )}
         </div>
-        <div className="flex items-center gap-4 shrink-0 ml-4">
-          <span className="font-bold text-on-surface">{sub.amount}</span>
+
+        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+          <span className="font-black text-lg text-slate-900">{sub.amount}</span>
           <button
             onClick={() => {
               if (open) { setOpen(false) } else {
-                window.open(loginUrl, '_blank', 'noopener,noreferrer')
+                window.open(cancelUrl, '_blank', 'noopener,noreferrer')
                 setOpen(true)
               }
             }}
-            className="text-xs rounded-lg px-4 py-2 font-semibold transition-all hover:scale-[1.02] bg-secondary/10 text-secondary border border-secondary/30 hover:bg-secondary/20"
+            className="text-xs rounded-xl px-4 py-2.5 font-bold transition-all bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1"
           >
-            {open ? 'Close ✕' : 'Cancel Guide →'}
+            <span>{open ? 'סגור ✕' : 'בטל מנוי ➔'}</span>
           </button>
         </div>
       </div>
 
       {open && (
-        <div className="mt-3 w-full rounded-xl bg-surface-container-low border border-outline-variant/20 p-4">
-          <p className="text-sm font-semibold text-on-surface mb-3">
-            ✓ Login page opened — sign in there, then come back here
+        <div className="mt-4 w-full rounded-xl bg-white border border-emerald-100 p-4 space-y-3 animate-fadeIn">
+          <p className="text-xs font-bold text-slate-800">
+            ✓ עמוד הביטול נפתח בחלון חדש.
           </p>
-          <button
-            onClick={() => window.open(cancelUrl, '_blank', 'noopener,noreferrer')}
-            className="w-full text-left text-xs bg-surface-container-highest hover:bg-surface-container-high text-on-surface font-medium rounded-lg px-3 py-2.5 transition-colors"
-          >
-            I&apos;m logged in → Go to cancel page →
-          </button>
+          {entry?.steps && entry.steps.length > 0 && (
+            <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <p className="font-semibold text-slate-700 mb-1">הנחיות לביטול:</p>
+              {entry.steps.map((s, idx) => (
+                <p key={idx}>{idx + 1}. {s}</p>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <a
+              href={cancelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-semibold px-3 py-2 rounded-lg transition-colors inline-block"
+            >
+              פתח שוב את עמוד הביטול ↗
+            </a>
+            {loginUrl && (
+              <a
+                href={loginUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 font-semibold px-3 py-2 rounded-lg transition-colors inline-block"
+              >
+                עמוד התחברות
+              </a>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -69,9 +96,6 @@ export default function Preview({ subscriptions }: { subscriptions: Subscription
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-on-surface-variant uppercase tracking-widest">
-        {subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''} detected
-      </p>
       {subscriptions.map((sub, i) => (
         <SubscriptionCard key={`${sub.name}-${i}`} sub={sub} />
       ))}
