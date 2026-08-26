@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import QuickCancelBar from '@/components/QuickCancelBar'
-import StatementCapsule from '@/components/StatementCapsule'
 
 function Header() {
   return (
     <header className="fixed top-0 w-full z-50 bg-[#090a0f]/80 backdrop-blur-xl border-b border-white/[0.05]">
-      <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 max-w-4xl mx-auto">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
             <span className="material-symbols-outlined text-base">bolt</span>
@@ -13,20 +12,20 @@ function Header() {
           <span className="font-bold text-xl tracking-tight text-white">SubSnap</span>
         </Link>
 
-        <div className="flex items-center gap-3 sm:gap-5">
-          <Link
-            href="/app"
-            className="text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+        <div className="flex items-center gap-3 sm:gap-4">
+          <a
+            href="#how-it-works"
+            className="hidden sm:inline-block text-xs font-medium text-zinc-400 hover:text-white transition-colors"
           >
-            דשבורד סריקה
-          </Link>
-          <Link
-            href="/app"
-            className="btn-emerald px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"
+            איך זה עובד?
+          </a>
+          <a
+            href="#extension"
+            className="btn-emerald px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
           >
-            <span>סרוק תדפיס</span>
-            <span className="material-symbols-outlined text-xs">arrow_back</span>
-          </Link>
+            <span className="material-symbols-outlined text-xs">extension</span>
+            <span>תוסף כרום חינם</span>
+          </a>
         </div>
       </div>
     </header>
@@ -42,7 +41,7 @@ function Footer() {
             <span className="text-emerald-400">⚡</span> SubSnap
           </div>
           <p className="text-xs text-zinc-400">
-            החזרת כספים חכמה — איתור וביטול מנויים חוזרים בלחיצה אחת.
+            החזרת כספים חכמה — מנוע ביטול מנויים וחיובים חוזרים בחינם.
           </p>
         </div>
 
@@ -50,12 +49,11 @@ function Footer() {
           <Link href="/privacy" className="hover:text-zinc-200 transition-colors">מדיניות פרטיות</Link>
           <Link href="/terms" className="hover:text-zinc-200 transition-colors">תנאי שימוש</Link>
           <Link href="/refund" className="hover:text-zinc-200 transition-colors">מדיניות החזרים</Link>
-          <Link href="/app" className="hover:text-zinc-200 transition-colors">סורק תדפיסים</Link>
         </div>
       </div>
 
       <div className="text-center text-[11px] text-zinc-500 mt-6 pt-6 border-t border-white/[0.03]">
-        © 2026 SubSnap. כל הזכויות שמורות. פרטיות מקומית 100% Zero-Knowledge.
+        © 2026 SubSnap. 100% חינם ללא עלות תפעולית. פרטיות מקומית Zero-Knowledge.
       </div>
     </footer>
   )
@@ -67,14 +65,14 @@ export default function HomePage() {
       <Header />
 
       {/* Ambient background glow */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-emerald-500/[0.06] via-sky-500/[0.03] to-transparent blur-[100px] pointer-events-none -z-10" />
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-emerald-500/[0.07] via-sky-500/[0.03] to-transparent blur-[100px] pointer-events-none -z-10" />
 
-      <main className="flex-1 pt-28 pb-16 px-4 sm:px-6 max-w-3xl mx-auto w-full space-y-8">
+      <main className="flex-1 pt-32 pb-16 px-4 sm:px-6 max-w-2xl mx-auto w-full space-y-8">
         {/* Hero Title */}
         <section className="text-center space-y-3 pt-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs font-medium text-zinc-300">
             <span className="text-emerald-400">●</span>
-            <span>ללא סיסמאות · 100% פרטיות מקומית · ביטול בחינם</span>
+            <span>100% חינם · ללא צורך בהרשמה · ללא סיסמאות</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.2]">
@@ -82,38 +80,60 @@ export default function HomePage() {
           </h1>
 
           <p className="text-zinc-400 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
-            איתור וביטול מנויים וחיובים חוזרים בלחיצה אחת — בלי לחפש בתפריטים ובפרטיות מלאה.
+            מקלידים שם שירות — ומקבלים קישור ישיר ומדויק לביטול המנוי תוך שניות, בלי להסתבך בתפריטים.
           </p>
         </section>
 
-        {/* ── THE TWO MASTER CAPSULES ────────────────────────────────────────── */}
-        <section className="space-y-5">
-          {/* Top Capsule: Quick Prompt */}
+        {/* ── THE MASTER CANCEL CAPSULE ──────────────────────────────────────── */}
+        <section>
           <QuickCancelBar />
+        </section>
 
-          {/* Bottom Capsule: Statement Dropzone */}
-          <StatementCapsule />
+        {/* ── CHROME EXTENSION HIGHLIGHT CARD ────────────────────────────────── */}
+        <section id="extension" className="studio-capsule p-6 sm:p-7 relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
+            <div className="flex items-center gap-4 text-right">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                <span className="material-symbols-outlined text-2xl">extension</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-base text-white">תוסף כרום אוטונומי</h3>
+                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                  רוצה לבטל ישירות מתוך הדפדפן? התקן את התוסף והוא יאתר ויאיר עבורך את כפתור הביטול בכל עמוד.
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://chrome.google.com/webstore"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.1] px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors shrink-0 flex items-center gap-1.5"
+            >
+              <span>זמין לכרום</span>
+              <span className="material-symbols-outlined text-xs">open_in_new</span>
+            </a>
+          </div>
         </section>
 
         {/* ── 3 CLEAN FEATURE CARDS ──────────────────────────────────────────── */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <div className="studio-capsule p-5 space-y-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <span className="material-symbols-outlined text-base">shield_lock</span>
+              <span className="material-symbols-outlined text-base">verified</span>
             </div>
-            <h3 className="font-semibold text-sm text-white">100% פרטיות מקומית</h3>
+            <h3 className="font-semibold text-sm text-white">100% חינם לתמיד</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              הקובץ מעובד ישירות בדפדפן שלך. מספרי חשבון מושחרים אוטומטית ושום מידע לא נשמר בשרת.
+              מנוע הביטולים פתוח לחלוטין לשימוש חופשי ללא תשלום, ללא מנוי וללא עמלות.
             </p>
           </div>
 
           <div className="studio-capsule p-5 space-y-2">
             <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-              <span className="material-symbols-outlined text-base">extension</span>
+              <span className="material-symbols-outlined text-base">key_off</span>
             </div>
-            <h3 className="font-semibold text-sm text-white">תוסף כרום אוטונומי</h3>
+            <h3 className="font-semibold text-sm text-white">אפס סיסמאות</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              מבטל מנויים ישירות בזמן הגלישה בלחיצת כפתור אחת — מאתר ומאיר את כפתור הביטול בעמוד.
+              אנחנו לעולם לא מבקשים סיסמאות. הכל מתבצע דרך החיבור הטבעי והמאובטח שלך.
             </p>
           </div>
 
@@ -129,26 +149,26 @@ export default function HomePage() {
         </section>
 
         {/* ── 3-STEP GUIDE ──────────────────────────────────────────────────── */}
-        <section className="studio-capsule p-6 sm:p-8 space-y-6">
+        <section id="how-it-works" className="studio-capsule p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-1">
             <h2 className="text-lg sm:text-xl font-bold text-white">איך זה עובד? ב-3 שלבים</h2>
-            <p className="text-xs text-zinc-400">תהליך מהיר ללא צורך בהרשמה</p>
+            <p className="text-xs text-zinc-400">ביטול מיידי ללא צורך בהרשמה</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
             <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.04] space-y-1.5">
               <div className="text-xl font-bold text-emerald-400">01</div>
-              <h4 className="font-semibold text-xs text-white">מקלידים או מעלים תדפיס</h4>
+              <h4 className="font-semibold text-xs text-white">מקלידים את שם השירות</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                רושמים את שם השירות בקפסולה העליונה, או מעלים תדפיס אשראי כדי לגלות הכל.
+                רושמים את שם המנוי בשורת החיפוש למעלה (נטפליקס, גרוק, אדובי וכו&apos;).
               </p>
             </div>
 
             <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.04] space-y-1.5">
               <div className="text-xl font-bold text-sky-400">02</div>
-              <h4 className="font-semibold text-xs text-white">מקבלים קישור ישיר</h4>
+              <h4 className="font-semibold text-xs text-white">מקבלים קישור ביטול ישיר</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                המערכת מובילה אותך ישירות למסך הביטול המדויק עם הנחיות פשוטות.
+                עוקפים את כל מסכי השימור ומגיעים ישר לעמוד הביטול הרשמי עם הנחיות פשוטות.
               </p>
             </div>
 
