@@ -15,16 +15,9 @@ function Header() {
         <div className="flex items-center gap-3 sm:gap-4">
           <a
             href="#how-it-works"
-            className="hidden sm:inline-block text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+            className="text-xs font-medium text-zinc-400 hover:text-white transition-colors"
           >
             איך זה עובד?
-          </a>
-          <a
-            href="#extension"
-            className="btn-emerald px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-xs">extension</span>
-            <span>תוסף כרום חינם</span>
           </a>
         </div>
       </div>
@@ -87,32 +80,6 @@ export default function HomePage() {
         {/* ── THE MASTER CANCEL CAPSULE ──────────────────────────────────────── */}
         <section>
           <QuickCancelBar />
-        </section>
-
-        {/* ── CHROME EXTENSION HIGHLIGHT CARD ────────────────────────────────── */}
-        <section id="extension" className="studio-capsule p-6 sm:p-7 relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
-            <div className="flex items-center gap-4 text-right">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                <span className="material-symbols-outlined text-2xl">extension</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-base text-white">תוסף כרום אוטונומי</h3>
-                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
-                  רוצה לבטל ישירות מתוך הדפדפן? התקן את התוסף והוא יאתר ויאיר עבורך את כפתור הביטול בכל עמוד.
-                </p>
-              </div>
-            </div>
-            <a
-              href="https://chrome.google.com/webstore"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.1] px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors shrink-0 flex items-center gap-1.5"
-            >
-              <span>זמין לכרום</span>
-              <span className="material-symbols-outlined text-xs">open_in_new</span>
-            </a>
-          </div>
         </section>
 
         {/* ── 3 CLEAN FEATURE CARDS ──────────────────────────────────────────── */}
