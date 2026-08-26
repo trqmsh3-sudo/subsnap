@@ -1,31 +1,37 @@
-import jdmDb from './jdm-db.json'
-
 export interface CancellationEntry {
   name: string
+  nameHe?: string
   keywords: string[]
   loginUrl: string
   cancelUrl: string
-  method: 'url' | 'phone' | 'chat'
-  notes: string
+  method: 'url' | 'chat' | 'phone'
+  notes?: string
   difficulty: 'easy' | 'hard'
-  tier: 'auto' | 'session' | 'manual'
-  steps?: string[]   // service-specific hints passed to AI prompt
+  tier?: 'auto' | 'session' | 'manual'
+  steps?: string[]
 }
 
 export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Netflix',
-    keywords: ['netflix', 'nflx', 'netflix.com', 'netflix international'],
+    nameHe: 'נטפליקס (Netflix)',
+    keywords: ['netflix', 'nflx', 'netflix.com', 'netflix international', 'נטפליקס', 'נטפליכס'],
     loginUrl: 'https://www.netflix.com/login',
     cancelUrl: 'https://www.netflix.com/cancelplan',
     method: 'url',
-    notes: 'Direct cancel page — no chat required',
+    notes: 'עמוד אישור ביטול ישיר של נטפליקס',
     difficulty: 'easy',
     tier: 'auto',
+    steps: [
+      'העמוד נפתח ישירות על מסך ביטול המנוי',
+      'לוחצים על Finish Cancellation (סיום ביטול)',
+      'המנוי מבוטל מיד ותישאר גישה עד סוף תקופת החיוב',
+    ],
   },
   {
     name: 'Grok / X Premium',
-    keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר'],
+    nameHe: 'גרוק / X פרימיום (טוויטר)',
+    keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'איקס', 'x'],
     loginUrl: 'https://x.com/i/flow/login',
     cancelUrl: 'https://x.com/settings/manage_subscriptions',
     method: 'url',
@@ -41,7 +47,8 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Spotify',
-    keywords: ['spotify', 'spotifyusa', 'spotify ab', 'spotify.com', 'spotify usa', 'ספוטיפיי'],
+    nameHe: 'ספוטיפיי (Spotify Premium)',
+    keywords: ['spotify', 'spotifyusa', 'spotify ab', 'spotify.com', 'spotify usa', 'ספוטיפיי', 'ספוטיפי'],
     loginUrl: 'https://accounts.spotify.com/en/login',
     cancelUrl: 'https://www.spotify.com/account/subscription/change/',
     method: 'url',
@@ -56,11 +63,12 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Adobe Creative Cloud',
-    keywords: ['adobe', 'creative cloud', 'adobe systems', 'adobe inc', 'adobe.com', 'אדובי'],
+    nameHe: 'אדובי (Adobe Creative Cloud)',
+    keywords: ['adobe', 'creative cloud', 'adobe systems', 'adobe inc', 'adobe.com', 'אדובי', 'פוטושופ'],
     loginUrl: 'https://account.adobe.com/',
     cancelUrl: 'https://account.adobe.com/plans',
     method: 'url',
-    notes: 'עמוד ניהול התוכניות של אדובי',
+    notes: 'עמוד ניהול התוכניות והביטול של אדובי',
     difficulty: 'hard',
     tier: 'session',
     steps: [
@@ -72,7 +80,8 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'Apple / iCloud / App Store',
-    keywords: ['icloud', 'apple', 'apple.com', 'apple services', 'apple inc', 'itunes', 'אפל', 'אייקלאוד'],
+    nameHe: 'אפל / אייקלאוד / אפסטור',
+    keywords: ['icloud', 'apple', 'apple.com', 'apple services', 'apple inc', 'itunes', 'אפל', 'אייקלאוד', 'אפסטור', 'אייטיונס'],
     loginUrl: 'https://appleid.apple.com/',
     cancelUrl: 'https://apps.apple.com/account/subscriptions',
     method: 'url',
@@ -87,7 +96,8 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   },
   {
     name: 'ChatGPT Plus',
-    keywords: ['chatgpt', 'openai', 'openai.com', 'chat.openai', 'openai *chatgpt', 'צ\'אט ג\'יפיטי'],
+    nameHe: 'צ\'אט ג\'יפיטי פלוס (OpenAI)',
+    keywords: ['chatgpt', 'openai', 'openai.com', 'chat.openai', 'openai *chatgpt', 'צ\'אט ג\'יפיטי', 'צ\'ט ג\'יפיטי', 'צאט גפיטי', 'אופן איי איי'],
     loginUrl: 'https://chatgpt.com/auth/login',
     cancelUrl: 'https://chatgpt.com/#settings/Subscription',
     method: 'url',
@@ -101,130 +111,130 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     ],
   },
   {
-    name: 'Amazon Prime',
-    keywords: ['amazon', 'prime', 'amzn', 'amznprime', 'amazon.com', 'amazon digital', 'prime video', 'amazon prime'],
-    loginUrl: 'https://www.amazon.com/ap/signin',
-    cancelUrl: 'https://www.amazon.com/gp/primecentral',
+    name: 'Canva Pro',
+    nameHe: 'קנבה פרו (Canva Pro)',
+    keywords: ['canva', 'canva pty', 'canva.com', 'קנבה', 'קנווה'],
+    loginUrl: 'https://www.canva.com/login',
+    cancelUrl: 'https://www.canva.com/settings/billing-and-teams',
     method: 'url',
-    notes: 'May offer pause instead of cancel',
+    notes: 'עמוד חיובים וביטול מנוי ב-Canva',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'עוברים ללשונית מנויים בהגדרות',
+      'לוחצים על שלוש הנקודות ליד המנוי',
+      'בוחרים ב-Cancel subscription (בטל מנוי)',
+    ],
+  },
+  {
+    name: 'Amazon Prime',
+    nameHe: 'אמזון פריים (Amazon Prime)',
+    keywords: ['amazon', 'prime', 'amzn', 'amznprime', 'amazon.com', 'amazon digital', 'prime video', 'amazon prime', 'אמזון', 'פריים', 'אמזון פריים'],
+    loginUrl: 'https://www.amazon.com/ap/signin',
+    cancelUrl: 'https://www.amazon.com/mc/manage',
+    method: 'url',
+    notes: 'עמוד ניהול וסיום מנוי Prime',
     difficulty: 'hard',
     tier: 'session',
     steps: [
-      'Look for a link that says "Update, cancel and more" and click it',
-      'Click "End membership" or "Cancel membership"',
-      'If you see a retention offer (pause, discounted plan), click "Continue to cancel" or "No thanks"',
-      'Click the final confirm button to complete cancellation',
+      'לוחצים על Manage Membership (נהל מנוי)',
+      'בוחרים ב-End Membership (סיים חברות)',
+      'במסכי השימור לוחצים על Continue to cancel',
+      'מאשרים את הביטול במסך הסופי',
     ],
   },
   {
     name: 'YouTube Premium',
-    keywords: ['youtube', 'youtube premium', 'google youtube', 'yt premium', 'googleyoutube'],
+    nameHe: 'יוטיוב פרימיום (YouTube Premium)',
+    keywords: ['youtube', 'youtube premium', 'google youtube', 'yt premium', 'googleyoutube', 'יוטיוב', 'יוטיוב פרימיום'],
     loginUrl: 'https://accounts.google.com/',
     cancelUrl: 'https://www.youtube.com/paid_memberships',
     method: 'url',
-    notes: 'Cancel from memberships page — requires Google login',
+    notes: 'עמוד ניהול המנויים של יוטיוב',
     difficulty: 'easy',
     tier: 'auto',
+    steps: [
+      'לוחצים על מנוי הפרימיום הפעיל',
+      'בוחרים ב-Deactivate (השבת / בטל)',
+      'מאשרים את המעבר לחשבון חינמי',
+    ],
   },
   {
     name: 'Disney Plus',
-    keywords: ['disney', 'disney+', 'disneyplus', 'disney plus', 'disney.com', 'dsny+'],
+    nameHe: 'דיסני פלוס (Disney+)',
+    keywords: ['disney', 'disney+', 'disneyplus', 'disney plus', 'disney.com', 'dsny+', 'דיסני', 'דיסני פלוס'],
     loginUrl: 'https://www.disneyplus.com/login',
     cancelUrl: 'https://www.disneyplus.com/account',
     method: 'url',
-    notes: 'Cancel from account page',
+    notes: 'ביטול מנוי בהגדרות חשבון דיסני',
     difficulty: 'easy',
     tier: 'auto',
-  },
-  {
-    name: 'Canva',
-    keywords: ['canva', 'canva pty', 'canva.com'],
-    loginUrl: 'https://www.canva.com/login',
-    cancelUrl: 'https://www.canva.com/settings/billing',
-    method: 'url',
-    notes: 'Cancel from billing settings',
-    difficulty: 'easy',
-    tier: 'auto',
-  },
-  {
-    name: 'Test Service',
-    keywords: ['test', 'test service'],
-    loginUrl: 'http://localhost:3009/',
-    cancelUrl: 'http://localhost:3009/test-cancel',
-    method: 'url',
-    notes: 'Local test cancellation flow',
-    difficulty: 'easy',
-    tier: 'auto',
-  },
-  {
-    name: 'Test Easy',
-    keywords: ['test easy', 'easystream'],
-    loginUrl: 'http://localhost:3009/',
-    cancelUrl: 'http://localhost:3009/test-easy',
-    method: 'url',
-    notes: 'Local easy-flow test — direct cancel button visible',
-    difficulty: 'easy',
-    tier: 'auto',
-  },
-  {
-    name: 'Test Hard',
-    keywords: ['test hard', 'darkstream'],
-    loginUrl: 'http://localhost:3009/',
-    cancelUrl: 'http://localhost:3009/test-hard',
-    method: 'url',
-    notes: 'Local dark-patterns test — retention popup, survey, pause offer',
-    difficulty: 'hard',
-    tier: 'session',
     steps: [
-      'Sign in with the pre-filled credentials',
-      'Click "Manage Subscription"',
-      'On the retention popup, click "Continue to cancel"',
-      'Select any survey option and click "Next"',
-      'On the pause offer screen, click "No thanks, cancel anyway"',
-      'Click "Confirm cancellation" to complete',
+      'בוחרים במנוי דיסני פלוס',
+      'לוחצים על Cancel Subscription (בטל מנוי)',
+      'בוחרים סיבה ומאשרים ביטול',
+    ],
+  },
+  {
+    name: 'Google Play / Android',
+    nameHe: 'גוגל פליי / מנויי אנדרואיד',
+    keywords: ['google play', 'android', 'גוגל פליי', 'אנדרואיד', 'גוגל', 'google'],
+    loginUrl: 'https://accounts.google.com/',
+    cancelUrl: 'https://play.google.com/store/account/subscriptions',
+    method: 'url',
+    notes: 'ניהול וביטול כל מנויי Google Play',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'נכנסים לרשימת המנויים של חשבון Google',
+      'בוחרים את האפליקציה שברצונכם לבטל',
+      'לוחצים על Cancel Subscription (בטל מנוי)',
     ],
   },
   {
     name: 'Dropbox',
-    keywords: ['dropbox', 'dropbox inc', 'dropbox.com'],
+    nameHe: 'דרופבוקס (Dropbox)',
+    keywords: ['dropbox', 'dropbox inc', 'dropbox.com', 'דרופבוקס'],
     loginUrl: 'https://www.dropbox.com/login',
     cancelUrl: 'https://www.dropbox.com/account/plan',
     method: 'url',
-    notes: 'Downgrade to the free plan to cancel paid subscription',
+    notes: 'שנמוך לחשבון חינמי',
     difficulty: 'easy',
     tier: 'manual',
     steps: [
-      'Sign in to your Dropbox account',
-      'Go to Account → Plan',
-      'Click "Change plan" and select the free plan to cancel',
+      'נכנסים להגדרות התוכנית (Plan)',
+      'לוחצים על Change plan או Cancel subscription',
+      'בוחרים בחשבון החינמי',
     ],
   },
   {
     name: 'Google One',
-    keywords: ['google one', 'google one storage', 'google storage'],
+    nameHe: 'גוגל וואן (Google One Storage)',
+    keywords: ['google one', 'google one storage', 'google storage', 'גוגל וואן', 'אחסון גוגל'],
     loginUrl: 'https://one.google.com',
     cancelUrl: 'https://one.google.com/storage',
     method: 'url',
-    notes: 'Downgrade to the free 15GB tier to cancel paid plan',
+    notes: 'שנמוך לשטח אחסון חינמי (15GB)',
     difficulty: 'easy',
     tier: 'manual',
     steps: [
-      'Go to one.google.com and sign in',
-      'Click "Manage" next to your storage plan',
-      'Select "Downgrade" and choose the free tier',
+      'נכנסים להגדרות אחסון גוגל',
+      'לוחצים על שינוי תוכנית ובחירה בחשבון חינמי',
     ],
-  },
+  }
 ]
 
-// JDM entries merged in — our hand-curated entries take priority
-const MERGED_DB: CancellationEntry[] = [
-  ...CANCELLATION_DB,
-  ...(jdmDb as CancellationEntry[]),
-]
-
-export function findCancellationEntry(subscriptionName: string): CancellationEntry | null {
-  const lower = subscriptionName.toLowerCase()
-  return MERGED_DB.find((entry) =>
-    entry.keywords.some((keyword) => lower.includes(keyword))
-  ) ?? null
+export function findCancellationEntry(serviceName: string): CancellationEntry | null {
+  const normalized = serviceName.toLowerCase().trim()
+  for (const entry of CANCELLATION_DB) {
+    if (entry.name.toLowerCase() === normalized || entry.nameHe?.toLowerCase() === normalized) {
+      return entry
+    }
+    for (const keyword of entry.keywords) {
+      if (normalized.includes(keyword) || keyword.includes(normalized)) {
+        return entry
+      }
+    }
+  }
+  return null
 }
