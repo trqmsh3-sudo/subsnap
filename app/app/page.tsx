@@ -56,60 +56,61 @@ export default function AppPage() {
   }, 0)
 
   return (
-    <div className="bg-[#f8fafc] text-slate-900 min-h-screen pb-20 selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen pb-24 selection:bg-[#44e2cd]/30 selection:text-[#44e2cd]">
       {/* Top Header */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-semibold">
-            <span className="material-symbols-outlined text-lg">arrow_forward</span>
-            <span>חזרה לעמוד הראשי</span>
+      <header className="sticky top-0 z-50 bg-[#08090d]/80 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-xs font-bold">
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+            <span>חזרה לראשי</span>
           </Link>
           <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">⚡</span>
-            <span className="font-extrabold text-xl text-slate-900">SubSnap</span>
+            <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#44e2cd] to-[#2dd4bf] text-[#002b26] flex items-center justify-center font-black text-xs">⚡</span>
+            <span className="font-black text-lg text-white">SubSnap AI</span>
           </div>
         </div>
       </header>
 
+      {/* Ambient glow */}
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-[#38bdf8]/10 via-[#44e2cd]/5 to-transparent blur-[120px] pointer-events-none -z-10" />
+
       <main className="pt-8 pb-20 px-4 sm:px-6 max-w-3xl mx-auto space-y-8">
-        {/* Hero Section: Summary Card */}
-        <section className="bg-gradient-to-br from-emerald-50 via-teal-50/40 to-white border border-emerald-200/80 rounded-3xl p-6 sm:p-8 shadow-xs">
-          <div className="space-y-2">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-full inline-block">
-              {analyzed ? 'סיכום המנויים שאותרו' : 'דשבורד סריקה ואיתור מנויים'}
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900">
-              {analyzed && subscriptions.length > 0
-                ? `אותרו ${subscriptions.length} מנויים פעילים`
-                : analyzed
-                ? 'לא אותרו מנויים בקובץ זה'
-                : 'סריקת מנויים חכמה'}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600">
-              {analyzing
-                ? '🔍 ה-AI מנתח כעת את התדפיס ומזהה שירותי מנויים...'
-                : analyzed && subscriptions.length > 0
-                ? `סך החיוב החודשי המוערך: ₪${totalMonthly.toFixed(2)}`
-                : 'העלה צילום מסך או PDF של פירוט האשראי, או השתמש בשורת הביטול המהיר למטה.'}
-            </p>
-          </div>
+        {/* Status Summary Banner */}
+        <section className="gemini-capsule p-6 sm:p-8 space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#44e2cd] bg-[#44e2cd]/10 border border-[#44e2cd]/20 px-3 py-1 rounded-full inline-block">
+            {analyzed ? 'סיכום סריקה' : 'דשבורד סריקה וביטול מנויים'}
+          </span>
+          <h1 className="text-2xl sm:text-4xl font-black text-white">
+            {analyzed && subscriptions.length > 0
+              ? `אותרו ${subscriptions.length} מנויים פעילים`
+              : analyzed
+              ? 'לא אותרו מנויים בקובץ זה'
+              : 'סורק תדפיסים חכם'}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400">
+            {analyzing
+              ? '🔍 ה-AI סורק ומזהה מנויים...'
+              : analyzed && subscriptions.length > 0
+              ? `סך החיוב החודשי המוערך: ₪${totalMonthly.toFixed(2)}`
+              : 'העלה צילום מסך או PDF, או השתמש בקפסולת הביטול המהיר.'}
+          </p>
         </section>
 
-        {/* Feature 1: Quick Search Bar */}
+        {/* Feature 1: Quick Prompt Capsule */}
         <QuickCancelBar />
 
-        {/* Feature 2: Bank Statement Upload */}
-        <section className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
-              <span className="material-symbols-outlined text-lg">upload_file</span>
+        {/* Feature 2: Bank Statement Upload Capsule */}
+        <section className="gemini-capsule p-6 sm:p-8 space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-[#38bdf8]/10 border border-[#38bdf8]/20 text-[#38bdf8] flex items-center justify-center font-bold">
+              <span className="material-symbols-outlined text-xl">upload_file</span>
             </div>
             <div>
-              <h2 className="font-extrabold text-base sm:text-lg text-slate-900">
+              <h2 className="font-bold text-base sm:text-lg text-white">
                 העלאת תדפיס חשבון / פירוט אשראי
               </h2>
-              <p className="text-xs text-slate-500">
-                תמיכה בקבצי תמונה (PNG/JPG) וקובצי PDF. פרטים מזהים מושחרים מקומית בדפדפן.
+              <p className="text-xs text-slate-400">
+                מעובד ישירות בדפדפן. שמות ומספרי כרטיס מושחרים מקומית.
               </p>
             </div>
           </div>
@@ -124,35 +125,32 @@ export default function AppPage() {
             />
           )}
 
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-            <span className="text-xs font-semibold px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-slate-600 flex items-center gap-1">
-              🛡️ עיבוד מקומי במכשיר שלך
-            </span>
-            <span className="text-xs font-semibold px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-slate-600 flex items-center gap-1">
-              🔒 ללא שמירת מידע בנקאי
-            </span>
+          <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5 text-xs text-slate-400">
+            <span>🔒 עיבוד מקומי מלא</span>
+            <span>·</span>
+            <span>🛡️ ללא שמירת מידע בנקאי</span>
           </div>
         </section>
 
         {/* Subscription Results */}
         {analyzed && (
-          <section className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-lg font-bold text-slate-900">
-                רשימת המנויים שזוהו ({subscriptions.length})
+          <section className="gemini-capsule p-6 sm:p-8 space-y-6 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <h3 className="text-lg font-bold text-white">
+                מנויים שזוהו ({subscriptions.length})
               </h3>
               {totalMonthly > 0 && (
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold text-[#44e2cd] bg-[#44e2cd]/10 border border-[#44e2cd]/20 px-3 py-1 rounded-full">
                   סה&quot;כ חודשי: ~₪{totalMonthly.toFixed(2)}
                 </span>
               )}
             </div>
 
             {subscriptions.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 space-y-2">
-                <span className="material-symbols-outlined text-4xl text-slate-300">search_off</span>
-                <p className="font-bold text-sm text-slate-700">לא זוהו מנויים בתדפיס זה</p>
-                <p className="text-xs">ודא שהתמונה ברורה ומכילה פירוט שורות חיוב, או הקלד את שם השירות בשורת החיפוש למעלה.</p>
+              <div className="text-center py-8 text-slate-400 space-y-2">
+                <span className="material-symbols-outlined text-4xl text-slate-600">search_off</span>
+                <p className="font-bold text-sm text-white">לא זוהו מנויים בתדפיס זה</p>
+                <p className="text-xs">השתמש בשורת החיפוש למעלה כדי לקבל קישור ישיר לכל שירות שתרצה לבטל.</p>
               </div>
             ) : (
               <Preview subscriptions={subscriptions} />

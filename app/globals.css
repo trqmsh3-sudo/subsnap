@@ -1,82 +1,64 @@
 @import "tailwindcss";
 
-/* ── Light Calming Palette (Trust & Relief) ────────────────────────────────── */
+/* ── Google Gemini Dark Luxury Theme ────────────────────────────────────────── */
 @theme {
-  /* Surface layers - Crisp, airy & soothing */
-  --color-surface: #f8fafc;
-  --color-surface-dim: #f1f5f9;
-  --color-surface-bright: #ffffff;
-  --color-surface-container: #ffffff;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f8fafc;
-  --color-surface-container-high: #f1f5f9;
-  --color-surface-container-highest: #e2e8f0;
-  --color-surface-variant: #e2e8f0;
-  --color-surface-tint: #059669;
+  /* Surface layers - Deep Space Charcoal & Obsidian */
+  --color-surface: #08090d;
+  --color-surface-dim: #050608;
+  --color-surface-bright: #171b26;
+  --color-surface-container: #0e121b;
+  --color-surface-container-lowest: #050608;
+  --color-surface-container-low: #0a0d14;
+  --color-surface-container-high: #131722;
+  --color-surface-container-highest: #1a202f;
+  --color-surface-variant: #1a202f;
+  --color-surface-tint: #44e2cd;
 
   /* Text & Readability */
-  --color-on-surface: #0f172a;
-  --color-on-surface-variant: #475569;
+  --color-on-surface: #f1f5f9;
+  --color-on-surface-variant: #94a3b8;
 
-  /* Primary – Calming Emerald & Fresh Mint */
-  --color-primary: #059669;
-  --color-primary-container: #d1fae5;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #065f46;
-  --color-primary-fixed: #10b981;
-  --color-primary-fixed-dim: #059669;
-  --color-on-primary-fixed: #ffffff;
-  --color-on-primary-fixed-variant: #047857;
-  --color-inverse-primary: #6ee7b7;
+  /* Primary – Neon Emerald & Cyber Mint */
+  --color-primary: #44e2cd;
+  --color-primary-container: #004d44;
+  --color-on-primary: #002b26;
+  --color-on-primary-container: #69ffe9;
+  --color-primary-fixed: #69ffe9;
+  --color-primary-fixed-dim: #44e2cd;
+  --color-on-primary-fixed: #00201c;
+  --color-on-primary-fixed-variant: #004d44;
+  --color-inverse-primary: #006b5f;
 
-  /* Secondary – Reassuring Indigo / Blue */
-  --color-secondary: #0284c7;
-  --color-secondary-container: #e0f2fe;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #0369a1;
-  --color-secondary-fixed: #38bdf8;
-  --color-secondary-fixed-dim: #0284c7;
-  --color-on-secondary-fixed: #ffffff;
-  --color-on-secondary-fixed-variant: #075985;
-
-  /* Tertiary – Soft Warm Amber/Teal */
-  --color-tertiary: #0d9488;
-  --color-tertiary-container: #ccfbf1;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #115e59;
-  --color-tertiary-fixed: #14b8a6;
-  --color-tertiary-fixed-dim: #0d9488;
-  --color-on-tertiary-fixed: #ffffff;
-  --color-on-tertiary-fixed-variant: #0f766e;
-
-  /* Error */
-  --color-error: #ef4444;
-  --color-error-container: #fee2e2;
-  --color-on-error: #ffffff;
-  --color-on-error-container: #991b1b;
+  /* Secondary – Electric Indigo / Cyan */
+  --color-secondary: #38bdf8;
+  --color-secondary-container: #0c4a6e;
+  --color-on-secondary: #082f49;
+  --color-on-secondary-container: #bae6fd;
 
   /* Outline */
-  --color-outline: #cbd5e1;
-  --color-outline-variant: #e2e8f0;
+  --color-outline: #334155;
+  --color-outline-variant: #1e293b;
 
   /* Background */
-  --color-background: #f8fafc;
-  --color-on-background: #0f172a;
-
-  /* Inverse */
-  --color-inverse-surface: #0f172a;
-  --color-inverse-on-surface: #f8fafc;
+  --color-background: #08090d;
+  --color-on-background: #f1f5f9;
 
   /* Font */
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Heebo', sans-serif;
+  --font-sans: var(--font-heebo), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ── Global Base ───────────────────────────────────────────────────────────── */
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #08090d;
+  color: #f1f5f9;
   direction: rtl;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 15%, rgba(68, 226, 205, 0.07) 0%, transparent 60%),
+    radial-gradient(circle at 80% 40%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 20% 60%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+  background-attachment: fixed;
 }
 
 /* ── Material Symbols ───────────────────────────────────────────────────────── */
@@ -87,29 +69,69 @@ body {
   line-height: 1;
 }
 
-/* ── Soothing Cards & Shadows ──────────────────────────────────────────────── */
-.calm-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-  border-radius: 1.5rem;
+/* ── Gemini Glass Capsules ─────────────────────────────────────────────────── */
+.gemini-capsule {
+  background: rgba(14, 18, 27, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.5),
+    0 0 30px -10px rgba(68, 226, 205, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.calm-card-hover {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.calm-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
-  border-color: #cbd5e1;
-}
-
-.calm-gradient {
-  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #f8fafc 100%);
+.gemini-capsule:hover {
+  border-color: rgba(68, 226, 205, 0.25);
+  box-shadow: 
+    0 25px 60px -12px rgba(0, 0, 0, 0.7),
+    0 0 40px -10px rgba(68, 226, 205, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.calm-pill {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+.gemini-input {
+  background: rgba(8, 9, 13, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.gemini-input:focus {
+  background: rgba(14, 18, 27, 0.95);
+  border-color: #44e2cd;
+  box-shadow: 0 0 0 4px rgba(68, 226, 205, 0.15), 0 0 20px rgba(68, 226, 205, 0.1);
+}
+
+.gemini-tag {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.gemini-tag:hover {
+  background: rgba(68, 226, 205, 0.1);
+  border-color: rgba(68, 226, 205, 0.4);
+  color: #44e2cd;
+  transform: translateY(-1px);
+}
+
+.gemini-btn-primary {
+  background: linear-gradient(135deg, #44e2cd 0%, #2dd4bf 100%);
+  color: #002b26;
+  font-weight: 800;
+  box-shadow: 0 4px 20px -2px rgba(68, 226, 205, 0.35);
+  transition: all 0.2s ease;
+}
+
+.gemini-btn-primary:hover {
+  filter: brightness(1.08);
+  transform: scale(1.02);
+  box-shadow: 0 6px 25px -2px rgba(68, 226, 205, 0.5);
+}
+
+.gemini-btn-primary:active {
+  transform: scale(0.98);
 }
