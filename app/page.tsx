@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import QuickCancelBar from '@/components/QuickCancelBar'
 
 function BottomNav() {
   return (
@@ -97,6 +98,9 @@ export default function HomePage() {
           <p className="text-sm text-on-surface-variant font-medium mt-6">
             First cancellation guide — free. No credit card needed to scan.
           </p>
+
+          {/* Instant Prompt Bar */}
+          <QuickCancelBar />
         </section>
 
         {/* Insights Bento Grid */}
@@ -132,6 +136,20 @@ export default function HomePage() {
                 <p className="text-on-surface-variant text-sm leading-relaxed">
                   Your PDF is processed entirely in your browser. We never see your raw bank data.
                 </p>
+              </div>
+            </div>
+
+            {/* Chrome Extension Card */}
+            <div className="bg-surface-container-low rounded-[2rem] p-8 flex flex-col justify-between border border-[#44e2cd]/30">
+              <div>
+                <span className="material-symbols-outlined text-[#44e2cd] text-3xl mb-4 block">extension</span>
+                <h3 className="text-xl font-bold text-on-surface mb-2">Chrome Extension</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed mb-4">
+                  Cancel any service in 1-click directly while browsing. No logins or forms needed.
+                </p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#44e2cd]/10 text-[#44e2cd] text-xs font-bold">
+                  ⚡ Ready for Chrome Web Store
+                </span>
               </div>
             </div>
 

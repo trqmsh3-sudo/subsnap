@@ -9,11 +9,10 @@
 
 ## Stack
 - Next.js 15 App Router + TypeScript strict + Tailwind CSS 4
-- Playwright browser automation runs on Railway (separate Node/Express server)
-- Gemini 2.5 Flash for bank statement analysis and easy cancellation sites
-- Claude Opus for hard cancellation sites (dark patterns, retention flows)
-- LemonSqueezy for payments (not Stripe — CLAUDE.md was out of date)
-- Upstash Redis for credits, rate limiting, scan logging
+- Playwright browser automation (Node/Express server)
+- Gemini 2.5 Flash / 2.0 Flash for bank statement analysis and cancellation automation (100% Free Tier via Google AI Studio)
+- Upstash Redis for credits, rate limiting, scan logging (with in-memory fallback for local/zero-cost mode)
+- LemonSqueezy for payments (optional)
 
 ## Redis Key Patterns
 - `credits:{userId}` — integer credit balance

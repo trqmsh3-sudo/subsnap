@@ -1,39 +1,18 @@
 import express from 'express'
 import { chromium } from 'playwright'
-import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const app = express()
 app.use(express.json({ limit: '10mb' }))
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 // Log env var presence at startup
-console.log('[startup] ANTHROPIC_API_KEY set:', !!process.env.ANTHROPIC_API_KEY)
 console.log('[startup] GEMINI_API_KEY set:', !!process.env.GEMINI_API_KEY)
-
-// ─── Cost constants ───────────────────────────────────────────────────────────
-
-const COST = {
-  scoutCall: 0.000025,
-  geminiCancel: 0.15,
-  claudeCancel: 0.75,
-}
-
-function calcCost(model) {
-  return COST.scoutCall + (model === 'claude' ? COST.claudeCancel : COST.geminiCancel)
-}
-
-function logCost(serviceName, model, steps) {
-  const total = calcCost(model).toFixed(6)
-  console.log(`[cost] service=${serviceName} | model=${model} | steps=${steps} | estimated=$${total}`)
-}
 
 // ─── Scout ────────────────────────────────────────────────────────────────────
 
 async function scoutDifficulty(screenshotBase64, fallback) {
-  // Try Gemini first; fall back to Claude if quota exceeded or unavailable
   if (process.env.GEMINI_API_KEY) {
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
@@ -54,29 +33,7 @@ Easy = direct cancel button visible. Medium = multi-step flow. Hard = chat requi
     }
   }
 
-  // Claude fallback for scout
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 10,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
-            { type: 'text', text: 'Rate this cancellation page complexity: reply with only one word: easy, medium, or hard.' },
-          ],
-        }],
-      })
-      const rating = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim().toLowerCase()
-      console.log(`[scout] Claude fallback response: "${rating}"`)
-      if (rating === 'easy' || rating === 'medium' || rating === 'hard') return rating
-    } catch (err) {
-      console.error(`[scout] Claude fallback FAILED: ${err?.message ?? err}`)
-    }
-  }
-
-  console.warn(`[scout] all models failed, using fallback: ${fallback}`)
+  console.warn(`[scout] GEMINI_API_KEY not configured or failed, using fallback: ${fallback}`)
   return fallback
 }
 
@@ -106,50 +63,23 @@ function parseAction(raw) {
   return JSON.parse(cleaned)
 }
 
-// ─── AI action getters ────────────────────────────────────────────────────────
-
-async function getNextActionClaude(screenshotBase64, goal, steps) {
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not set in Railway environment')
-  const response = await anthropic.messages.create({
-    model: 'claude-opus-4-5',
-    max_tokens: 512,
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
-        { type: 'text', text: buildPrompt(goal, steps) },
-      ],
-    }],
-  })
-  const raw = response.content[0].type === 'text' ? response.content[0].text : '{}'
-  return parseAction(raw)
-}
+// ─── AI action getter ─────────────────────────────────────────────────────────
 
 async function getNextActionGemini(screenshotBase64, goal, steps) {
   if (!process.env.GEMINI_API_KEY) {
-    console.warn('[gemini] no API key — falling back to Claude')
-    return getNextActionClaude(screenshotBase64, goal, steps)
+    throw new Error('GEMINI_API_KEY not set in server environment')
   }
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const result = await model.generateContent([
+    { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
+    buildPrompt(goal, steps),
+  ])
+  const raw = result.response.text()
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-    const result = await model.generateContent([
-      { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
-      buildPrompt(goal, steps),
-    ])
-    const raw = result.response.text()
-    try {
-      return parseAction(raw)
-    } catch {
-      console.error('[gemini] failed to parse JSON:', raw.slice(0, 200))
-      throw new Error(`Gemini returned non-JSON response: ${raw.slice(0, 100)}`)
-    }
-  } catch (err) {
-    // 429 quota exhausted — fall back to Claude
-    if (err?.status === 429 || String(err?.message).includes('429') || String(err?.message).includes('quota')) {
-      console.warn('[gemini] quota exceeded — falling back to Claude')
-      return getNextActionClaude(screenshotBase64, goal, steps)
-    }
-    throw err
+    return parseAction(raw)
+  } catch {
+    console.error('[gemini] failed to parse JSON:', raw.slice(0, 200))
+    throw new Error(`Gemini returned non-JSON response: ${raw.slice(0, 100)}`)
   }
 }
 
@@ -175,33 +105,29 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
     const firstBase64 = firstShot.toString('base64')
 
     const scoutRating = await scoutDifficulty(firstBase64, difficulty)
-    const model = scoutRating === 'hard' ? 'claude' : 'gemini'
-    console.log(`[scout] service=${serviceName} | rated=${scoutRating} | model=${model === 'claude' ? 'claude-opus-4-5' : 'gemini-2.5-flash'}`)
+    const modelName = 'gemini-2.5-flash'
+    console.log(`[scout] service=${serviceName} | rated=${scoutRating} | model=${modelName}`)
 
     let stepCount = 0
     const maxSteps = 10
     let currentBase64 = firstBase64
 
     while (stepCount < maxSteps) {
-      console.log(`[step ${stepCount + 1}] getting next action from ${model}`)
-      const action = model === 'claude'
-        ? await getNextActionClaude(currentBase64, `Cancel ${serviceName} subscription`, steps)
-        : await getNextActionGemini(currentBase64, `Cancel ${serviceName} subscription`, steps)
+      console.log(`[step ${stepCount + 1}] getting next action from ${modelName}`)
+      const action = await getNextActionGemini(currentBase64, `Cancel ${serviceName} subscription`, steps)
 
       console.log(`[step ${stepCount + 1}] action=${action.action} reason="${action.reason}"`)
 
       if (action.action === 'done') {
         clearTimeout(timeoutHandle)
-        logCost(serviceName, model, stepCount + 1)
         await browser.close()
-        return { success: true, message: `${serviceName} cancelled successfully`, model, stepsTaken: stepCount + 1, estimatedCost: calcCost(model) }
+        return { success: true, message: `${serviceName} cancelled successfully`, model: modelName, stepsTaken: stepCount + 1, estimatedCost: 0 }
       }
 
       if (action.action === 'need_human') {
         clearTimeout(timeoutHandle)
-        logCost(serviceName, model, stepCount + 1)
         await browser.close()
-        return { success: false, message: 'need_human — login required', model, stepsTaken: stepCount + 1, estimatedCost: calcCost(model) }
+        return { success: false, message: 'need_human — login required', model: modelName, stepsTaken: stepCount + 1, estimatedCost: 0 }
       }
 
       if (action.action === 'click' && action.selector) {
@@ -224,8 +150,7 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
     }
 
     clearTimeout(timeoutHandle)
-    logCost(serviceName, model, maxSteps)
-    return { success: false, message: 'Max steps reached — please complete manually', model, stepsTaken: maxSteps, estimatedCost: calcCost(model) }
+    return { success: false, message: 'Max steps reached — please complete manually', model: modelName, stepsTaken: maxSteps, estimatedCost: 0 }
 
   } catch (error) {
     clearTimeout(timeoutHandle)
@@ -244,7 +169,6 @@ app.get('/health', (_req, res) => {
 
 app.get('/debug', (_req, res) => {
   res.json({
-    ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
     GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
     NODE_VERSION: process.version,
   })

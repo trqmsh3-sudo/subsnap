@@ -24,6 +24,22 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     tier: 'auto',
   },
   {
+    name: 'Grok / X Premium',
+    keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר'],
+    loginUrl: 'https://x.com/i/flow/login',
+    cancelUrl: 'https://x.com/settings/premium',
+    method: 'url',
+    notes: 'Cancel via X Premium settings or manage subscription',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'Navigate to X Premium settings',
+      'Click Manage Subscription',
+      'Click Cancel Subscription',
+      'Confirm cancellation when prompted',
+    ],
+  },
+  {
     name: 'Spotify',
     keywords: ['spotify', 'spotifyusa', 'spotify ab', 'spotify.com', 'spotify usa'],
     loginUrl: 'https://accounts.spotify.com/en/login',

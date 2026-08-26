@@ -6,6 +6,7 @@ import Link from 'next/link'
 import CreditBalance from '@/components/CreditBalance'
 import Preview from '@/components/Preview'
 import PricingCards from '@/components/PricingCards'
+import QuickCancelBar from '@/components/QuickCancelBar'
 
 const FileUpload = dynamic(() => import('@/components/FileUpload'), { ssr: false })
 const Redactor = dynamic(() => import('@/components/Redactor'), { ssr: false })
@@ -123,6 +124,9 @@ export default function AppPage() {
         <div className="bg-surface-container-low rounded-[2rem] p-4 sm:p-6">
           <CreditBalance />
         </div>
+
+        {/* Instant Search Bar */}
+        <QuickCancelBar />
 
         {/* Upload Section */}
         <section className="bg-surface-container-low rounded-[2rem] p-5 sm:p-8 space-y-4 sm:space-y-6">

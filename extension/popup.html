@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SubSnap</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      width: 360px;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 900;
+      color: #44e2cd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge {
+      font-size: 10px;
+      background: rgba(68, 226, 205, 0.15);
+      color: #44e2cd;
+      border: 1px solid rgba(68, 226, 205, 0.3);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .search-box {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    input {
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 10px 36px 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: #44e2cd;
+    }
+    .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+    }
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .tag {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tag:hover {
+      border-color: #44e2cd;
+      color: #44e2cd;
+    }
+    .result-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .result-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #44e2cd;
+      margin-bottom: 4px;
+    }
+    .result-notes {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+    .btn-cancel {
+      width: 100%;
+      background: linear-gradient(135deg, #44e2cd 0%, #69ffe9 100%);
+      color: #003731;
+      font-weight: 800;
+      border: none;
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn-cancel:hover {
+      opacity: 0.95;
+      transform: scale(1.01);
+    }
+    .btn-cancel:active {
+      transform: scale(0.98);
+    }
+    .footer-link {
+      display: block;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      text-decoration: none;
+      padding-top: 6px;
+      border-top: 1px solid #1e293b;
+    }
+    .footer-link span {
+      color: #44e2cd;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">⚡ SubSnap</div>
+    <div class="badge">1-Click Canceller</div>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Cancel Grok, Netflix, Adobe..." autofocus />
+    <button class="clear-btn" id="clearBtn">✕</button>
+  </div>
+
+  <div class="tags-container" id="tagsContainer">
+    <div class="tag" data-service="Grok / X Premium">Grok / X</div>
+    <div class="tag" data-service="Netflix">Netflix</div>
+    <div class="tag" data-service="Spotify">Spotify</div>
+    <div class="tag" data-service="Adobe">Adobe</div>
+    <div class="tag" data-service="ChatGPT Plus">ChatGPT</div>
+    <div class="tag" data-service="Canva">Canva</div>
+    <div class="tag" data-service="Amazon Prime">Amazon Prime</div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-title" id="serviceName">Grok / X Premium</div>
+    <div class="result-notes" id="serviceNotes">Direct cancellation via X settings</div>
+    <button class="btn-cancel" id="btnCancel">Cancel Subscription Now ➔</button>
+  </div>
+
+  <a href="https://www.subsnap.net/app" target="_blank" class="footer-link">
+    Need to scan bank statement? <span>Open Web App ↗</span>
+  </a>
+
+  <script src="popup.js"></script>
+</body>
+</html>

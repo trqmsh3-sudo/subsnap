@@ -64,7 +64,16 @@ export async function POST(req: NextRequest) {
 
   // ── AI analysis ───────────────────────────────────────────────────────────
   try {
-    const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      console.error('[analyze] GEMINI_API_KEY is not set. Please set GEMINI_API_KEY in .env.local')
+      return NextResponse.json(
+        { error: 'Missing Gemini API Key', message: 'GEMINI_API_KEY is not configured on server.', subscriptions: [] },
+        { status: 500 }
+      )
+    }
+
+    const genai = new GoogleGenerativeAI(apiKey)
     const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const result = await model.generateContent([
@@ -84,6 +93,6 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('[analyze] error:', error)
     await logScanResult(uid, 0).catch(() => {})
-    return NextResponse.json({ subscriptions: [] })
+    return NextResponse.json({ subscriptions: [], error: 'Failed to analyze statement' })
   }
 }

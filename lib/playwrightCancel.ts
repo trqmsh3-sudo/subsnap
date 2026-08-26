@@ -3,16 +3,13 @@ import * as path from 'path'
 dotenv.config({ override: true, path: path.resolve(process.cwd(), '.env.local') })
 
 import { chromium } from 'playwright'
-import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const anthropic = new Anthropic()
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 // ─── Scout ────────────────────────────────────────────────────────────────────
 // Sends a single screenshot to Gemini Flash and returns easy | medium | hard.
-// Estimated cost: ~$0.000075 per call (gemini-1.5-flash image input at $0.075/1M tokens,
-// ~1000 tokens per screenshot + prompt).
+// Uses free tier Gemini Flash (100% free with Google AI Studio API key).
 // Falls back to the manual difficulty tag if Scout throws.
 
 async function scoutDifficulty(
@@ -20,6 +17,10 @@ async function scoutDifficulty(
   fallback: 'easy' | 'hard'
 ): Promise<'easy' | 'medium' | 'hard'> {
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('[scout] No GEMINI_API_KEY provided, using manual fallback:', fallback)
+      return fallback === 'hard' ? 'hard' : 'easy'
+    }
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     const result = await model.generateContent([
       { inlineData: { mimeType: 'image/png', data: screenshotBase64 } },
@@ -70,23 +71,6 @@ type ActionResult = {
   reason: string
 }
 
-async function getNextActionClaude(screenshotBase64: string, goal: string, steps?: string[]): Promise<ActionResult> {
-  const response = await anthropic.messages.create({
-    model: 'claude-opus-4-5',
-    max_tokens: 512,
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 } },
-        { type: 'text', text: ACTION_PROMPT(goal, steps) },
-      ]
-    }]
-  })
-  const raw = response.content[0].type === 'text' ? response.content[0].text : '{}'
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-  return JSON.parse(cleaned)
-}
-
 async function getNextActionGemini(screenshotBase64: string, goal: string, steps?: string[]): Promise<ActionResult> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
   const result = await model.generateContent([
@@ -98,38 +82,14 @@ async function getNextActionGemini(screenshotBase64: string, goal: string, steps
   return JSON.parse(cleaned)
 }
 
-function pickModel(scoutRating: 'easy' | 'medium' | 'hard'): 'gemini' | 'claude' {
-  return scoutRating === 'hard' ? 'claude' : 'gemini'
-}
-
-// ─── Cost estimation ──────────────────────────────────────────────────────────
-
-const COST = {
-  scoutCall: 0.000025,      // one Gemini Flash image call for Scout
-  geminiCancel: 0.15,       // flat per-cancellation estimate (Gemini steps)
-  claudeCancel: 0.75,       // flat per-cancellation estimate (Claude steps)
-}
-
-function logCost(serviceName: string, model: 'gemini' | 'claude', stepCount: number) {
-  const base = model === 'claude' ? COST.claudeCancel : COST.geminiCancel
-  const total = (COST.scoutCall + base).toFixed(6)
-  console.log(
-    `[cost] service=${serviceName} | model=${model} | steps=${stepCount} | estimated=$${total}`
-  )
-}
-
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export interface CancelResult {
   success: boolean
   message: string
-  model?: 'gemini' | 'claude'
+  model?: string
   stepsTaken?: number
   estimatedCost?: number
-}
-
-function calcCost(model: 'gemini' | 'claude'): number {
-  return COST.scoutCall + (model === 'claude' ? COST.claudeCancel : COST.geminiCancel)
 }
 
 export async function cancelSubscription(
@@ -171,9 +131,9 @@ export async function cancelSubscription(
     const firstScreenshot = await page.screenshot({ type: 'png' })
     const firstBase64 = firstScreenshot.toString('base64')
     const scoutRating = await scoutDifficulty(firstBase64, manualDifficulty)
-    const model = pickModel(scoutRating)
+    const modelName = 'gemini-2.5-flash'
 
-    console.log(`[scout] service=${serviceName} | rated=${scoutRating} | model=${model === 'claude' ? 'claude-opus-4-5' : 'gemini-2.5-flash'} | manual-fallback=${manualDifficulty}`)
+    console.log(`[scout] service=${serviceName} | rated=${scoutRating} | model=${modelName} | manual-fallback=${manualDifficulty}`)
 
     let stepCount = 0
     const maxSteps = 10
@@ -182,24 +142,20 @@ export async function cancelSubscription(
     let currentBase64 = firstBase64
 
     while (stepCount < maxSteps) {
-      const action = model === 'claude'
-        ? await getNextActionClaude(currentBase64, `Cancel ${serviceName} subscription`, steps)
-        : await getNextActionGemini(currentBase64, `Cancel ${serviceName} subscription`, steps)
+      const action = await getNextActionGemini(currentBase64, `Cancel ${serviceName} subscription`, steps)
 
-      console.log(`[step ${stepCount + 1}] model=${model} action=${action.action} reason="${action.reason}"`)
+      console.log(`[step ${stepCount + 1}] model=${modelName} action=${action.action} reason="${action.reason}"`)
 
       if (action.action === 'done') {
         clearTimeout(timeoutHandle)
-        logCost(serviceName, model, stepCount + 1)
         await browser.close()
-        return { success: true, message: `${serviceName} cancelled successfully`, model, stepsTaken: stepCount + 1, estimatedCost: calcCost(model) }
+        return { success: true, message: `${serviceName} cancelled successfully`, model: modelName, stepsTaken: stepCount + 1, estimatedCost: 0 }
       }
 
       if (action.action === 'need_human') {
         clearTimeout(timeoutHandle)
-        logCost(serviceName, model, stepCount + 1)
         await browser.close()
-        return { success: false, message: `need_human — login required`, model, stepsTaken: stepCount + 1, estimatedCost: calcCost(model) }
+        return { success: false, message: `need_human — login required`, model: modelName, stepsTaken: stepCount + 1, estimatedCost: 0 }
       }
 
       if (action.action === 'click' && action.selector) {
@@ -224,8 +180,7 @@ export async function cancelSubscription(
     }
 
     clearTimeout(timeoutHandle)
-    logCost(serviceName, model, maxSteps)
-    return { success: false, message: 'Max steps reached — please complete manually', model, stepsTaken: maxSteps, estimatedCost: calcCost(model) }
+    return { success: false, message: 'Max steps reached — please complete manually', model: modelName, stepsTaken: maxSteps, estimatedCost: 0 }
 
   } catch (error) {
     clearTimeout(timeoutHandle)
