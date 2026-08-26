@@ -8,52 +8,48 @@ export default function StatementCapsule() {
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  function handleFileSelected(file: File) {
-    // Navigate to /app to process the file in full dashboard
+  function handleFileSelected() {
     router.push('/app')
   }
 
   return (
-    <div className="w-full gemini-capsule p-6 sm:p-8 relative overflow-hidden">
-      {/* Subtle top inner glow */}
-      <div className="absolute top-0 left-1/4 w-1/2 h-1 bg-gradient-to-r from-transparent via-[#38bdf8]/40 to-transparent blur-xs" />
+    <div className="w-full studio-capsule p-6 sm:p-8 relative overflow-hidden">
+      {/* Top micro-line gradient */}
+      <div className="absolute top-0 left-1/4 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent" />
 
-      {/* Header with Scan Icon */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] flex items-center justify-center font-bold shadow-[0_0_15px_rgba(56,189,248,0.2)]">
-            <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>document_scanner</span>
+          <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
+            <span className="material-symbols-outlined text-lg">document_scanner</span>
           </div>
-          <div>
-            <h3 className="font-black text-lg sm:text-2xl text-white tracking-tight">
-              שים פה את דף פירוט החיובים החודשי
-            </h3>
-          </div>
+          <h2 className="font-semibold text-lg sm:text-xl text-white tracking-tight">
+            שים פה את דף פירוט החיובים החודשי
+          </h2>
         </div>
-        <span className="hidden sm:inline-flex text-[11px] font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#38bdf8]">
-          גילוי מנויים מלא 🔍
+        <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-zinc-400">
+          סריקה מלאה
         </span>
       </div>
 
-      <p className="text-xs sm:text-sm text-slate-400 mb-5">
-        גרור צילום מסך או קובץ PDF של כרטיס האשראי — ואנחנו נמצא את כל המנויים החבויים שתרצה לבטל:
+      <p className="text-xs sm:text-sm text-zinc-400 mb-5 leading-relaxed">
+        גרור צילום מסך או PDF של פירוט האשראי — ואנחנו נמצא את כל המנויים החבויים שתרצה לבטל:
       </p>
 
-      {/* Upload Drop Capsule */}
+      {/* Drop Zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          const file = e.dataTransfer.files[0];
-          if (file) handleFileSelected(file);
+          handleFileSelected();
         }}
         onClick={() => inputRef.current?.click()}
-        className={`w-full rounded-2xl p-6 sm:p-8 border-2 border-dashed flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer transition-all duration-300 ${
+        className={`w-full rounded-xl p-5 sm:p-6 border border-dashed flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer transition-all duration-200 ${
           dragging
-            ? 'border-[#38bdf8] bg-[#38bdf8]/10 scale-[1.01]'
-            : 'border-white/10 bg-black/30 hover:border-[#38bdf8]/50 hover:bg-white/[0.02]'
+            ? 'border-sky-400 bg-sky-500/10'
+            : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
         }`}
       >
         <input
@@ -61,37 +57,37 @@ export default function StatementCapsule() {
           type="file"
           accept=".pdf,image/*"
           className="hidden"
-          onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
+          onChange={() => handleFileSelected()}
         />
 
-        <div className="flex items-center gap-4 text-right">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#38bdf8] shrink-0">
-            <span className="material-symbols-outlined text-2xl">cloud_upload</span>
+        <div className="flex items-center gap-3.5 text-right">
+          <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-sky-400 shrink-0">
+            <span className="material-symbols-outlined text-xl">upload_file</span>
           </div>
           <div>
-            <h4 className="font-bold text-sm sm:text-base text-white">
+            <h3 className="font-medium text-sm text-zinc-200">
               גרור לכאן את הקובץ או לחץ לבחירה
-            </h4>
-            <p className="text-xs text-slate-400 mt-0.5">
-              תומך בקובצי תמונה (PNG/JPG) וקובצי PDF מכל הבנקים וחברות האשראי
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              תומך בקובצי תמונה (PNG/JPG) וקובצי PDF מכל הבנקים
             </p>
           </div>
         </div>
 
-        <div className="bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-3 rounded-xl text-xs transition-colors shrink-0 flex items-center gap-2">
+        <div className="bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 border border-white/[0.08] font-medium px-4 py-2.5 rounded-lg text-xs transition-colors shrink-0 flex items-center gap-1.5">
           <span>פתח סורק תדפיסים</span>
-          <span className="material-symbols-outlined text-sm">arrow_back</span>
+          <span className="material-symbols-outlined text-xs">arrow_back</span>
         </div>
       </div>
 
-      {/* Trust Badges Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-white/5 text-xs text-slate-400">
-        <div className="flex items-center gap-2">
-          <span className="text-[#38bdf8]">🔒</span>
-          <span>100% פרטיות — הקובץ מעובד מקומית בדפדפן בלבד</span>
+      {/* Trust Badges */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3.5 border-t border-white/[0.04] text-xs text-zinc-400">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sky-400">🔒</span>
+          <span>100% פרטיות — הקובץ מעובד מקומית במכשיר שלך בלבד</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[#44e2cd]">🛡️</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-emerald-400">🛡️</span>
           <span>שמות ומספרי חשבון מושחרים אוטומטית</span>
         </div>
       </div>

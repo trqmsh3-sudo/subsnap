@@ -1,137 +1,128 @@
 @import "tailwindcss";
 
-/* ── Google Gemini Dark Luxury Theme ────────────────────────────────────────── */
+/* ── Bespoke High-End Startup Theme (Raycast / Linear / Apple Level) ────────── */
 @theme {
-  /* Surface layers - Deep Space Charcoal & Obsidian */
-  --color-surface: #08090d;
-  --color-surface-dim: #050608;
-  --color-surface-bright: #171b26;
-  --color-surface-container: #0e121b;
-  --color-surface-container-lowest: #050608;
-  --color-surface-container-low: #0a0d14;
-  --color-surface-container-high: #131722;
-  --color-surface-container-highest: #1a202f;
-  --color-surface-variant: #1a202f;
-  --color-surface-tint: #44e2cd;
+  /* Surfaces */
+  --color-surface: #090a0f;
+  --color-surface-dim: #06070a;
+  --color-surface-bright: #141721;
+  --color-surface-container: #0f121a;
+  --color-surface-container-low: #0b0d14;
+  --color-surface-container-high: #161a26;
+  --color-surface-container-highest: #1e2434;
 
-  /* Text & Readability */
-  --color-on-surface: #f1f5f9;
-  --color-on-surface-variant: #94a3b8;
+  /* Typography */
+  --color-on-surface: #f4f4f6;
+  --color-on-surface-variant: #9499ad;
 
-  /* Primary – Neon Emerald & Cyber Mint */
-  --color-primary: #44e2cd;
-  --color-primary-container: #004d44;
-  --color-on-primary: #002b26;
-  --color-on-primary-container: #69ffe9;
-  --color-primary-fixed: #69ffe9;
-  --color-primary-fixed-dim: #44e2cd;
-  --color-on-primary-fixed: #00201c;
-  --color-on-primary-fixed-variant: #004d44;
-  --color-inverse-primary: #006b5f;
-
-  /* Secondary – Electric Indigo / Cyan */
-  --color-secondary: #38bdf8;
-  --color-secondary-container: #0c4a6e;
-  --color-on-secondary: #082f49;
-  --color-on-secondary-container: #bae6fd;
-
-  /* Outline */
-  --color-outline: #334155;
-  --color-outline-variant: #1e293b;
-
-  /* Background */
-  --color-background: #08090d;
-  --color-on-background: #f1f5f9;
+  /* Accent – Studio Emerald & Platinum */
+  --color-primary: #10b981;
+  --color-primary-container: #064e3b;
+  --color-on-primary: #ffffff;
+  --color-primary-fixed: #34d399;
 
   /* Font */
-  --font-sans: var(--font-heebo), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-assistant), var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ── Global Base ───────────────────────────────────────────────────────────── */
+html {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
 body {
   font-family: var(--font-sans);
-  background-color: #08090d;
-  color: #f1f5f9;
+  background-color: #090a0f;
+  color: #f4f4f6;
   direction: rtl;
   overflow-x: hidden;
+  letter-spacing: -0.012em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-image: 
-    radial-gradient(circle at 50% 15%, rgba(68, 226, 205, 0.07) 0%, transparent 60%),
-    radial-gradient(circle at 80% 40%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 20% 60%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+    radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 85% 35%, rgba(56, 189, 248, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 15% 55%, rgba(168, 85, 247, 0.03) 0%, transparent 40%);
   background-attachment: fixed;
 }
 
 /* ── Material Symbols ───────────────────────────────────────────────────────── */
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 22;
   user-select: none;
   display: inline-block;
   line-height: 1;
 }
 
-/* ── Gemini Glass Capsules ─────────────────────────────────────────────────── */
-.gemini-capsule {
-  background: rgba(14, 18, 27, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ── Bespoke Studio Glass Capsules ─────────────────────────────────────────── */
+.studio-capsule {
+  background: rgba(15, 18, 26, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 
-    0 20px 50px -10px rgba(0, 0, 0, 0.5),
-    0 0 30px -10px rgba(68, 226, 205, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border-radius: 2rem;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    0 20px 40px -15px rgba(0, 0, 0, 0.6),
+    0 0 1px 1px rgba(255, 255, 255, 0.04) inset;
+  border-radius: 1.75rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gemini-capsule:hover {
-  border-color: rgba(68, 226, 205, 0.25);
+.studio-capsule:hover {
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow: 
-    0 25px 60px -12px rgba(0, 0, 0, 0.7),
-    0 0 40px -10px rgba(68, 226, 205, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 25px 50px -15px rgba(0, 0, 0, 0.75),
+    0 0 25px -5px rgba(16, 185, 129, 0.08),
+    0 0 1px 1px rgba(255, 255, 255, 0.08) inset;
 }
 
-.gemini-input {
-  background: rgba(8, 9, 13, 0.8);
+/* ── Command Palette Input ─────────────────────────────────────────────────── */
+.command-input {
+  background: rgba(10, 12, 18, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-  transition: all 0.2s ease;
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gemini-input:focus {
-  background: rgba(14, 18, 27, 0.95);
-  border-color: #44e2cd;
-  box-shadow: 0 0 0 4px rgba(68, 226, 205, 0.15), 0 0 20px rgba(68, 226, 205, 0.1);
+.command-input:focus {
+  background: rgba(14, 17, 25, 0.95);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 
+    0 0 0 3px rgba(16, 185, 129, 0.12),
+    0 0 20px -3px rgba(16, 185, 129, 0.15);
 }
 
-.gemini-tag {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-  transition: all 0.2s ease;
+/* ── Minimalist Studio Tags ────────────────────────────────────────────────── */
+.studio-tag {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #9499ad;
+  font-weight: 500;
+  transition: all 0.15s ease;
 }
 
-.gemini-tag:hover {
-  background: rgba(68, 226, 205, 0.1);
-  border-color: rgba(68, 226, 205, 0.4);
-  color: #44e2cd;
+.studio-tag:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
-.gemini-btn-primary {
-  background: linear-gradient(135deg, #44e2cd 0%, #2dd4bf 100%);
-  color: #002b26;
-  font-weight: 800;
-  box-shadow: 0 4px 20px -2px rgba(68, 226, 205, 0.35);
-  transition: all 0.2s ease;
+/* ── Primary Action Button ─────────────────────────────────────────────────── */
+.btn-emerald {
+  background: #10b981;
+  color: #032014;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  box-shadow: 0 4px 15px -2px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gemini-btn-primary:hover {
-  filter: brightness(1.08);
-  transform: scale(1.02);
-  box-shadow: 0 6px 25px -2px rgba(68, 226, 205, 0.5);
+.btn-emerald:hover {
+  background: #34d399;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -2px rgba(16, 185, 129, 0.45);
 }
 
-.gemini-btn-primary:active {
-  transform: scale(0.98);
+.btn-emerald:active {
+  transform: translateY(0);
 }
