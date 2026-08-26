@@ -1,18 +1,47 @@
 import Link from 'next/link'
 
+function Header() {
+  return (
+    <header className="fixed top-0 w-full z-50 bg-[#090a0f]/80 backdrop-blur-xl border-b border-white/[0.05]">
+      <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 max-w-4xl mx-auto">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+            <span className="material-symbols-outlined text-base">bolt</span>
+          </div>
+          <span className="font-bold text-xl tracking-tight text-white">SubSnap</span>
+        </Link>
+        <Link
+          href="/"
+          className="text-xs font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
+        >
+          <span className="material-symbols-outlined text-xs">arrow_forward</span>
+          <span>חזרה לדף הבית</span>
+        </Link>
+      </div>
+    </header>
+  )
+}
+
 function Footer() {
   return (
-    <footer className="bg-[#060d20] w-full py-12 px-8 border-t border-[#3c4a47]/15">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
-        <div>
-          <span className="text-[#69ffe9] font-black text-xl tracking-tighter">SubSnap</span>
-          <p className="text-[#dbe2fd]/60 text-[0.75rem] mt-2">© 2026 SubSnap. All rights reserved.</p>
+    <footer className="border-t border-white/[0.05] bg-[#06070a] py-10 px-6 mt-20">
+      <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-right">
+          <div className="text-white font-bold text-base flex items-center gap-1.5">
+            <span className="text-emerald-400">⚡</span> SubSnap
+          </div>
+          <p className="text-xs text-zinc-400">
+            החזרת כספים חכמה — מנוע ביטול מנויים וחיובים חוזרים בחינם.
+          </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-8">
-          <Link href="/privacy" className="text-[0.75rem] uppercase tracking-[0.1em] font-medium text-[#dbe2fd]/60 hover:text-[#69ffe9] transition-colors">Privacy Policy</Link>
-          <Link href="/terms" className="text-[0.75rem] uppercase tracking-[0.1em] font-medium text-[#dbe2fd]/60 hover:text-[#69ffe9] transition-colors">Terms of Service</Link>
-          <Link href="/refund" className="text-[0.75rem] uppercase tracking-[0.1em] font-medium text-[#69ffe9]">Refund Policy</Link>
+        <div className="flex flex-wrap justify-center gap-5 text-xs text-zinc-400 font-medium">
+          <Link href="/privacy" className="hover:text-zinc-200 transition-colors">מדיניות פרטיות</Link>
+          <Link href="/terms" className="hover:text-zinc-200 transition-colors">תנאי שימוש</Link>
+          <Link href="/refund" className="text-emerald-400 font-semibold">מדיניות שירות</Link>
         </div>
+      </div>
+      <div className="text-center text-[11px] text-zinc-500 mt-6 pt-6 border-t border-white/[0.03]">
+        © 2026 SubSnap. 100% חינם. פרטיות מקומית Zero-Knowledge.
       </div>
     </footer>
   )
@@ -20,136 +49,50 @@ function Footer() {
 
 export default function RefundPage() {
   return (
-    <div className="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#0b1326]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="md:hidden text-[#44E2CD] active:scale-95 transition-transform">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <Link href="/" className="text-[#69ffe9] font-black text-xl">SubSnap</Link>
-        </div>
-        <nav className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Home</Link>
-          <Link href="/app" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Dashboard</Link>
-          <Link href="/#pricing" className="text-[#dbe2fd]/70 font-medium hover:text-white transition-colors text-sm">Pricing</Link>
-        </nav>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
-      <main className="pt-32 pb-24 px-6 md:px-12 max-w-5xl mx-auto min-h-screen">
-        {/* Hero Section */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20 items-start overflow-hidden">
-          <div className="md:col-span-8">
-            <label className="text-[0.75rem] uppercase tracking-[0.1em] font-semibold text-secondary mb-4 block">
-              Satisfaction Guaranteed
-            </label>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
-              Short, clear, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">
-                and fair.
-              </span>
-            </h1>
-            <p className="text-lg text-on-surface-variant max-w-xl leading-relaxed">
-              At SubSnap, we believe managing your subscriptions should be stress-free. Our refund
-              policy reflects our commitment to providing a high-end, honest service.
-            </p>
-          </div>
-          <div className="md:col-span-4 flex justify-end">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shadow-[0_0_40px_rgba(105,255,233,0.2)]">
-              <span
-                className="material-symbols-outlined text-on-primary text-4xl"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                verified_user
-              </span>
-            </div>
-          </div>
-        </div>
+      {/* Ambient background glow */}
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-gradient-to-b from-purple-500/[0.06] via-transparent to-transparent blur-[100px] pointer-events-none -z-10" />
 
-        {/* Bento Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Major Statement Card */}
-          <div className="md:col-span-2 glass-card p-10 rounded-xl flex flex-col justify-between min-h-[320px]">
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Our 100% Money-Back Guarantee</h2>
-              <p className="text-on-surface-variant text-lg leading-relaxed mb-6">
-                We stand by the accuracy of our detection engine. If SubSnap doesn&rsquo;t deliver the
-                insights you were promised, we don&rsquo;t deserve your money.
-              </p>
-              <div className="flex items-center gap-3 text-primary font-medium">
-                <span className="material-symbols-outlined">check_circle</span>
-                <span>Zero questions asked for technical failures</span>
-              </div>
-            </div>
-            <div className="mt-8">
-              <a
-                href="mailto:contact@subsnap.net"
-                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold transition-transform active:scale-95 shadow-lg"
-              >
-                Request a Refund
-              </a>
-            </div>
-          </div>
+      <main className="flex-1 pt-32 pb-16 px-4 sm:px-6 max-w-3xl mx-auto w-full space-y-8">
+        {/* Title */}
+        <section className="space-y-3 text-right">
+          <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full inline-block">
+            שירות ותמיכה
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+            מדיניות שירות וסיוע (Service & Refund Policy)
+          </h1>
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            עודכן לאחרונה: אוגוסט 2026. שקיפות מלאה ומחויבות לחוויית משתמש איכותית.
+          </p>
+        </section>
 
-          {/* Not Happy Card */}
-          <div className="bg-surface-container-high p-8 rounded-xl flex flex-col">
-            <span className="material-symbols-outlined text-secondary text-3xl mb-4">search_off</span>
-            <h3 className="text-xl font-bold mb-4">Not happy?</h3>
-            <p className="text-on-surface-variant text-sm leading-relaxed">
-              If nothing was found or a technical issue occurred, simply email{' '}
-              <a href="mailto:contact@subsnap.net" className="text-primary">contact@subsnap.net</a>{' '}
-              for a full refund. We process most requests within 24 hours.
+        {/* Content */}
+        <div className="space-y-6">
+          <div className="studio-capsule p-6 sm:p-8 space-y-4">
+            <h2 className="font-semibold text-lg text-white">1. שירות חינמי</h2>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              מנוע החיפוש והביטול של SubSnap מוצע לציבור ללא תשלום. אין צורך בהזנת פרטי אשראי או תשלום כדי להשתמש במנוע החיפוש ובקישורי הביטול.
             </p>
           </div>
 
-          {/* Visual Break */}
-          <div className="md:col-span-3 h-48 rounded-xl overflow-hidden relative bg-surface-container-high">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#060d20] via-surface-container to-transparent flex items-center px-12">
-              <p className="text-2xl font-light italic text-on-surface">
-                &ldquo;Simplicity in policy, excellence in service.&rdquo;
-              </p>
-            </div>
+          <div className="studio-capsule p-6 sm:p-8 space-y-4">
+            <h2 className="font-semibold text-lg text-white">2. סיוע ודיווח על קישורים שגויים</h2>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              אנו מעדכנים את מאגר הביטולים באופן שוטף. אם נתקלת בקישור שאינו מוביל ישירות או בחברה ששינתה את תהליך הביטול שלה, נשמח אם תדווח לנו ונתקן זאת מיד.
+            </p>
           </div>
 
-          {/* Eligibility */}
-          <div className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10">
-            <h4 className="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant mb-6">Eligibility</h4>
-            <ul className="space-y-4">
-              <li className="flex gap-3 text-sm">
-                <span className="text-primary">•</span>
-                <span>Technical detection errors</span>
-              </li>
-              <li className="flex gap-3 text-sm">
-                <span className="text-primary">•</span>
-                <span>Incorrect account scanning</span>
-              </li>
-              <li className="flex gap-3 text-sm">
-                <span className="text-primary">•</span>
-                <span>Duplicate charges</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* The Process */}
-          <div className="bg-surface-container-low p-8 rounded-xl md:col-span-2">
-            <h4 className="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant mb-6">The Process</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="flex flex-col gap-2">
-                <span className="text-2xl font-black text-outline-variant/30">01</span>
-                <p className="text-sm font-semibold">Email Us</p>
-                <p className="text-xs text-on-surface-variant">Send your receipt to contact@subsnap.net</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-2xl font-black text-outline-variant/30">02</span>
-                <p className="text-sm font-semibold">Review</p>
-                <p className="text-xs text-on-surface-variant">We review your request within 24h</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-2xl font-black text-outline-variant/30">03</span>
-                <p className="text-sm font-semibold">Refund</p>
-                <p className="text-xs text-on-surface-variant">Funds return to your bank in 3–5 business days</p>
-              </div>
-            </div>
+          <div className="studio-capsule p-6 sm:p-8 space-y-4">
+            <h2 className="font-semibold text-lg text-white">3. יצירת קשר ושירות לקוחות</h2>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              צוות SubSnap זמין לכל פנייה, שאלה או עזרה בנושאי ביטול מנויים בדוא&quot;ל:{' '}
+              <a href="mailto:contact@subsnap.net" className="text-emerald-400 hover:underline font-mono">
+                contact@subsnap.net
+              </a>.
+            </p>
           </div>
         </div>
       </main>
