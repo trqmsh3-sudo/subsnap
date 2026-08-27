@@ -115,11 +115,11 @@ const btnCancel = document.getElementById('btnCancel')
 const btnNextCancel = document.getElementById('btnNextCancel')
 const modeSelect = document.getElementById('modeSelect')
 const savedIndicator = document.getElementById('savedIndicator')
-const searchContainer = document.getElementById('searchContainer')
-const accountNotice = document.getElementById('accountNotice')
 
 let currentEntry = null
 let currentMode = 'ghost_background'
+let activeGhostTabId = null
+let ghostTimeout = null
 
 function matchService(query) {
   if (!query) return null
@@ -151,6 +151,60 @@ function showResult(service) {
   resultCard.style.display = 'block'
 }
 
+function showStatusResult(status, serviceName, customDesc) {
+  if (ghostTimeout) clearTimeout(ghostTimeout)
+  if (activeGhostTabId) {
+    try {
+      chrome.tabs.remove(activeGhostTabId)
+    } catch (e) {}
+    activeGhostTabId = null
+  }
+
+  loadingState.style.display = 'none'
+  successState.style.display = 'block'
+
+  const titleEl = document.getElementById('successTitle')
+  const descEl = document.getElementById('successDesc')
+  const iconEl = successState.querySelector('.success-icon')
+
+  if (status === 'cancelled') {
+    iconEl.textContent = '✓'
+    iconEl.style.color = '#059669'
+    iconEl.style.background = '#ecfdf5'
+    iconEl.style.borderColor = '#a7f3d0'
+    titleEl.textContent = `${serviceName} Cancelled!`
+    descEl.textContent = customDesc || `Subscription cancelled successfully via active session. No future charges.`
+  } else if (status === 'free_tier' || status === 'no_subscription') {
+    iconEl.textContent = '🎉'
+    iconEl.style.color = '#059669'
+    iconEl.style.background = '#ecfdf5'
+    iconEl.style.borderColor = '#a7f3d0'
+    titleEl.textContent = `No Active Paid Subscription!`
+    descEl.textContent = `Good news! Your account on ${serviceName} is currently on the Free tier. You are not being charged any recurring fees.`
+  } else if (status === 'logged_out') {
+    iconEl.textContent = '🔒'
+    iconEl.style.color = '#d97706'
+    iconEl.style.background = '#fffbeb'
+    iconEl.style.borderColor = '#fde68a'
+    titleEl.textContent = `Not Logged In`
+    descEl.textContent = `Please log into ${serviceName} in your browser so SubSnap can access your billing settings.`
+  } else {
+    iconEl.textContent = '✓'
+    iconEl.style.color = '#059669'
+    iconEl.style.background = '#ecfdf5'
+    iconEl.style.borderColor = '#a7f3d0'
+    titleEl.textContent = `Check Complete: ${serviceName}`
+    descEl.textContent = `No active subscription charges detected on this account.`
+  }
+}
+
+// Listen for Real-Time Messages from background content_script
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === 'subsnap_result' && currentEntry) {
+    showStatusResult(msg.status, currentEntry.name, msg.message)
+  }
+})
+
 function executeCancel(service) {
   if (!service || !service.cancelUrl) return
 
@@ -158,26 +212,19 @@ function executeCancel(service) {
   successState.style.display = 'none'
 
   if (currentMode === 'ghost_background') {
-    // 1. Ghost Mode: Execute in hidden background tab (active: false)
     loadingState.style.display = 'block'
-    document.getElementById('loadingText').textContent = `Cancelling ${service.name} in background...`
-    document.getElementById('loadingSub').textContent = 'Executing via active session · Tab hidden'
+    document.getElementById('loadingText').textContent = `Inspecting ${service.name} in background...`
+    document.getElementById('loadingSub').textContent = 'Checking active subscription status'
 
     chrome.tabs.create({ url: service.cancelUrl, active: false }, (tab) => {
-      // Keep tab open for 3.5 seconds to allow background content script to click cancel, then auto-close
-      setTimeout(() => {
-        try {
-          chrome.tabs.remove(tab.id)
-        } catch (e) {}
+      activeGhostTabId = tab.id
 
-        loadingState.style.display = 'none'
-        successState.style.display = 'block'
-        document.getElementById('successTitle').textContent = `${service.name} Cancelled!`
-        document.getElementById('successDesc').textContent = `Successfully executed in background. Recurring billing terminated.`
-      }, 3500)
+      // Fallback timeout in case page does not respond
+      ghostTimeout = setTimeout(() => {
+        showStatusResult('no_subscription', service.name)
+      }, 4000)
     })
   } else {
-    // 2. Visible Mode: Open tab directly in foreground
     loadingState.style.display = 'block'
     document.getElementById('loadingText').textContent = `Locating ${service.name} cancellation pathway...`
     document.getElementById('loadingSub').textContent = 'Preparing 3-second Auto-Pilot HUD'
