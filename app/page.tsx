@@ -2,19 +2,24 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
+function ExtensionPuzzleIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19.439 7.85c0-1.571-1.285-2.85-2.87-2.85h-2.14a2.85 2.85 0 0 0-5.7 0H6.589c-1.585 0-2.87 1.279-2.87 2.85v2.14a2.85 2.85 0 0 0 0 5.7v2.14c0 1.571 1.285 2.85 2.87 2.85h2.14a2.85 2.85 0 0 1 5.7 0h2.14c1.585 0 2.87-1.279 2.87-2.85v-2.14a2.85 2.85 0 0 1 0-5.7v-2.14z"/>
+    </svg>
+  )
+}
+
 function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 h-16 px-6">
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 font-black text-base shadow-sm group-hover:scale-105 transition-transform">
-            ⚡
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 shadow-sm group-hover:scale-105 transition-transform">
+            <ExtensionPuzzleIcon className="w-4 h-4 text-emerald-600" />
           </div>
           <span className="font-extrabold text-xl tracking-tight text-slate-950 text-shadow-subtle">
             SubSnap
-          </span>
-          <span className="hidden sm:inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
-            Chrome Extension
           </span>
         </Link>
 
@@ -47,8 +52,11 @@ function Footer() {
     <footer className="border-t border-slate-200 bg-white py-14 px-6 mt-20">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
         <div className="space-y-1">
-          <div className="text-slate-900 font-extrabold text-base flex items-center justify-center md:justify-start gap-1.5 text-shadow-subtle">
-            <span className="text-emerald-600">⚡</span> SubSnap
+          <div className="text-slate-900 font-extrabold text-base flex items-center justify-center md:justify-start gap-2 text-shadow-subtle">
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+              <ExtensionPuzzleIcon className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <span>SubSnap</span>
           </div>
           <p className="text-xs text-slate-500 max-w-md">
             The autonomous Chrome extension for 1-click subscription cancellations directly inside your browser.
@@ -64,7 +72,7 @@ function Footer() {
 
       <div className="text-center text-[11px] text-slate-400 mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-        <span>© 2026 SubSnap. Zero-Knowledge Local Browser Execution. All Systems Operational.</span>
+        <span>© 2026 SubSnap. Official Chrome Extension. Zero-Knowledge Local Browser Execution.</span>
       </div>
     </footer>
   )
@@ -80,7 +88,7 @@ export default function HomePage() {
         <section className="relative overflow-hidden bg-white border-b border-slate-200/80 h-[calc(100vh-64px)] min-h-[580px] max-h-[920px] flex">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 h-full">
             
-            {/* Left Half: Shocked Statement Image with Smart Floating Glass Pill */}
+            {/* Left Half: Shocked Statement Image with Clean Gradient Fade */}
             <div className="hidden lg:block lg:col-span-6 relative w-full h-full overflow-hidden bg-slate-100">
               <Image
                 src="/hero-statement.jpg"
@@ -91,20 +99,6 @@ export default function HomePage() {
               />
               {/* Soft Gradient Fade-out into Studio White on the right */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-[#fafafc]" />
-
-              {/* Floating Intelligence Glass Badge on Photo */}
-              <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-3.5 shadow-xl shadow-slate-900/10 flex items-center gap-3 animate-fadeIn">
-                <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 font-bold text-sm">
-                  💸
-                </div>
-                <div>
-                  <div className="text-[11px] font-bold text-slate-900 flex items-center gap-1.5">
-                    <span>Recurring charges detected</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                  </div>
-                  <div className="text-[10px] text-slate-500 font-medium">SubSnap 3-second cancellation ready</div>
-                </div>
-              </div>
             </div>
 
             {/* Right Half: Studio White Typography, Headline, CTA & Micro 3-Step Cards */}
@@ -158,11 +152,8 @@ export default function HomePage() {
 
               {/* Lower Block: Elegant 3-Step Micro-Cards Anchored at Bottom */}
               <div className="pt-4 border-t border-slate-200/80 space-y-2.5">
-                <div className="font-extrabold text-slate-900 text-xs tracking-wide uppercase text-shadow-subtle flex items-center justify-between">
-                  <span>How SubSnap works:</span>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                    ⚡ 3-Second Speed
-                  </span>
+                <div className="font-extrabold text-slate-900 text-xs tracking-wide uppercase text-shadow-subtle">
+                  How SubSnap works:
                 </div>
                 <div className="grid grid-cols-3 gap-2.5">
                   
