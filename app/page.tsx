@@ -12,13 +12,13 @@ function ExtensionPuzzleIcon({ className = "w-4 h-4" }: { className?: string }) 
 
 function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 h-16 px-6">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 h-14 sm:h-16 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 shadow-sm group-hover:scale-105 transition-transform">
-            <ExtensionPuzzleIcon className="w-4 h-4 text-emerald-600" />
+        <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
+          <div className="w-7 h-7 sm:w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 shadow-sm group-hover:scale-105 transition-transform">
+            <ExtensionPuzzleIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
           </div>
-          <span className="font-extrabold text-xl tracking-tight text-slate-950 text-shadow-subtle">
+          <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-950 text-shadow-subtle">
             SubSnap
           </span>
         </Link>
@@ -28,18 +28,20 @@ function Header() {
           <a href="#pricing" className="hover:text-slate-950 transition-colors">Pricing</a>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <a
             href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
             download
-            className="btn-chrome px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
+            className="btn-chrome px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" fill="#4285F4"/>
               <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="white" strokeWidth="2"/>
               <circle cx="12" cy="12" r="4" fill="white"/>
             </svg>
-            <span>Add to Chrome (Free)</span>
+            <span className="hidden xs:inline sm:inline">Add to Chrome</span>
+            <span className="xs:hidden sm:hidden">Install</span>
+            <span className="hidden sm:inline">(Free)</span>
           </a>
         </div>
       </div>
@@ -49,7 +51,7 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white py-14 px-6 mt-20">
+    <footer className="border-t border-slate-200 bg-white py-10 sm:py-14 px-4 sm:px-6 mt-16 sm:mt-20">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
         <div className="space-y-1">
           <div className="text-slate-900 font-extrabold text-base flex items-center justify-center md:justify-start gap-2 text-shadow-subtle">
@@ -63,7 +65,7 @@ function Footer() {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-600 font-semibold">
+        <div className="flex flex-wrap justify-center gap-5 sm:gap-6 text-xs text-slate-600 font-semibold">
           <Link href="/privacy" className="hover:text-slate-950 transition-colors">Privacy Policy</Link>
           <Link href="/terms" className="hover:text-slate-950 transition-colors">Terms of Service</Link>
           <Link href="/refund" className="hover:text-slate-950 transition-colors">Service Policy</Link>
@@ -83,48 +85,50 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-[#fafafc] text-slate-900">
       <Header />
 
-      <main className="flex-1 pt-16">
-        {/* ── HERO SECTION: FULL OPENING VIEWPORT SCREEN (100vh FLUSH) ─────── */}
-        <section className="relative overflow-hidden bg-white border-b border-slate-200/80 h-[calc(100vh-64px)] min-h-[580px] max-h-[920px] flex">
+      <main className="flex-1 pt-14 sm:pt-16">
+        {/* ── HERO SECTION: RESPONSIVE SPLIT SCREEN (100vh on Desktop, Fluid & Masked on Mobile) ── */}
+        <section className="relative overflow-hidden bg-white border-b border-slate-200/80 lg:h-[calc(100vh-64px)] lg:min-h-[580px] lg:max-h-[920px] flex flex-col justify-center">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 h-full">
             
-            {/* Left Half: Shocked Statement Image with Clean Gradient Fade */}
-            <div className="hidden lg:block lg:col-span-6 relative w-full h-full overflow-hidden bg-slate-100">
+            {/* Left Half: Shocked Statement Image with Responsive Gradient Mask */}
+            <div className="lg:col-span-6 relative w-full h-[220px] sm:h-[280px] lg:h-full overflow-hidden bg-slate-100">
               <Image
                 src="/hero-statement.jpg"
                 alt="Man shocked by recurring bank statement subscription charges"
                 fill
                 priority
-                className="object-cover object-left"
+                className="object-cover object-center lg:object-left"
               />
-              {/* Soft Gradient Fade-out into Studio White on the right */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-[#fafafc]" />
+              {/* Desktop Gradient Mask: Fades out to Studio White on the right */}
+              <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-[#fafafc]" />
+              {/* Mobile Gradient Mask: Fades out to Studio White at the bottom */}
+              <div className="block lg:hidden absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fafafc]" />
             </div>
 
             {/* Right Half: Studio White Typography, Headline, CTA & Micro 3-Step Cards */}
-            <div className="lg:col-span-6 h-full flex flex-col justify-between px-6 sm:px-10 lg:px-14 py-8 lg:py-10 space-y-4">
+            <div className="lg:col-span-6 h-full flex flex-col justify-between px-5 sm:px-10 lg:px-14 py-6 sm:py-8 lg:py-10 space-y-5 lg:space-y-4">
               
               {/* Upper Block */}
-              <div className="space-y-4 my-auto">
-                <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black tracking-tight text-slate-950 leading-[1.12] text-shadow-title">
+              <div className="space-y-3.5 sm:space-y-4 my-auto">
+                <h1 className="text-2xl sm:text-4xl lg:text-[44px] font-black tracking-tight text-slate-950 leading-[1.15] text-shadow-title">
                   Stop Paying for Subscriptions{' '}
                   <span className="bg-gradient-to-r from-emerald-600 to-teal-700 bg-clip-text text-transparent">
                     You Forgot You Had.
                   </span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg text-shadow-subtle font-medium">
+                <p className="text-xs sm:text-sm lg:text-base text-slate-600 leading-relaxed max-w-lg text-shadow-subtle font-medium">
                   The smart Chrome extension that navigates right into your authenticated accounts and cancels recurring charges in 3 seconds flat.
                 </p>
 
                 {/* Big Prominent CTA Button */}
-                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <a
                     href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
                     download
-                    className="btn-chrome px-8 py-4 rounded-2xl text-base font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:shadow-slate-900/20 group"
+                    className="btn-chrome w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-extrabold flex items-center justify-center gap-2.5 sm:gap-3 shadow-xl hover:shadow-2xl hover:shadow-slate-900/20 group"
                   >
-                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" viewBox="0 0 24 24" fill="none">
                       <circle cx="12" cy="12" r="10" fill="#4285F4"/>
                       <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="white" strokeWidth="2"/>
                       <circle cx="12" cy="12" r="4" fill="white"/>
@@ -135,7 +139,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Trust Indicators */}
-                <div className="text-xs text-slate-500 flex flex-wrap items-center gap-3 pt-0.5">
+                <div className="text-[11px] sm:text-xs text-slate-500 flex flex-wrap items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pt-0.5">
                   <span className="font-semibold text-emerald-700 flex items-center gap-1">
                     <span className="text-emerald-500 font-bold">✓</span> 100% Free Forever
                   </span>
@@ -145,21 +149,21 @@ export default function HomePage() {
                   </span>
                   <span>·</span>
                   <span className="flex items-center gap-1">
-                    <span className="text-emerald-500 font-bold">✓</span> Installs in 3 seconds
+                    <span className="text-emerald-500 font-bold">✓</span> Installs in 3s
                   </span>
                 </div>
               </div>
 
               {/* Lower Block: Elegant 3-Step Micro-Cards Anchored at Bottom */}
-              <div className="pt-4 border-t border-slate-200/80 space-y-2.5">
+              <div className="pt-3 sm:pt-4 border-t border-slate-200/80 space-y-2">
                 <div className="font-extrabold text-slate-900 text-xs tracking-wide uppercase text-shadow-subtle">
                   How SubSnap works:
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
                   
-                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-1">
+                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-0.5 sm:space-y-1">
                     <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center">1</span>
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
                       <span>Direct Entry</span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-tight">
@@ -167,9 +171,9 @@ export default function HomePage() {
                     </p>
                   </div>
 
-                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-1">
+                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-0.5 sm:space-y-1">
                     <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center">2</span>
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
                       <span>Bypass Traps</span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-tight">
@@ -177,9 +181,9 @@ export default function HomePage() {
                     </p>
                   </div>
 
-                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-1">
+                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-0.5 sm:space-y-1">
                     <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center">3</span>
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
                       <span>1-Click Done</span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-tight">
@@ -195,7 +199,7 @@ export default function HomePage() {
         </section>
 
         {/* ── WHY BROWSER EXTENSION (10X BETTER THAN A WEBSITE) ────────────── */}
-        <section id="how-it-works" className="max-w-5xl mx-auto px-6 pt-20 space-y-12">
+        <section id="how-it-works" className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 space-y-8 sm:space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
               The Extension Superpower
@@ -203,15 +207,15 @@ export default function HomePage() {
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight text-shadow-title">
               Why SubSnap Lives Inside Your Browser
             </h2>
-            <p className="text-sm text-slate-500 text-shadow-subtle">
+            <p className="text-xs sm:text-sm text-slate-500 text-shadow-subtle">
               Websites require passwords and manual searching. The SubSnap extension takes action directly where you are already logged in.
             </p>
           </div>
 
           {/* 3 Value Pillars */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             
-            <div className="studio-white-card p-7 space-y-3">
+            <div className="studio-white-card p-6 sm:p-7 space-y-2.5 sm:space-y-3">
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-black text-lg shadow-sm">
                 🔒
               </div>
@@ -223,7 +227,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="studio-white-card p-7 space-y-3">
+            <div className="studio-white-card p-6 sm:p-7 space-y-2.5 sm:space-y-3">
               <div className="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-200 text-sky-600 flex items-center justify-center font-black text-lg shadow-sm">
                 ⚡
               </div>
@@ -235,7 +239,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="studio-white-card p-7 space-y-3">
+            <div className="studio-white-card p-6 sm:p-7 space-y-2.5 sm:space-y-3">
               <div className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center font-black text-lg shadow-sm">
                 🛡️
               </div>
@@ -250,7 +254,7 @@ export default function HomePage() {
           </div>
 
           {/* Value Banner CTA */}
-          <div className="p-6 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="p-5 sm:p-6 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="space-y-0.5">
               <div className="font-extrabold text-sm text-slate-900">
                 Ready to stop wasted monthly charges?
@@ -262,7 +266,7 @@ export default function HomePage() {
             <a
               href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
               download
-              className="btn-chrome px-6 py-3 rounded-xl text-xs font-extrabold shrink-0 flex items-center gap-2"
+              className="btn-chrome w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-2"
             >
               <span>Add to Chrome (Free)</span>
               <span>➔</span>
@@ -271,7 +275,7 @@ export default function HomePage() {
         </section>
 
         {/* ── SIDE-BY-SIDE PRICING (STUDIO WHITE) ────────────────────────────── */}
-        <section id="pricing" className="max-w-5xl mx-auto px-6 pt-24 space-y-10">
+        <section id="pricing" className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 space-y-8 sm:space-y-10">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
               Transparent Pricing
@@ -279,15 +283,15 @@ export default function HomePage() {
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight text-shadow-title">
               Start Free. Upgrade for Autonomous AI.
             </h2>
-            <p className="text-sm text-slate-500 text-shadow-subtle">
+            <p className="text-xs sm:text-sm text-slate-500 text-shadow-subtle">
               Choose the right plan to take back control of your recurring expenses.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
             
             {/* Free Tier Card */}
-            <div className="studio-white-card p-8 flex flex-col justify-between space-y-6">
+            <div className="studio-white-card p-6 sm:p-8 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-700">
                   Free Extension
@@ -325,7 +329,7 @@ export default function HomePage() {
             </div>
 
             {/* Pro Tier Card */}
-            <div className="studio-white-card p-8 border-2 border-emerald-500 relative flex flex-col justify-between space-y-6 shadow-xl shadow-emerald-500/10">
+            <div className="studio-white-card p-6 sm:p-8 border-2 border-emerald-500 relative flex flex-col justify-between space-y-6 shadow-xl shadow-emerald-500/10">
               <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-emerald-600 text-[10px] font-extrabold text-white uppercase tracking-wider">
                 Most Popular
               </div>
