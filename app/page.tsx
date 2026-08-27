@@ -120,62 +120,66 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* ── INTERACTIVE EXTENSION PREVIEW HUD ─────────────────────────────── */}
-        <section className="relative max-w-2xl mx-auto">
-          {/* Outer glow ring */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-sky-500/20 to-purple-500/20 rounded-3xl blur-xl opacity-70" />
+        {/* ── HIGH-LEVEL BENEFIT SHOWCASE (ZERO TECHNICAL LEAKS) ──────────── */}
+        <section className="relative max-w-3xl mx-auto">
+          {/* Ambient glow ring */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-sky-500/20 rounded-3xl blur-2xl opacity-60" />
           
-          <div className="studio-capsule p-6 sm:p-8 relative bg-[#090a0f]/95 border-emerald-500/30 space-y-6">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+          <div className="studio-capsule p-8 sm:p-10 relative bg-[#090a0f]/95 border-emerald-500/25 space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-6">
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">פתרון צרכני מלא</span>
+                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">מה SubSnap עושה עבורך?</h3>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-300 self-start sm:self-auto">
+                <span>⚡ תוצאה מיידית</span>
+              </div>
+            </div>
+
+            {/* 3 Outcome Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <span className="material-symbols-outlined text-lg">payments</span>
+                </div>
+                <h4 className="font-bold text-sm text-white">עוצר את החיובים החודשיים</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  מפסיק את זליגת הכספים השקטה ומבטל שירותים שנשכחו בלי שתצטרך לחפש מדריכים מסובכים.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2.5">
+                <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                  <span className="material-symbols-outlined text-lg">timer</span>
+                </div>
+                <h4 className="font-bold text-sm text-white">חוסך זמן ועצבים</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  עוקף תפריטים מפותלים, שיחות שירות ומסכי שכנוע מייגעים — ומסיים את התהליך ב-3 שניות.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                  <span className="material-symbols-outlined text-lg">lock</span>
+                </div>
+                <h4 className="font-bold text-sm text-white">שומר על פרטיות מלאה</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  הכל מתבצע בדפדפן האישי שלך בלבד. שום סיסמה או מידע אישי לא מועברים לאף גורם.
+                </p>
+              </div>
+            </div>
+
+            {/* Value Metric Banner */}
+            <div className="p-4 rounded-xl bg-emerald-500/[0.04] border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
-                  ⚡
-                </div>
-                <div>
-                  <div className="font-bold text-sm text-white">SubSnap Auto-Pilot</div>
-                  <div className="text-[11px] text-zinc-400">תצוגת התוסף בסרגל הדפדפן</div>
-                </div>
+                <span className="text-emerald-400 text-lg">💡</span>
+                <span className="text-xs text-zinc-300 font-medium">
+                  המשתמש הממוצע חוסך מעל <strong>1,840 ₪ בשנה</strong> כבר בחודש הראשון של השימוש.
+                </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>מחובר לדפדפן</span>
-              </div>
-            </div>
-
-            {/* Mockup Quick Buttons */}
-            <div className="space-y-2.5">
-              <div className="text-[11px] font-semibold text-zinc-400">ביטול ישיר מתוך החשבון בלחיצה אחת:</div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { name: 'קלוד (Claude)', tag: 'בטל ⚡' },
-                  { name: 'גרוק / X', tag: 'בטל ⚡' },
-                  { name: 'נטפליקס', tag: 'בטל ⚡' },
-                  { name: 'ספוטיפיי', tag: 'בטל ⚡' },
-                  { name: 'אדובי (Adobe)', tag: 'בטל ⚡' },
-                  { name: 'צ\'אט GPT', tag: 'בטל ⚡' },
-                  { name: 'קנבה פרו', tag: 'בטל ⚡' },
-                  { name: 'אפל / iCloud', tag: 'בטל ⚡' },
-                ].map((s) => (
-                  <div
-                    key={s.name}
-                    className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between hover:border-emerald-500/40 transition-colors"
-                  >
-                    <span className="text-xs font-semibold text-zinc-200">{s.name}</span>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                      {s.tag}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* In-page HUD simulation */}
-            <div className="p-3.5 rounded-xl bg-black/40 border border-emerald-500/20 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400">✓</span>
-                <span className="text-zinc-300">התוסף מזהה את כפתור הביטול בכל אתר ומדגיש אותו בהילה זוהרת</span>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">Auto-Click</span>
+              <span className="text-[11px] font-bold text-emerald-400 whitespace-nowrap">
+                100% חינם לשימוש ➔
+              </span>
             </div>
           </div>
         </section>
