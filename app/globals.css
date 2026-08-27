@@ -1,128 +1,114 @@
 @import "tailwindcss";
 
-/* ── Bespoke High-End Startup Theme (Raycast / Linear / Apple Level) ────────── */
+/* ── Studio Light & Minimalist Luxury Theme ─────────────────────────────── */
 @theme {
-  /* Surfaces */
-  --color-surface: #090a0f;
-  --color-surface-dim: #06070a;
-  --color-surface-bright: #141721;
-  --color-surface-container: #0f121a;
-  --color-surface-container-low: #0b0d14;
-  --color-surface-container-high: #161a26;
-  --color-surface-container-highest: #1e2434;
+  --color-surface: #fafafc;
+  --color-surface-dim: #f1f3f9;
+  --color-surface-bright: #ffffff;
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #64748b;
 
-  /* Typography */
-  --color-on-surface: #f4f4f6;
-  --color-on-surface-variant: #9499ad;
-
-  /* Accent – Studio Emerald & Platinum */
-  --color-primary: #10b981;
-  --color-primary-container: #064e3b;
+  --color-primary: #059669;
+  --color-primary-container: #d1fae5;
   --color-on-primary: #ffffff;
-  --color-primary-fixed: #34d399;
 
-  /* Font */
-  --font-sans: var(--font-assistant), var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ── Global Base ───────────────────────────────────────────────────────────── */
 html {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #090a0f;
-  color: #f4f4f6;
-  direction: rtl;
+  background-color: #fafafc;
+  color: #0f172a;
+  direction: ltr;
   overflow-x: hidden;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.015em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: 
-    radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 85% 35%, rgba(56, 189, 248, 0.03) 0%, transparent 40%),
-    radial-gradient(circle at 15% 55%, rgba(168, 85, 247, 0.03) 0%, transparent 40%);
-  background-attachment: fixed;
 }
 
-/* ── Material Symbols ───────────────────────────────────────────────────────── */
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 22;
-  user-select: none;
-  display: inline-block;
-  line-height: 1;
+/* Subtle Text Shadows for Crisp Depth */
+.text-shadow-subtle {
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
-/* ── Bespoke Studio Glass Capsules ─────────────────────────────────────────── */
-.studio-capsule {
-  background: rgba(15, 18, 26, 0.65);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+.text-shadow-title {
+  text-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+}
+
+/* ── Studio Light Glass Capsules ─────────────────────────────────────────── */
+.studio-white-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 
-    0 20px 40px -15px rgba(0, 0, 0, 0.6),
-    0 0 1px 1px rgba(255, 255, 255, 0.04) inset;
-  border-radius: 1.75rem;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.studio-capsule:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 25px 50px -15px rgba(0, 0, 0, 0.75),
-    0 0 25px -5px rgba(16, 185, 129, 0.08),
-    0 0 1px 1px rgba(255, 255, 255, 0.08) inset;
-}
-
-/* ── Command Palette Input ─────────────────────────────────────────────────── */
-.command-input {
-  background: rgba(10, 12, 18, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+    0 10px 30px -10px rgba(15, 23, 42, 0.06),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+  border-radius: 1.5rem;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.command-input:focus {
-  background: rgba(14, 17, 25, 0.95);
-  border-color: rgba(16, 185, 129, 0.6);
+.studio-white-card:hover {
+  border-color: rgba(203, 213, 225, 1);
   box-shadow: 
-    0 0 0 3px rgba(16, 185, 129, 0.12),
-    0 0 20px -3px rgba(16, 185, 129, 0.15);
+    0 20px 40px -15px rgba(15, 23, 42, 0.1),
+    0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
-/* ── Minimalist Studio Tags ────────────────────────────────────────────────── */
-.studio-tag {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #9499ad;
-  font-weight: 500;
-  transition: all 0.15s ease;
-}
-
-.studio-tag:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+.btn-chrome {
+  background: #0f172a;
   color: #ffffff;
-  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── Primary Action Button ─────────────────────────────────────────────────── */
+.btn-chrome:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.4);
+}
+
+.btn-chrome:active {
+  transform: translateY(0);
+}
+
 .btn-emerald {
-  background: #10b981;
-  color: #032014;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  box-shadow: 0 4px 15px -2px rgba(16, 185, 129, 0.3);
+  background: #059669;
+  color: #ffffff;
+  box-shadow: 0 8px 24px -4px rgba(5, 150, 105, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-emerald:hover {
-  background: #34d399;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px -2px rgba(16, 185, 129, 0.45);
+  background: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -4px rgba(5, 150, 105, 0.4);
 }
 
-.btn-emerald:active {
-  transform: translateY(0);
+.command-input-light {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s ease;
+}
+
+.command-input-light:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

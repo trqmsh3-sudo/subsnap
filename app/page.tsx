@@ -1,44 +1,59 @@
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import SmartTagBar from '@/components/SmartTagBar'
+import { CANCELLATION_DB, CancellationEntry, findCancellationEntry } from '@/lib/cancellationDb'
+
+const POPULAR_GLOBAL_SERVICES = [
+  { name: 'Claude Pro / Max', q: 'Claude', tag: 'AI', desc: 'Anthropic AI subscription' },
+  { name: 'Grok / X Premium', q: 'Grok', tag: 'X', desc: 'X Corp subscription' },
+  { name: 'Netflix', q: 'Netflix', tag: 'Stream', desc: 'Streaming membership' },
+  { name: 'Spotify Premium', q: 'Spotify', tag: 'Music', desc: 'Audio streaming' },
+  { name: 'Adobe Creative Cloud', q: 'Adobe', tag: 'Design', desc: 'Adobe plan & apps' },
+  { name: 'ChatGPT Plus', q: 'ChatGPT', tag: 'AI', desc: 'OpenAI subscription' },
+  { name: 'Canva Pro', q: 'Canva', tag: 'Design', desc: 'Canva team/pro plan' },
+  { name: 'Apple / iCloud+', q: 'Apple', tag: 'iOS', desc: 'Apple ID subscriptions' },
+  { name: 'Amazon Prime', q: 'Amazon Prime', tag: 'Shopping', desc: 'Prime delivery & video' },
+  { name: 'YouTube Premium', q: 'YouTube', tag: 'Video', desc: 'Ad-free & Music' },
+  { name: 'Microsoft 365', q: 'Microsoft', tag: 'Office', desc: 'Word, Excel & OneDrive' },
+  { name: 'Midjourney', q: 'Midjourney', tag: 'AI', desc: 'AI image subscription' },
+]
 
 function Header() {
   return (
-    <header className="fixed top-0 w-full z-50 bg-[#090a0f]/85 backdrop-blur-xl border-b border-white/[0.05]">
-      <div className="flex items-center justify-between px-4 sm:px-8 py-3.5 max-w-5xl mx-auto">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
-            <span className="material-symbols-outlined text-base">bolt</span>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 py-3.5 px-6">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-base shadow-sm">
+            ⚡
           </div>
-          <span className="font-bold text-xl tracking-tight text-white">SubSnap</span>
+          <span className="font-extrabold text-xl tracking-tight text-slate-900 text-shadow-subtle">
+            SubSnap
+          </span>
+          <span className="hidden sm:inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+            Chrome Extension
+          </span>
         </Link>
 
-        <div className="flex items-center gap-4 sm:gap-6">
-          <a
-            href="#how-it-works"
-            className="text-xs font-medium text-zinc-400 hover:text-white transition-colors hidden sm:inline-block"
-          >
-            איך זה עובד?
-          </a>
-          <a
-            href="#features"
-            className="text-xs font-medium text-zinc-400 hover:text-white transition-colors hidden sm:inline-block"
-          >
-            יתרונות
-          </a>
-          <a
-            href="#pricing"
-            className="text-xs font-medium text-zinc-400 hover:text-white transition-colors hidden sm:inline-block"
-          >
-            תמחור Pro
-          </a>
+        <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-600">
+          <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How It Works</a>
+          <a href="#search" className="hover:text-slate-900 transition-colors">Supported Services</a>
+          <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
+        </nav>
+
+        <div className="flex items-center gap-3">
           <a
             href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
             download
-            className="btn-emerald px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+            className="btn-chrome px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
           >
-            <span>הוסף לכרום בחינם</span>
-            <span className="material-symbols-outlined text-xs">download</span>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="white" strokeWidth="2"/>
+              <circle cx="12" cy="12" r="4" fill="white"/>
+            </svg>
+            <span>Add to Chrome (Free)</span>
           </a>
         </div>
       </div>
@@ -48,351 +63,387 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/[0.05] bg-[#06070a] py-12 px-6 mt-20">
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-right">
-          <div className="text-white font-bold text-base flex items-center gap-1.5">
-            <span className="text-emerald-400">⚡</span> SubSnap
+    <footer className="border-t border-slate-200 bg-white py-14 px-6 mt-20">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+        <div className="space-y-1">
+          <div className="text-slate-900 font-extrabold text-base flex items-center justify-center md:justify-start gap-1.5 text-shadow-subtle">
+            <span className="text-emerald-600">⚡</span> SubSnap
           </div>
-          <p className="text-xs text-zinc-400">
-            התוסף האוטונומי לביטול מנויים וחיובים חוזרים ישירות מתוך הדפדפן.
+          <p className="text-xs text-slate-500 max-w-md">
+            The autonomous Chrome extension for 1-click subscription cancellations directly inside your browser.
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 text-xs text-zinc-400 font-medium">
-          <Link href="/privacy" className="hover:text-zinc-200 transition-colors">מדיניות פרטיות</Link>
-          <Link href="/terms" className="hover:text-zinc-200 transition-colors">תנאי שימוש</Link>
-          <Link href="/refund" className="hover:text-zinc-200 transition-colors">מדיניות שירות</Link>
+        <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-600 font-medium">
+          <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
+          <Link href="/refund" className="hover:text-slate-900 transition-colors">Service Policy</Link>
         </div>
       </div>
 
-      <div className="text-center text-[11px] text-zinc-500 mt-8 pt-6 border-t border-white/[0.03]">
-        © 2026 SubSnap. תוסף דפדפן רשמי בטוח ומאובטח. פרטיות מקומית Zero-Knowledge.
+      <div className="text-center text-[11px] text-slate-400 mt-8 pt-6 border-t border-slate-100">
+        © 2026 SubSnap. Official Chrome Extension. Zero-Knowledge Client-Side Privacy.
       </div>
     </footer>
   )
 }
 
 export default function HomePage() {
+  const [query, setQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<CancellationEntry[]>([])
+  const [selectedService, setSelectedService] = useState<CancellationEntry | null>(null)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setSuggestions([])
+      setShowDropdown(false)
+      return
+    }
+    const q = query.toLowerCase().trim()
+    const matches = CANCELLATION_DB.filter(item =>
+      item.name.toLowerCase().includes(q) ||
+      (item.nameHe && item.nameHe.toLowerCase().includes(q)) ||
+      item.keywords.some(k => k.includes(q) || q.includes(k))
+    ).slice(0, 5)
+
+    setSuggestions(matches)
+    setShowDropdown(matches.length > 0)
+  }, [query])
+
+  function handleCancelClick(item: CancellationEntry) {
+    setSelectedService(item)
+    setShowDropdown(false)
+    if (item.cancelUrl) {
+      window.open(item.cancelUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  async function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!query.trim()) return
+
+    setShowDropdown(false)
+    const direct = findCancellationEntry(query)
+    if (direct) {
+      handleCancelClick(direct)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/lookup?q=${encodeURIComponent(query)}`)
+      const data = await res.json()
+      if (data.entry) {
+        handleCancelClick(data.entry)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen flex flex-col selection:bg-emerald-500/30 selection:text-emerald-300">
+    <div className="min-h-screen flex flex-col bg-[#fafafc] text-slate-900">
       <Header />
 
-      {/* Ambient background glows */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-emerald-500/[0.09] via-sky-500/[0.03] to-transparent blur-[120px] pointer-events-none -z-10" />
-
-      <main className="flex-1 pt-32 pb-20 px-4 sm:px-6 max-w-4xl mx-auto w-full space-y-16">
-        {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
-        <section className="text-center space-y-5 pt-4">
-          <div className="flex items-center justify-center mb-2">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden border border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.35)]">
+      <main className="flex-1 pt-24 pb-16">
+        {/* ── HERO SECTION: SPLIT SCREEN WITH SEAMLESS GRADIENT MASK ────────── */}
+        <section className="relative overflow-hidden bg-white border-b border-slate-200/80">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 min-h-[580px] lg:min-h-[640px]">
+            
+            {/* Left Half: Shocked Statement Image with Gradient Mask into Studio White */}
+            <div className="lg:col-span-6 relative w-full h-[360px] sm:h-[420px] lg:h-full overflow-hidden bg-slate-100">
               <Image
-                src="/hero-badge.jpg"
-                alt="SubSnap 3D Titanium Core"
+                src="/hero-statement.jpg"
+                alt="Man shocked by recurring bank statement subscription charges"
                 fill
-                className="object-cover"
                 priority
+                className="object-cover object-center lg:object-left"
               />
-            </div>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-emerald-500/30 text-xs font-semibold text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>תוסף כרום חדשני · 100% חינם · ללא סיסמאות</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
-            מפסיקים לשלם על מנויים.<br />
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent">
-              התוסף שמבטל הכל בלחיצה אחת.
-            </span>
-          </h1>
-
-          <p className="text-zinc-400 text-sm sm:text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            במקום להסתבך בתפריטים מפותלים ובשאלוני שימור מעיקים — תוסף SubSnap פועל ישירות מתוך החשבונות המחוברים שלכם ומבטל כל מנוי תוך 3 שניות.
-          </p>
-
-          {/* Primary CTA Box */}
-          <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
-              download
-              className="btn-emerald w-full sm:w-auto px-8 py-4 rounded-2xl text-sm font-extrabold flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/25 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span className="text-lg">⭐</span>
-              <span>הוסף ל-Chrome בחינם (התקנה מהירה)</span>
-              <span className="material-symbols-outlined text-base">arrow_back</span>
-            </a>
-          </div>
-
-          <p className="text-[11px] text-zinc-500 flex items-center justify-center gap-3 pt-1">
-            <span>✓ ללא צורך בהרשמה</span>
-            <span>·</span>
-            <span>✓ אפס גישה לסיסמאות</span>
-            <span>·</span>
-            <span>✓ מותקן תוך 3 שניות</span>
-          </p>
-        </section>
-
-        {/* ── SMART MULTI-LOCALE TAGGING & SEARCH BAR ───────────────────────── */}
-        <section id="tags-section" className="relative">
-          <SmartTagBar />
-        </section>
-
-        {/* ── HIGH-LEVEL BENEFIT SHOWCASE (ZERO TECHNICAL LEAKS) ──────────── */}
-        <section className="relative max-w-3xl mx-auto">
-          {/* Ambient glow ring */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-sky-500/20 rounded-3xl blur-2xl opacity-60" />
-          
-          <div className="studio-capsule p-8 sm:p-10 relative bg-[#090a0f]/95 border-emerald-500/25 space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-6">
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">פתרון צרכני מלא</span>
-                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">מה SubSnap עושה עבורך?</h3>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-300 self-start sm:self-auto">
-                <span>⚡ תוצאה מיידית</span>
-              </div>
+              {/* Desktop Gradient Mask: Fades out to Studio White seamlessly on the right */}
+              <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-[#fafafc]" />
+              {/* Mobile Gradient Mask: Fades out to Studio White at the bottom */}
+              <div className="block lg:hidden absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fafafc]" />
             </div>
 
-            {/* 3 Outcome Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <span className="material-symbols-outlined text-lg">payments</span>
-                </div>
-                <h4 className="font-bold text-sm text-white">עוצר את החיובים החודשיים</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  מפסיק את זליגת הכספים השקטה ומבטל שירותים שנשכחו בלי שתצטרך לחפש מדריכים מסובכים.
-                </p>
+            {/* Right Half: Studio White Typography, Headline, CTA & Unboxed Explanations */}
+            <div className="lg:col-span-6 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-10 lg:py-16 space-y-6">
+              
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 self-start shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>SubSnap 1-Click Chrome Extension · 100% Free</span>
               </div>
 
-              <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-                  <span className="material-symbols-outlined text-lg">timer</span>
-                </div>
-                <h4 className="font-bold text-sm text-white">חוסך זמן ועצבים</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  עוקף תפריטים מפותלים, שיחות שירות ומסכי שכנוע מייגעים — ומסיים את התהליך ב-3 שניות.
-                </p>
+              {/* Main Headline */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-950 leading-[1.15] text-shadow-title">
+                Stop Paying for Subscriptions You Forgot.
+              </h1>
+
+              {/* Sub-headline */}
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl text-shadow-subtle">
+                The smart Chrome extension that navigates right into your authenticated accounts and cancels recurring charges in 3 seconds flat.
+              </p>
+
+              {/* Big Prominent CTA Button */}
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <a
+                  href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
+                  download
+                  className="btn-chrome px-8 py-4 rounded-2xl text-base font-extrabold flex items-center justify-center gap-3 shadow-xl"
+                >
+                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="white" strokeWidth="2"/>
+                    <circle cx="12" cy="12" r="4" fill="white"/>
+                  </svg>
+                  <span>Add to Chrome for Free</span>
+                  <span className="text-slate-400 font-normal">➔</span>
+                </a>
               </div>
 
-              <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2.5">
-                <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                  <span className="material-symbols-outlined text-lg">lock</span>
-                </div>
-                <h4 className="font-bold text-sm text-white">שומר על פרטיות מלאה</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  הכל מתבצע בדפדפן האישי שלך בלבד. שום סיסמה או מידע אישי לא מועברים לאף גורם.
-                </p>
+              {/* Trust Indicators */}
+              <div className="text-xs text-slate-500 flex flex-wrap items-center gap-3 pt-0.5">
+                <span className="font-semibold text-emerald-700">✓ 100% Free Forever</span>
+                <span>·</span>
+                <span>✓ Zero passwords stored</span>
+                <span>·</span>
+                <span>✓ Installs in 3 seconds</span>
               </div>
-            </div>
 
-            {/* Value Metric Banner */}
-            <div className="p-4 rounded-xl bg-emerald-500/[0.04] border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right">
-              <div className="flex items-center gap-2.5">
-                <span className="text-emerald-400 text-lg">💡</span>
-                <span className="text-xs text-zinc-300 font-medium">
-                  המשתמש הממוצע חוסך מעל <strong>1,840 ₪ בשנה</strong> כבר בחודש הראשון של השימוש.
-                </span>
+              {/* Unboxed Text Explanation (Clean on Studio White Background) */}
+              <div className="pt-4 border-t border-slate-200/80 space-y-2.5 text-xs text-slate-600">
+                <div className="font-bold text-slate-900 text-sm text-shadow-subtle">
+                  How SubSnap works in 3 simple steps:
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <span className="text-emerald-600 font-black">1.</span> Direct Entry
+                    </div>
+                    <p className="text-slate-500 leading-snug">
+                      Opens directly inside your active logged-in billing page.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <span className="text-emerald-600 font-black">2.</span> Bypass Traps
+                    </div>
+                    <p className="text-slate-500 leading-snug">
+                      Skips tricky retention surveys, discount popups & penalties.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <span className="text-emerald-600 font-black">3.</span> 1-Click Done
+                    </div>
+                    <p className="text-slate-500 leading-snug">
+                      Auto-Pilot confirms cancellation in 3 seconds.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <span className="text-[11px] font-bold text-emerald-400 whitespace-nowrap">
-                100% חינם לשימוש ➔
-              </span>
+
             </div>
           </div>
         </section>
 
-        {/* ── 3 VALUE PILLARS ───────────────────────────────────────────────── */}
-        <section id="features" className="space-y-6 pt-4">
-          <div className="text-center space-y-1.5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              למה תוסף SubSnap עדיף על כל שיטה אחרת?
+        {/* ── INTERACTIVE SEARCH & SUPPORTED SERVICES (STUDIO WHITE) ─────────── */}
+        <section id="search" className="max-w-5xl mx-auto px-6 pt-16 space-y-8">
+          <div className="text-center space-y-2 max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight text-shadow-title">
+              Cancel Any Subscription Instantly
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-400">הפשטות של תוסף דפדפן שרץ בתוך החשבון המחובר שלך</p>
+            <p className="text-sm text-slate-500 text-shadow-subtle">
+              Type any app or service name to launch its direct cancellation pathway:
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="studio-capsule p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <span className="material-symbols-outlined text-xl">key_off</span>
+          {/* Search Box */}
+          <div ref={searchRef} className="max-w-2xl mx-auto relative">
+            <form onSubmit={handleSearchSubmit} className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Type any service (e.g. Claude, Netflix, Adobe, Spotify, Grok)..."
+                  className="w-full command-input-light px-4 py-3.5 rounded-xl text-sm outline-none font-medium"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => { setQuery(''); setSuggestions([]); setShowDropdown(false); }}
+                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
-              <h3 className="font-bold text-base text-white">אפס סיסמאות (Zero Logins)</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                מכיוון שהתוסף רץ בתוך הדפדפן שלך, הוא משתמש בחיבורים הקיימים שלך. אתה לא צריך להקליד סיסמה או לעבור אימות SMS מחדש.
-              </p>
-            </div>
+              <button
+                type="submit"
+                disabled={loading || !query.trim()}
+                className="btn-emerald px-6 py-3.5 rounded-xl text-xs font-bold shrink-0 disabled:opacity-50"
+              >
+                {loading ? 'Locating...' : 'Cancel Now'}
+              </button>
+            </form>
 
-            <div className="studio-capsule p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-                <span className="material-symbols-outlined text-xl">security</span>
+            {/* Suggestions Dropdown */}
+            {showDropdown && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl p-2 shadow-2xl z-50 space-y-1 animate-fadeIn">
+                {suggestions.map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => handleCancelClick(item)}
+                    className="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-emerald-50 flex items-center justify-between transition-colors group"
+                  >
+                    <div>
+                      <div className="font-bold text-sm text-slate-900 group-hover:text-emerald-700">
+                        {item.name}
+                      </div>
+                      {item.notes && (
+                        <div className="text-xs text-slate-500">{item.notes}</div>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800">
+                      Cancel ➔
+                    </span>
+                  </button>
+                ))}
               </div>
-              <h3 className="font-bold text-base text-white">עקיפת שאלוני שימור</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                חברות כמו אדובי ואמזון שמות מסכי שכנוע וקנסות. התוסף יודע בדיוק אילו תשובות לבחור כדי להגיע לאישור הביטול בלי קנס.
-              </p>
-            </div>
+            )}
+          </div>
 
-            <div className="studio-capsule p-6 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                <span className="material-symbols-outlined text-xl">touch_app</span>
-              </div>
-              <h3 className="font-bold text-base text-white">נעוץ ותמיד זמין (1-Click)</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                במקום לחפש בגוגל בכל פעם — פשוט לוחצים על סמל הברק (⚡) בסרגל הדפדפן, בוחרים שירות, והמנוי מבוטל.
-              </p>
-            </div>
+          {/* Quick Service Tags Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+            {POPULAR_GLOBAL_SERVICES.map((s) => (
+              <button
+                key={s.name}
+                type="button"
+                onClick={() => {
+                  const matched = findCancellationEntry(s.q)
+                  if (matched) handleCancelClick(matched)
+                }}
+                className="studio-white-card p-4 text-left flex items-center justify-between hover:border-emerald-300 transition-all group"
+              >
+                <div>
+                  <div className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">
+                    {s.name}
+                  </div>
+                  <div className="text-[10px] text-slate-400">{s.desc}</div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  Cancel ⚡
+                </span>
+              </button>
+            ))}
           </div>
         </section>
 
-        {/* ── 3-STEP SETUP GUIDE ────────────────────────────────────────────── */}
-        <section id="how-it-works" className="studio-capsule p-6 sm:p-10 space-y-8">
-          <div className="text-center space-y-1.5">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">איך מתחילים? ב-3 צעדים פשוטים</h2>
-            <p className="text-xs text-zinc-400">התקנה מהירה של 10 שניות</p>
+        {/* ── SIDE-BY-SIDE PRICING (STUDIO WHITE) ────────────────────────────── */}
+        <section id="pricing" className="max-w-5xl mx-auto px-6 pt-20 space-y-10">
+          <div className="text-center space-y-2 max-w-xl mx-auto">
+            <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
+              Transparent Pricing
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight text-shadow-title">
+              Start Free. Upgrade for Autonomous AI.
+            </h2>
+            <p className="text-sm text-slate-500 text-shadow-subtle">
+              Choose the right plan to take back control of your recurring expenses.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2">
-              <div className="text-2xl font-black text-emerald-400">01</div>
-              <h4 className="font-bold text-sm text-white">מתקינים את התוסף</h4>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                לוחצים על &quot;הוסף לכרום בחינם&quot; ומצמידים את סמל הברק (⚡) לסרגל העליון בדפדפן.
-              </p>
-            </div>
-
-            <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2">
-              <div className="text-2xl font-black text-sky-400">02</div>
-              <h4 className="font-bold text-sm text-white">בוחרים מנוי לביטול</h4>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                פותחים את התוסף, מקלידים או לוחצים על השירות שרוצים לבטל (קלוד, נטפליקס, אדובי וכו&apos;).
-              </p>
-            </div>
-
-            <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/[0.04] space-y-2">
-              <div className="text-2xl font-black text-purple-400">03</div>
-              <h4 className="font-bold text-sm text-white">הביטול מתבצע מיד</h4>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                התוסף נכנס לחשבון המחובר שלכם, מאתר את כפתור הביטול, ומאשר לכם את החיסכון!
-              </p>
-            </div>
-          </div>
-
-          <div className="text-center pt-2">
-            <a
-              href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
-              download
-              className="btn-emerald inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold"
-            >
-              <span>התקן את התוסף עכשיו בחינם</span>
-              <span className="material-symbols-outlined text-xs">arrow_back</span>
-            </a>
-          </div>
-        </section>
-
-        {/* ── PRICING SECTION (29.90 ILS / Year) ────────────────────────────── */}
-        <section id="pricing" className="space-y-6 pt-4">
-          <div className="text-center space-y-1.5">
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-400">
-              השקעה של פחות מקפה אחד — חיסכון של אלפי שקלים
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">תוכניות פשוטות והוגנות</h2>
-            <p className="text-xs text-zinc-400">ללא התחייבות ארוכת טווח · אפשרות ביטול בכל עת</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Free Plan */}
-            <div className="studio-capsule p-6 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-base text-white">SubSnap Basic</h3>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400">
-                    לשימוש חופשי
-                  </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            
+            {/* Free Tier Card */}
+            <div className="studio-white-card p-8 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-700">
+                  Basic Extension
                 </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-white">0 ₪</span>
-                  <span className="text-xs text-zinc-400">/ חינם לתמיד</span>
+                <div>
+                  <div className="text-3xl font-black text-slate-950 text-shadow-subtle">$0</div>
+                  <div className="text-xs text-slate-400">Free forever · No credit card required</div>
                 </div>
-                <p className="text-xs text-zinc-400">
-                  כל הכלים הבסיסיים לביטול מנויים מהיר מתוך הדפדפן.
-                </p>
-                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-white/[0.04]">
+                <ul className="space-y-2.5 text-xs text-slate-600 pt-2">
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span>תוסף כרום לביטול שירותים פופולריים</span>
+                    <span className="text-emerald-600 font-bold">✓</span> Direct deep cancellation links
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span>קישורי ביטול רשמיים ומדויקים</span>
+                    <span className="text-emerald-600 font-bold">✓</span> Chrome toolbar quick launcher
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span>ללא צורך בהרשמה או סיסמאות</span>
+                    <span className="text-emerald-600 font-bold">✓</span> In-page cancel button highlighter
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span> Unlimited manual cancellations
                   </li>
                 </ul>
               </div>
+
               <a
                 href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
                 download
-                className="w-full py-2.5 rounded-xl text-center text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.08] transition-colors"
+                className="w-full py-3.5 rounded-xl border border-slate-300 hover:border-slate-400 text-slate-900 font-bold text-xs text-center transition-colors block"
               >
-                הורד תוסף בחינם
+                Add Free Extension
               </a>
             </div>
 
-            {/* Pro Plan */}
-            <div className="studio-capsule p-6 flex flex-col justify-between space-y-4 relative border-emerald-500/40 bg-gradient-to-b from-emerald-500/[0.04] to-transparent">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-[#032014] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                הכי פופולרי · חיסכון מובטח
+            {/* Pro Tier Card */}
+            <div className="studio-white-card p-8 border-2 border-emerald-500 relative flex flex-col justify-between space-y-6 shadow-xl shadow-emerald-500/10">
+              <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-emerald-600 text-[10px] font-extrabold text-white uppercase tracking-wider">
+                Most Popular
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-base text-emerald-400 flex items-center gap-1.5">
-                    <span>⚡ SubSnap Pro</span>
-                  </h3>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                    2.49 ₪ לחודש
-                  </span>
+
+              <div className="space-y-4">
+                <div className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-xs font-bold text-emerald-800">
+                  SubSnap Pro
                 </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-white">29.90 ₪</span>
-                  <span className="text-xs text-zinc-400">/ לשנה</span>
+                <div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-950 text-shadow-subtle">$7.99</span>
+                    <span className="text-xs text-slate-500 font-semibold">/ year</span>
+                  </div>
+                  <div className="text-xs text-emerald-700 font-medium">Just $0.66/month (Billed annually)</div>
                 </div>
-                <p className="text-xs text-zinc-400">
-                  אוטונומיה מלאה, סריקת תדפיסים ועקיפת שאלוני שימור.
-                </p>
-                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-white/[0.04]">
+                <ul className="space-y-2.5 text-xs text-slate-600 pt-2">
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span className="font-medium text-white">תוסף Auto-Pilot מלא (ביטול בלחיצה אחת)</span>
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>Everything in Free</strong>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span>עקיפת מסכי שימור ושאלונים (אדובי, אמזון)</span>
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>10 AI statement scans / mo</strong> (Gemini Flash)
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span>סורק תדפיסי אשראי לאיתור חיובים כפולים וסמויים</span>
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>Autonomous 3-second Auto-Pilot</strong>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">✓</span>
-                    <span>התראות מוקדמות לפני חידוש מנוי אוטומטי</span>
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>Dark-pattern retention bypass</strong>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span> Priority AI discovery for obscure SaaS
                   </li>
                 </ul>
               </div>
-              <a
+
+              <Link
                 href="/app"
-                className="w-full btn-emerald py-2.5 rounded-xl text-center text-xs font-bold transition-all block shadow-lg shadow-emerald-500/20"
+                className="btn-emerald w-full py-3.5 rounded-xl font-bold text-xs text-center transition-all block shadow-lg shadow-emerald-600/25"
               >
-                שדרג ל-Pro עכשיו ➔
-              </a>
-              <p className="text-[10px] text-zinc-500 text-center -mt-2">
-                * שימוש הוגן: עד 10 סריקות תדפיסים בחודש למנוי.
-              </p>
+                Upgrade to Pro ➔
+              </Link>
             </div>
+
           </div>
         </section>
+
       </main>
 
       <Footer />
