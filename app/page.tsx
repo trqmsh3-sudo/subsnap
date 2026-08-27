@@ -12,12 +12,18 @@ function Header() {
           <span className="font-bold text-xl tracking-tight text-white">SubSnap</span>
         </Link>
 
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-4 sm:gap-6">
           <a
             href="#how-it-works"
             className="text-xs font-medium text-zinc-400 hover:text-white transition-colors"
           >
             איך זה עובד?
+          </a>
+          <a
+            href="#pricing"
+            className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            תוכניות ותמחור
           </a>
         </div>
       </div>
@@ -34,19 +40,19 @@ function Footer() {
             <span className="text-emerald-400">⚡</span> SubSnap
           </div>
           <p className="text-xs text-zinc-400">
-            החזרת כספים חכמה — מנוע ביטול מנויים וחיובים חוזרים בחינם.
+            החזרת כספים חכמה — מנוע ביטול מנויים וחיובים חוזרים באוטונומיה מלאה.
           </p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-5 text-xs text-zinc-400 font-medium">
           <Link href="/privacy" className="hover:text-zinc-200 transition-colors">מדיניות פרטיות</Link>
           <Link href="/terms" className="hover:text-zinc-200 transition-colors">תנאי שימוש</Link>
-          <Link href="/refund" className="hover:text-zinc-200 transition-colors">מדיניות החזרים</Link>
+          <Link href="/refund" className="hover:text-zinc-200 transition-colors">מדיניות שירות</Link>
         </div>
       </div>
 
       <div className="text-center text-[11px] text-zinc-500 mt-6 pt-6 border-t border-white/[0.03]">
-        © 2026 SubSnap. 100% חינם ללא עלות תפעולית. פרטיות מקומית Zero-Knowledge.
+        © 2026 SubSnap. שירות מאובטח ופרטיות מקומית Zero-Knowledge.
       </div>
     </footer>
   )
@@ -65,7 +71,7 @@ export default function HomePage() {
         <section className="text-center space-y-3 pt-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs font-medium text-zinc-300">
             <span className="text-emerald-400">●</span>
-            <span>100% חינם · ללא צורך בהרשמה · ללא סיסמאות</span>
+            <span>ביטול בלחיצה אחת · אפס סיסמאות · חיסכון מוכח</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.2]">
@@ -86,11 +92,11 @@ export default function HomePage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <div className="studio-capsule p-5 space-y-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <span className="material-symbols-outlined text-base">verified</span>
+              <span className="material-symbols-outlined text-base">bolt</span>
             </div>
-            <h3 className="font-semibold text-sm text-white">100% חינם לתמיד</h3>
+            <h3 className="font-semibold text-sm text-white">1-Click Auto</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              מנוע הביטולים פתוח לחלוטין לשימוש חופשי ללא תשלום, ללא מנוי וללא עמלות.
+              פתיחה וביטול ישיר של עמודי הניהול הרשמיים בלחיצה אחת בלבד.
             </p>
           </div>
 
@@ -127,15 +133,15 @@ export default function HomePage() {
               <div className="text-xl font-bold text-emerald-400">01</div>
               <h4 className="font-semibold text-xs text-white">מקלידים את שם השירות</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                רושמים את שם המנוי בשורת החיפוש למעלה (נטפליקס, גרוק, אדובי וכו&apos;).
+                רושמים את שם המנוי בשורת החיפוש למעלה (קלוד, נטפליקס, גרוק, אדובי וכו&apos;).
               </p>
             </div>
 
             <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.04] space-y-1.5">
               <div className="text-xl font-bold text-sky-400">02</div>
-              <h4 className="font-semibold text-xs text-white">מקבלים קישור ביטול ישיר</h4>
+              <h4 className="font-semibold text-xs text-white">עמוד הביטול נפתח</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                עוקפים את כל מסכי השימור ומגיעים ישר לעמוד הביטול הרשמי עם הנחיות פשוטות.
+                עוקפים את כל מסכי השימור ומגיעים ישר לעמוד הביטול הרשמי בלחיצה אחת.
               </p>
             </div>
 
@@ -145,6 +151,106 @@ export default function HomePage() {
               <p className="text-xs text-zinc-400 leading-relaxed">
                 מאשרים את הביטול — ומפסיקים לשלם מאות שקלים בחודש על שירותים מיותרים.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── PRICING SECTION (29.90 ILS / Year - No Brainer) ───────────────── */}
+        <section id="pricing" className="space-y-6 pt-4">
+          <div className="text-center space-y-1.5">
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-400">
+              השקעה של פחות מקפה אחד — חיסכון של אלפי שקלים
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">תוכניות פשוטות והוגנות</h2>
+            <p className="text-xs text-zinc-400">ללא התחייבות ארוכת טווח · אפשרות ביטול בכל עת</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Free Plan */}
+            <div className="studio-capsule p-6 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-base text-white">SubSnap Basic</h3>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400">
+                    לשימוש אישי
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-extrabold text-white">0 ₪</span>
+                  <span className="text-xs text-zinc-400">/ חינם לתמיד</span>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  כל הכלים הבסיסיים לביטול מנויים ידני מהיר.
+                </p>
+                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-white/[0.04]">
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span>חיפוש מהיר של מאות שירותי מנויים</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span>קישורי ביטול רשמיים ומדויקים</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span>ללא צורך בהרשמה או סיסמאות</span>
+                  </li>
+                </ul>
+              </div>
+              <a
+                href="#"
+                className="w-full py-2.5 rounded-xl text-center text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.08] transition-colors"
+              >
+                התחל בחינם
+              </a>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="studio-capsule p-6 flex flex-col justify-between space-y-4 relative border-emerald-500/40 bg-gradient-to-b from-emerald-500/[0.04] to-transparent">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-[#032014] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                הכי פופולרי · חיסכון מובטח
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-base text-emerald-400 flex items-center gap-1.5">
+                    <span>⚡ SubSnap Pro</span>
+                  </h3>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                    2.49 ₪ לחודש
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-extrabold text-white">29.90 ₪</span>
+                  <span className="text-xs text-zinc-400">/ לשנה</span>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  אוטונומיה מלאה, סריקת תדפיסים ועקיפת שאלוני שימור.
+                </p>
+                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-white/[0.04]">
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span className="font-medium text-white">תוסף Auto-Pilot מלא (ביטול בלחיצה אחת)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span>עקיפת מסכי שימור ושאלונים (אדובי, אמזון)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span>סורק תדפיסי אשראי לאיתור חיובים כפולים וסמויים</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">✓</span>
+                    <span>התראות מוקדמות לפני חידוש מנוי אוטומטי</span>
+                  </li>
+                </ul>
+              </div>
+              <a
+                href="/app"
+                className="w-full btn-emerald py-2.5 rounded-xl text-center text-xs font-bold transition-all block shadow-lg shadow-emerald-500/20"
+              >
+                שדרג ל-Pro עכשיו ➔
+              </a>
             </div>
           </div>
         </section>
