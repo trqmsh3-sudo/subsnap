@@ -1,6 +1,6 @@
 /**
- * SubSnap In-Page Auto-Pilot Content Script (v2.0)
- * Intelligent Cancellation Engine with Semantic DOM Validation & Content Page Filtering.
+ * SubSnap In-Page Auto-Pilot Content Script (v2.5)
+ * Intelligent Cancellation Engine with Quick-Switcher Chain & Safe Free-Tier Detection.
  */
 
 (function () {
@@ -11,10 +11,25 @@
   const href = window.location.href.toLowerCase()
   const hostname = window.location.hostname.toLowerCase()
 
-  // 1. Check for Content/Forum/Discussion Pages (where "cancel" is just article/post text)
+  const QUICK_SERVICES = [
+    { name: 'Netflix', keywords: ['netflix', 'nflx'], url: 'https://www.netflix.com/cancelplan' },
+    { name: 'Claude Pro', keywords: ['claude', 'anthropic'], url: 'https://claude.ai/settings/billing' },
+    { name: 'Adobe Creative Cloud', keywords: ['adobe', 'photoshop'], url: 'https://account.adobe.com/plans' },
+    { name: 'Spotify Premium', keywords: ['spotify'], url: 'https://www.spotify.com/account/subscription/change/' },
+    { name: 'ChatGPT Plus', keywords: ['chatgpt', 'openai'], url: 'https://chatgpt.com/#settings/Subscription' },
+    { name: 'Grok / X Premium', keywords: ['grok', 'x', 'twitter'], url: 'https://x.com/settings/manage_subscriptions' },
+    { name: 'Canva Pro', keywords: ['canva'], url: 'https://www.canva.com/settings/billing-and-teams' },
+    { name: 'Amazon Prime', keywords: ['amazon', 'prime'], url: 'https://www.amazon.com/mc/manage' },
+    { name: 'Midjourney', keywords: ['midjourney'], url: 'https://www.midjourney.com/account' },
+    { name: 'Reddit Premium', keywords: ['reddit'], url: 'https://www.reddit.com/settings/premium' },
+    { name: 'ProtonVPN / Mail', keywords: ['proton', 'protonvpn'], url: 'https://account.proton.me/u/0/mail/dashboard' },
+    { name: 'Medium Membership', keywords: ['medium'], url: 'https://medium.com/me/settings/membership' }
+  ]
+
+  // Check for generic discussion / article / search pages
   const isDiscussionOrSearch = (
     pathname.includes('/comments/') ||
-    pathname.includes('/r/') && pathname.includes('/comments/') ||
+    (pathname.includes('/r/') && pathname.includes('/comments/')) ||
     pathname.includes('/discussion/') ||
     pathname.includes('/thread/') ||
     pathname.includes('/article/') ||
@@ -22,10 +37,9 @@
     pathname.startsWith('/search') ||
     hostname.includes('google.') ||
     hostname.includes('bing.') ||
-    hostname.includes('quora.') && !pathname.includes('/settings')
+    (hostname.includes('quora.') && !pathname.includes('/settings'))
   )
 
-  // Explicit Settings & Billing Paths are ALWAYS allowed (e.g., reddit.com/settings/premium)
   const isExplicitSettingsPage = (
     pathname.includes('/settings') ||
     pathname.includes('/billing') ||
@@ -37,7 +51,6 @@
   )
 
   if (isDiscussionOrSearch && !isExplicitSettingsPage) {
-    // Pure discussion / article post — do NOT run cancel scanner
     return
   }
 
@@ -69,11 +82,9 @@
   function isDisallowedElement(el) {
     if (!el) return true
     const tag = el.tagName.toUpperCase()
-    // Headings, articles, paragraphs are NEVER cancel buttons
     if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'ARTICLE', 'P', 'HEADER'].includes(tag)) {
       return true
     }
-    // Elements inside post titles or forum discussion headers
     if (el.closest('h1, h2, h3, article, [data-testid*="post-title"], [data-testid*="post-container"]')) {
       return true
     }
@@ -90,10 +101,7 @@
 
     for (const el of candidates) {
       if (isDisallowedElement(el)) continue
-
       const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
-      
-      // Exact or direct phrase match on actual buttons
       if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
         return el
       }
@@ -121,6 +129,43 @@
   let hudInjected = false
   let countdownTimer = null
 
+  function openNextService(query) {
+    const q = query.toLowerCase().trim()
+    const match = QUICK_SERVICES.find(s => s.name.toLowerCase().includes(q) || s.keywords.some(k => q.includes(k)))
+    const targetUrl = match ? match.url : `https://www.google.com/search?q=${encodeURIComponent('cancel ' + query + ' subscription')}`
+    
+    if (chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ action: 'openCancelTab', url: targetUrl })
+    } else {
+      window.open(targetUrl, '_blank')
+    }
+  }
+
+  function renderQuickSearchBox(container) {
+    container.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+        <input type="text" id="subsnap-next-input" placeholder="Type next subscription (e.g. Spotify, Adobe)..." style="flex: 1; padding: 7px 10px; border: 1.5px solid #059669; border-radius: 8px; font-size: 11px; font-weight: 600; outline: none; background: #ffffff; color: #0f172a;" />
+        <button id="subsnap-next-go" style="background: #0f172a; color: #ffffff; font-weight: 800; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; cursor: pointer;">Go ➔</button>
+      </div>
+    `
+    const input = container.querySelector('#subsnap-next-input')
+    const goBtn = container.querySelector('#subsnap-next-go')
+
+    input.focus()
+
+    function trigger() {
+      if (input.value.trim()) {
+        openNextService(input.value.trim())
+      }
+    }
+
+    goBtn.addEventListener('click', trigger)
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') trigger()
+    })
+  }
+
+  // 1. Reassuring Info HUD (When Free Tier / No Active Subscription)
   function injectInfoHUD(title, desc) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -134,14 +179,16 @@
       z-index: 2147483647;
       background: #ffffff;
       border: 1.5px solid #e2e8f0;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(16, 185, 129, 0.1);
       border-radius: 16px;
-      padding: 12px 18px;
+      padding: 14px 18px;
       display: flex;
-      align-items: center;
-      gap: 12px;
+      flex-direction: column;
+      gap: 10px;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       direction: ltr;
+      min-width: 320px;
+      max-width: 400px;
       animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `
 
@@ -152,25 +199,49 @@
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
       </style>
-      <div style="width: 32px; height: 32px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 16px;">
-        ℹ️
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+            🎉
+          </div>
+          <span style="font-size: 13px; font-weight: 800; color: #0f172a;">${title}</span>
+        </div>
+        <button id="subsnap-close-info" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px;">✕</button>
       </div>
-      <div>
-        <div style="font-size: 13px; font-weight: 800; color: #0f172a;">${title}</div>
-        <div style="font-size: 11px; color: #64748b; margin-top: 1px;">${desc}</div>
+
+      <div style="font-size: 11.5px; color: #64748b; line-height: 1.35;">${desc}</div>
+
+      <div id="subsnap-action-row" style="display: flex; align-items: center; gap: 6px; pt: 2px;">
+        <button id="subsnap-next-btn" style="flex: 1; background: #059669; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          Check Another Subscription ➔
+        </button>
+        <button id="subsnap-done-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 700; cursor: pointer;">
+          Done
+        </button>
       </div>
-      <button id="subsnap-close-info" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 8px;">
-        Got it ✕
-      </button>
     `
 
     document.body.appendChild(hud)
-    hud.querySelector('#subsnap-close-info').addEventListener('click', () => {
+
+    const closeBtn = hud.querySelector('#subsnap-close-info')
+    const doneBtn = hud.querySelector('#subsnap-done-btn')
+    const nextBtn = hud.querySelector('#subsnap-next-btn')
+    const actionRow = hud.querySelector('#subsnap-action-row')
+
+    function close() {
       hud.remove()
       hudInjected = false
+    }
+
+    closeBtn.addEventListener('click', close)
+    doneBtn.addEventListener('click', close)
+
+    nextBtn.addEventListener('click', () => {
+      renderQuickSearchBox(actionRow)
     })
   }
 
+  // 2. Active Subscription Auto-Pilot HUD
   function injectHUD(btn, mode = 'countdown_3s') {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -218,7 +289,7 @@
         </div>
         <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Cancel button identified. Auto-cancelling...</div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
+      <div id="subsnap-controls" style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
         <button id="subsnap-action-btn" style="background: #0f172a; color: #ffffff; font-weight: 800; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; cursor: pointer; transition: transform 0.1s;">
           Cancel Now ➔
         </button>
@@ -238,6 +309,7 @@
     const actionBtn = hud.querySelector('#subsnap-action-btn')
     const stopBtn = hud.querySelector('#subsnap-stop-btn')
     const closeBtn = hud.querySelector('#subsnap-close-btn')
+    const controls = hud.querySelector('#subsnap-controls')
 
     if (btn) {
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -253,7 +325,20 @@
         btn.click()
         setTimeout(() => {
           descEl.textContent = '✓ Action executed successfully!'
-        }, 1500)
+          controls.innerHTML = `
+            <button id="subsnap-post-next" style="background: #059669; color: #ffffff; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              Check Next ➔
+            </button>
+            <button id="subsnap-post-done" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 8px; font-size: 11px; cursor: pointer;">✕</button>
+          `
+          controls.querySelector('#subsnap-post-done').addEventListener('click', () => {
+            hud.remove()
+            hudInjected = false
+          })
+          controls.querySelector('#subsnap-post-next').addEventListener('click', () => {
+            renderQuickSearchBox(controls)
+          })
+        }, 1200)
       }
 
       if (mode === 'instant') {
@@ -305,14 +390,16 @@
         injectHUD(btn, mode)
       })
     } else if (isFreePlanAccount()) {
-      injectInfoHUD('No Active Paid Subscription', 'This account is currently on a Free tier. No recurring charges detected.')
+      injectInfoHUD(
+        'Good News: No Active Paid Subscription',
+        'Your account on this service is currently on the Free tier. You are not being charged any recurring fees.'
+      )
     }
   }
 
   setTimeout(checkAndExecute, 1000)
   setTimeout(checkAndExecute, 2500)
 
-  // Observe dynamically loaded SPAs on billing pages
   const observer = new MutationObserver(() => {
     if (!hudInjected && isExplicitSettingsPage) {
       checkAndExecute()
