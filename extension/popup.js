@@ -109,13 +109,15 @@ const resultCard = document.getElementById('resultCard')
 const loadingState = document.getElementById('loadingState')
 const serviceNameEl = document.getElementById('serviceName')
 const serviceNotesEl = document.getElementById('serviceNotes')
+const modeTagEl = document.getElementById('modeTag')
 const btnCancel = document.getElementById('btnCancel')
 const modeSelect = document.getElementById('modeSelect')
 const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
+let debounceTimer = null
 
-function matchService(query) {
+function matchLocalService(query) {
   if (!query) return null
   const q = query.toLowerCase().trim()
   return TOP_SERVICES.find(s => 
@@ -124,7 +126,7 @@ function matchService(query) {
   )
 }
 
-function showResult(service) {
+function showResult(service, sourceTag = '⚡ Direct Pathway') {
   if (!service) {
     resultCard.style.display = 'none'
     currentEntry = null
@@ -133,7 +135,35 @@ function showResult(service) {
   currentEntry = service
   serviceNameEl.textContent = service.name
   serviceNotesEl.textContent = service.notes || 'Direct cancellation pathway identified'
+  if (modeTagEl) modeTagEl.textContent = sourceTag
   resultCard.style.display = 'block'
+}
+
+// Query Autonomous Gemini AI Scout for any unknown / custom subscription
+async function queryAIScout(query) {
+  try {
+    const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
+    const data = await res.json()
+    if (data && data.entry && data.entry.cancelUrl) {
+      showResult({
+        name: data.entry.name || query,
+        cancelUrl: data.entry.cancelUrl,
+        notes: data.entry.notes || 'AI Scout identified direct billing pathway'
+      }, '🤖 AI Scout Located')
+    } else {
+      showResult({
+        name: query,
+        cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + query + ' subscription')}`,
+        notes: 'Locating official cancellation pathway...'
+      }, '🔍 Deep Search')
+    }
+  } catch (err) {
+    showResult({
+      name: query,
+      cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + query + ' subscription')}`,
+      notes: 'Direct official billing & cancellation pathway locator'
+    }, '🔍 Search')
+  }
 }
 
 function executeCancel(service) {
@@ -151,20 +181,26 @@ function executeCancel(service) {
   })
 }
 
-// Search input handling
+// Search input handling with AI Scout
 searchInput.addEventListener('input', (e) => {
   const val = e.target.value
   clearBtn.style.display = val ? 'block' : 'none'
+  if (debounceTimer) clearTimeout(debounceTimer)
   
-  const matched = matchService(val)
-  if (matched) {
-    showResult(matched)
+  const localMatch = matchLocalService(val)
+  if (localMatch) {
+    showResult(localMatch, '⚡ Direct Pathway')
   } else if (val.trim().length >= 2) {
+    // Show quick placeholder and query AI Scout in background
     showResult({
       name: val,
       cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + val + ' subscription')}`,
-      notes: 'Direct official billing & cancellation pathway locator'
-    })
+      notes: 'AI Scout analyzing subscription pathway...'
+    }, '🤖 AI Scanning...')
+
+    debounceTimer = setTimeout(() => {
+      queryAIScout(val.trim())
+    }, 400)
   } else {
     showResult(null)
   }
