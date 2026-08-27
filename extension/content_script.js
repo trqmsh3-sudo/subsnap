@@ -14,20 +14,37 @@
     'button:contains("End membership")',
     'button:contains("Deactivate")',
     'button:contains("Finish Cancellation")',
+    'button:contains("Manage plan")',
+    'button:contains("Cancel your plan")',
     'a:contains("Cancel plan")',
     'a:contains("Cancel subscription")',
     'a:contains("Cancel membership")',
     'a:contains("Cancel your plan")',
+    'a:contains("Manage plan")',
     '[data-testid*="cancel"]',
+    '[data-testid*="manage-plan"]',
     '[aria-label*="cancel" i]',
     'button[class*="cancel" i]',
-    'a[href*="cancel" i]'
+    'a[href*="cancel" i]',
+    'a[href*="plans" i]'
   ]
 
   function findCancelButton() {
     // 1. Exact text scan across buttons and links
-    const elements = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
-    const keywords = ['cancel subscription', 'cancel plan', 'cancel membership', 'finish cancellation', 'end membership', 'בטל מנוי', 'בטל תוכנית', 'סיום ביטול']
+    const elements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'))
+    const keywords = [
+      'cancel subscription',
+      'cancel your plan',
+      'cancel plan',
+      'cancel membership',
+      'finish cancellation',
+      'end membership',
+      'manage plan',
+      'בטל מנוי',
+      'בטל תוכנית',
+      'בטל את התוכנית שלך',
+      'סיום ביטול'
+    ]
 
     for (const el of elements) {
       const text = (el.innerText || el.textContent || '').toLowerCase().trim()
@@ -47,8 +64,11 @@
     return null
   }
 
+  let hudInjected = false
+
   function injectHUD(btn) {
-    if (document.getElementById('subsnap-hud')) return
+    if (hudInjected || document.getElementById('subsnap-hud')) return
+    hudInjected = true
 
     const hud = document.createElement('div')
     hud.id = 'subsnap-hud'
@@ -120,6 +140,7 @@
 
     closeBtn.addEventListener('click', () => {
       hud.remove()
+      hudInjected = false
       if (btn) {
         btn.style.outline = ''
         btn.style.animation = ''
@@ -127,10 +148,21 @@
     })
   }
 
-  // Scan on load and DOM changes
-  setTimeout(() => {
+  // Active scanning with MutationObserver for dynamic React/SPA apps like Adobe
+  function scan() {
     const btn = findCancelButton()
-    injectHUD(btn)
-  }, 1000)
+    if (btn) {
+      injectHUD(btn)
+    }
+  }
+
+  scan()
+  const interval = setInterval(scan, 1000)
+  setTimeout(() => clearInterval(interval), 10000)
+
+  const observer = new MutationObserver(() => {
+    if (!hudInjected) scan()
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
 
 })()
