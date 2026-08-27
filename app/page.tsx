@@ -273,7 +273,7 @@ export default function HomePage() {
             <div className="studio-white-card p-8 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-700">
-                  Basic Extension
+                  Free Extension
                 </div>
                 <div>
                   <div className="text-3xl font-black text-slate-950 text-shadow-subtle">$0</div>
@@ -281,16 +281,19 @@ export default function HomePage() {
                 </div>
                 <ul className="space-y-2.5 text-xs text-slate-600 pt-2">
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span> Direct deep cancellation links
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>Autonomous Auto-Pilot cancellation included</strong>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span> Chrome toolbar quick launcher
+                    <span className="text-emerald-600 font-bold">✓</span> Direct deep cancellation pathways
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-emerald-600 font-bold">✓</span> In-page cancel button highlighter
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span> Unlimited manual cancellations
+                    <span className="text-emerald-600 font-bold">✓</span> Chrome toolbar quick launcher
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span> 100% Client-Side Privacy (Zero Passwords)
                   </li>
                 </ul>
               </div>
@@ -300,7 +303,7 @@ export default function HomePage() {
                 download
                 className="w-full py-3.5 rounded-xl border border-slate-300 hover:border-slate-400 text-slate-900 font-bold text-xs text-center transition-colors block"
               >
-                Add Free Extension
+                Add to Chrome for Free
               </a>
             </div>
 
@@ -326,13 +329,13 @@ export default function HomePage() {
                     <span className="text-emerald-600 font-bold">✓</span> <strong>Everything in Free</strong>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span> <strong>10 AI statement scans / mo</strong> (Gemini Flash)
+                    <span className="text-emerald-600 font-bold">✓</span> <strong className="text-emerald-700">UNLIMITED Autonomous Auto-Pilot cancellations</strong>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span> <strong>Autonomous 3-second Auto-Pilot</strong>
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>10 AI bank statement scans / mo</strong> (Gemini Flash)
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span> <strong>Dark-pattern retention bypass</strong>
+                    <span className="text-emerald-600 font-bold">✓</span> <strong>Dark-pattern retention bypass</strong> (Adobe, Amazon)
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-emerald-600 font-bold">✓</span> Priority AI discovery for obscure SaaS
