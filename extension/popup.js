@@ -142,13 +142,13 @@ function executeCancel(service) {
   resultCard.style.display = 'none'
   loadingState.style.display = 'block'
   document.getElementById('loadingText').textContent = `Launching Auto-Pilot on ${service.name}...`
-  document.getElementById('loadingSub').textContent = 'Opening billing pathway · Preparing in-page HUD'
+  document.getElementById('loadingSub').textContent = 'Opening direct billing pathway'
 
-  setTimeout(() => {
-    chrome.tabs.create({ url: service.cancelUrl, active: true }, () => {
+  chrome.runtime.sendMessage({ action: 'openCancelTab', url: service.cancelUrl }, () => {
+    setTimeout(() => {
       window.close()
-    })
-  }, 400)
+    }, 400)
+  })
 }
 
 // Search input handling

@@ -1,6 +1,6 @@
 /**
- * SubSnap In-Page Visual Auto-Pilot & Dark Pattern Engine (v4.0)
- * 100% Universal · Bypasses Retention Traps, Surveys & Multi-Screen Cancels.
+ * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v5.0)
+ * Precision Multi-Step Automation · Dark Pattern & Survey Bypass · Universal Heuristics.
  */
 
 (function () {
@@ -11,48 +11,55 @@
   const href = window.location.href.toLowerCase()
   const hostname = window.location.hostname.toLowerCase()
 
-  const QUICK_SERVICES = [
-    { name: 'Netflix', keywords: ['netflix', 'nflx'], url: 'https://www.netflix.com/cancelplan' },
-    { name: 'Claude Pro', keywords: ['claude', 'anthropic'], url: 'https://claude.ai/settings/billing' },
-    { name: 'Adobe Creative Cloud', keywords: ['adobe', 'photoshop'], url: 'https://account.adobe.com/plans' },
-    { name: 'Spotify Premium', keywords: ['spotify'], url: 'https://www.spotify.com/account/subscription/change/' },
-    { name: 'ChatGPT Plus', keywords: ['chatgpt', 'openai'], url: 'https://chatgpt.com/#settings/Subscription' },
-    { name: 'Grok / X Premium', keywords: ['grok', 'x', 'twitter'], url: 'https://x.com/settings/manage_subscriptions' },
-    { name: 'Canva Pro', keywords: ['canva'], url: 'https://www.canva.com/settings/billing-and-teams' },
-    { name: 'Amazon Prime', keywords: ['amazon', 'prime'], url: 'https://www.amazon.com/mc/manage' },
-    { name: 'Midjourney', keywords: ['midjourney'], url: 'https://www.midjourney.com/account' },
-    { name: 'Reddit Premium', keywords: ['reddit'], url: 'https://www.reddit.com/settings/premium' },
-    { name: 'Proton (VPN / Mail)', keywords: ['proton', 'protonvpn'], url: 'https://account.proton.me/u/0/mail/dashboard' },
-    { name: 'Medium Membership', keywords: ['medium'], url: 'https://medium.com/me/settings/membership' }
+  // 1. Service-Specific Precision Selectors (Top Platforms)
+  const SERVICE_SPECIFIC_SELECTORS = [
+    // Netflix
+    '[data-uia="action-cancel-plan"]',
+    '[data-uia="btn-cancel-membership"]',
+    'button[data-uia*="cancel"]',
+    // Adobe Creative Cloud
+    'button[data-testid*="cancel-plan"]',
+    'button[data-testid*="end-service"]',
+    'a[href*="/cancel-plan"]',
+    // Claude (Anthropic)
+    'button:has-text("Cancel plan")',
+    'button[data-testid="cancel-subscription"]',
+    // Spotify
+    'button[data-testid="cancel-plan-button"]',
+    'a[data-testid="cancel-plan-link"]',
+    // ChatGPT / OpenAI
+    'button[data-testid="cancel-subscription-button"]',
+    // Amazon Prime
+    '#cancel-membership-button',
+    'a[href*="cancelPrime"]',
+    // Grok / X Premium
+    'div[data-testid="cancelSubscription"]',
+    'button[data-testid="cancelPlan"]',
+    // Canva Pro
+    'button[data-testid="cancel-subscription-button"]',
+    // Reddit Premium
+    'button[data-testid="cancel-premium-btn"]',
+    // Generic high-confidence attributes
+    '[data-testid*="cancel-subscription"]',
+    '[data-testid*="cancel-plan"]',
+    '[data-action*="cancel-subscription"]',
+    'button[aria-label*="cancel subscription" i]',
+    'button[aria-label*="cancel plan" i]'
   ]
 
-  // Filter out pure discussion/search pages
-  const isDiscussionOrSearch = (
-    pathname.includes('/comments/') ||
-    (pathname.includes('/r/') && pathname.includes('/comments/')) ||
-    pathname.includes('/discussion/') ||
-    pathname.includes('/thread/') ||
-    pathname.includes('/article/') ||
-    pathname.includes('/post/') ||
-    pathname.startsWith('/search') ||
-    hostname.includes('google.') ||
-    hostname.includes('bing.') ||
-    (hostname.includes('quora.') && !pathname.includes('/settings'))
-  )
-
-  const isExplicitSettingsPage = (
-    pathname.includes('/settings') ||
-    pathname.includes('/billing') ||
-    pathname.includes('/account') ||
-    pathname.includes('/membership') ||
-    pathname.includes('/subscription') ||
-    pathname.includes('/cancel') ||
-    pathname.includes('/plans')
-  )
-
-  if (isDiscussionOrSearch && !isExplicitSettingsPage) {
-    return
-  }
+  // 2. Strict Safety Filter: NEVER match destructive or order actions
+  const DISALLOWED_KEYWORDS = [
+    'delete account',
+    'delete my account',
+    'close account',
+    'cancel order',
+    'cancel item',
+    'remove card',
+    'delete payment',
+    'מחק חשבון',
+    'סגירת חשבון',
+    'ביטול הזמנה'
+  ]
 
   const STRICT_CANCEL_KEYWORDS = [
     'cancel subscription',
@@ -99,6 +106,10 @@
     if (el.closest('h1, h2, h3, article, [data-testid*="post-title"], [data-testid*="post-container"]')) {
       return true
     }
+    const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
+    if (DISALLOWED_KEYWORDS.some(k => text.includes(k))) {
+      return true
+    }
     return false
   }
 
@@ -107,7 +118,7 @@
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
-  // 1. Check for Dark Pattern Retention Screens / Survey Screens
+  // Handle Dark Patterns & Surveys
   function handleDarkPatterns() {
     // Check for "Too expensive" or "Other" radio buttons in surveys
     const radioInputs = Array.from(document.querySelectorAll('input[type="radio"], input[type="checkbox"], label'))
@@ -119,7 +130,7 @@
       }
     }
 
-    // Check for "Continue to cancel" or "Cancel anyway" buttons
+    // Check for "Continue to cancel" or "Cancel anyway" retention bypass buttons
     const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
     for (const b of continueBtns) {
       if (isDisallowedElement(b)) continue
@@ -132,10 +143,19 @@
   }
 
   function findCancelButton() {
-    // Prioritize retention bypass button if present
+    // 1. Check for active dark-pattern/retention screens
     const darkPatternBtn = handleDarkPatterns()
     if (darkPatternBtn) return darkPatternBtn
 
+    // 2. Try High-Confidence Service-Specific Selectors
+    for (const sel of SERVICE_SPECIFIC_SELECTORS) {
+      try {
+        const el = document.querySelector(sel)
+        if (el && !isDisallowedElement(el)) return el
+      } catch (e) {}
+    }
+
+    // 3. Fallback to Heuristic Text Analysis
     const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
 
     for (const el of candidates) {
@@ -146,65 +166,13 @@
       }
     }
 
-    const specificSelectors = [
-      '[data-testid*="cancel-subscription"]',
-      '[data-testid*="cancel-plan"]',
-      'button[aria-label*="cancel subscription" i]',
-      'button[aria-label*="cancel plan" i]',
-      'a[href*="/cancelplan"]',
-      'a[href*="/cancel-subscription"]'
-    ]
-
-    for (const sel of specificSelectors) {
-      try {
-        const el = document.querySelector(sel)
-        if (el && !isDisallowedElement(el)) return el
-      } catch (e) {}
-    }
-
     return null
   }
 
   let hudInjected = false
   let countdownTimer = null
 
-  function openNextService(query) {
-    const q = query.toLowerCase().trim()
-    const match = QUICK_SERVICES.find(s => s.name.toLowerCase().includes(q) || s.keywords.some(k => q.includes(k)))
-    const targetUrl = match ? match.url : `https://www.google.com/search?q=${encodeURIComponent('cancel ' + query + ' subscription')}`
-    
-    if (chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ action: 'openCancelTab', url: targetUrl })
-    } else {
-      window.open(targetUrl, '_blank')
-    }
-  }
-
-  function renderQuickSearchBox(container) {
-    container.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-        <input type="text" id="subsnap-next-input" placeholder="Type next subscription (e.g. Spotify, Adobe)..." style="flex: 1; padding: 7px 10px; border: 1.5px solid #059669; border-radius: 8px; font-size: 11px; font-weight: 600; outline: none; background: #ffffff; color: #0f172a;" />
-        <button id="subsnap-next-go" style="background: #0f172a; color: #ffffff; font-weight: 800; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; cursor: pointer;">Go ➔</button>
-      </div>
-    `
-    const input = container.querySelector('#subsnap-next-input')
-    const goBtn = container.querySelector('#subsnap-next-go')
-
-    input.focus()
-
-    function trigger() {
-      if (input.value.trim()) {
-        openNextService(input.value.trim())
-      }
-    }
-
-    goBtn.addEventListener('click', trigger)
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') trigger()
-    })
-  }
-
-  // 1. Reassuring Info HUD (When Free Tier / No Active Subscription)
+  // 1. Reassuring Free-Tier Notification
   function injectInfoHUD(title, desc) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -250,22 +218,15 @@
 
       <div style="font-size: 11.5px; color: #64748b; line-height: 1.35;">${desc}</div>
 
-      <div id="subsnap-action-row" style="display: flex; align-items: center; gap: 6px; pt: 2px;">
-        <button id="subsnap-next-btn" style="flex: 1; background: #059669; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
-          Check Another Subscription ➔
-        </button>
-        <button id="subsnap-done-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 700; cursor: pointer;">
-          Done
-        </button>
-      </div>
+      <button id="subsnap-done-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-weight: 800; cursor: pointer;">
+        Got it, thanks! ✕
+      </button>
     `
 
     document.body.appendChild(hud)
 
     const closeBtn = hud.querySelector('#subsnap-close-info')
     const doneBtn = hud.querySelector('#subsnap-done-btn')
-    const nextBtn = hud.querySelector('#subsnap-next-btn')
-    const actionRow = hud.querySelector('#subsnap-action-row')
 
     function close() {
       hud.remove()
@@ -274,10 +235,6 @@
 
     closeBtn.addEventListener('click', close)
     doneBtn.addEventListener('click', close)
-
-    nextBtn.addEventListener('click', () => {
-      renderQuickSearchBox(actionRow)
-    })
   }
 
   // 2. Active Visual Auto-Pilot HUD
@@ -348,7 +305,6 @@
     const actionBtn = hud.querySelector('#subsnap-action-btn')
     const stopBtn = hud.querySelector('#subsnap-stop-btn')
     const closeBtn = hud.querySelector('#subsnap-close-btn')
-    const controls = hud.querySelector('#subsnap-controls')
 
     if (btn) {
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -370,19 +326,6 @@
             nextBtn.click()
           }
           descEl.textContent = '✓ Action executed successfully!'
-          controls.innerHTML = `
-            <button id="subsnap-post-next" style="background: #059669; color: #ffffff; border: none; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 800; cursor: pointer;">
-              Check Next ➔
-            </button>
-            <button id="subsnap-post-done" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 8px; font-size: 11px; cursor: pointer;">✕</button>
-          `
-          controls.querySelector('#subsnap-post-done').addEventListener('click', () => {
-            hud.remove()
-            hudInjected = false
-          })
-          controls.querySelector('#subsnap-post-next').addEventListener('click', () => {
-            renderQuickSearchBox(controls)
-          })
         }, 1200)
       }
 
@@ -426,8 +369,6 @@
   }
 
   function checkAndExecute() {
-    if (!isExplicitSettingsPage) return
-
     const btn = findCancelButton()
     if (btn) {
       chrome.storage.local.get(['autopilot_mode'], (res) => {
@@ -442,11 +383,11 @@
     }
   }
 
-  setTimeout(checkAndExecute, 1000)
-  setTimeout(checkAndExecute, 2500)
+  setTimeout(checkAndExecute, 800)
+  setTimeout(checkAndExecute, 2000)
 
   const observer = new MutationObserver(() => {
-    if (!hudInjected && isExplicitSettingsPage) {
+    if (!hudInjected) {
       checkAndExecute()
     }
   })

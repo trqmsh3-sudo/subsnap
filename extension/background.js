@@ -1,38 +1,25 @@
 // SubSnap Background Service Worker
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[SubSnap] Extension installed successfully!')
+  console.log('[SubSnap] Extension ready.')
 })
 
-async function ensureOffscreenDocument() {
-  if (typeof chrome.offscreen !== 'undefined') {
-    const existingContexts = await chrome.runtime.getContexts({
-      contextTypes: ['OFFSCREEN_DOCUMENT']
-    })
-
-    if (existingContexts.length > 0) return
-
-    await chrome.offscreen.createDocument({
-      url: 'offscreen.html',
-      reasons: ['DOM_SCRAPING'],
-      justification: 'Inspect subscription status in silent background without creating visible browser tabs.'
-    })
-  }
-}
-
+// Listen for tab navigation & dynamic script injection
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'startGhostInspection') {
-    ensureOffscreenDocument().then(() => {
-      chrome.runtime.sendMessage({
-        action: 'executeGhostInspection',
-        url: request.url,
-        serviceName: request.serviceName
+  if (request.action === 'openCancelTab' && request.url) {
+    chrome.tabs.create({ url: request.url }, (tab) => {
+      // Dynamically inject content script once the tab finishes loading
+      chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+        if (tabId === tab.id && info.status === 'complete') {
+          chrome.tabs.onUpdated.removeListener(listener)
+          try {
+            chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['content_script.js']
+            })
+          } catch (e) {}
+        }
       })
     })
-    sendResponse({ status: 'queued' })
-  }
-
-  if (request.action === 'openCancelTab' && request.url) {
-    chrome.tabs.create({ url: request.url })
     sendResponse({ status: 'ok' })
   }
 })
