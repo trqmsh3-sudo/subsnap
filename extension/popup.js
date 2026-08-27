@@ -1,5 +1,17 @@
 const TOP_SERVICES = [
   {
+    name: 'Reddit Premium',
+    keywords: ['reddit', 'reddit premium', 'רדיט', 'רדיט פרימיום'],
+    cancelUrl: 'https://www.reddit.com/settings/premium',
+    notes: 'Direct Reddit Premium account settings'
+  },
+  {
+    name: 'Proton (ProtonVPN / Proton Mail)',
+    keywords: ['proton', 'protonvpn', 'proton mail', 'פרוטון'],
+    cancelUrl: 'https://account.proton.me/u/0/mail/dashboard',
+    notes: 'Direct Proton account & subscription dashboard'
+  },
+  {
     name: 'Readwise / Reader',
     keywords: ['readwise', 'readwise.io', 'reader', 'רידווייז'],
     cancelUrl: 'https://readwise.io/preferences/account/',
@@ -76,6 +88,12 @@ const TOP_SERVICES = [
     keywords: ['disney', 'disney+', 'דיסני'],
     cancelUrl: 'https://www.disneyplus.com/account',
     notes: 'Direct Disney+ account cancellation'
+  },
+  {
+    name: 'Medium Membership',
+    keywords: ['medium', 'medium membership', 'מדיום'],
+    cancelUrl: 'https://medium.com/me/settings/membership',
+    notes: 'Direct Medium membership settings'
   },
   {
     name: 'Google One / Play Subscriptions',

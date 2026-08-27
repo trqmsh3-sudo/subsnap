@@ -1,6 +1,6 @@
 /**
- * SubSnap In-Page Auto-Pilot Content Script
- * Intelligent Cancellation Engine with Safeguards for Free Tiers & Non-Billing Pages.
+ * SubSnap In-Page Auto-Pilot Content Script (v2.0)
+ * Intelligent Cancellation Engine with Semantic DOM Validation & Content Page Filtering.
  */
 
 (function () {
@@ -9,17 +9,35 @@
 
   const pathname = window.location.pathname.toLowerCase()
   const href = window.location.href.toLowerCase()
+  const hostname = window.location.hostname.toLowerCase()
 
-  // Safeguard 1: Do not auto-run on main chat feeds, homepages, search results
-  const isGenericPage = (
-    pathname.startsWith('/chat') ||
+  // 1. Check for Content/Forum/Discussion Pages (where "cancel" is just article/post text)
+  const isDiscussionOrSearch = (
+    pathname.includes('/comments/') ||
+    pathname.includes('/r/') && pathname.includes('/comments/') ||
+    pathname.includes('/discussion/') ||
+    pathname.includes('/thread/') ||
+    pathname.includes('/article/') ||
+    pathname.includes('/post/') ||
     pathname.startsWith('/search') ||
-    pathname === '/' ||
-    pathname === '/home' ||
-    pathname === '/feed'
-  ) && !href.includes('cancel') && !href.includes('billing') && !href.includes('settings') && !href.includes('subscription')
+    hostname.includes('google.') ||
+    hostname.includes('bing.') ||
+    hostname.includes('quora.') && !pathname.includes('/settings')
+  )
 
-  if (isGenericPage) {
+  // Explicit Settings & Billing Paths are ALWAYS allowed (e.g., reddit.com/settings/premium)
+  const isExplicitSettingsPage = (
+    pathname.includes('/settings') ||
+    pathname.includes('/billing') ||
+    pathname.includes('/account') ||
+    pathname.includes('/membership') ||
+    pathname.includes('/subscription') ||
+    pathname.includes('/cancel') ||
+    pathname.includes('/plans')
+  )
+
+  if (isDiscussionOrSearch && !isExplicitSettingsPage) {
+    // Pure discussion / article post — do NOT run cancel scanner
     return
   }
 
@@ -31,6 +49,7 @@
     'finish cancellation',
     'end membership',
     'deactivate subscription',
+    'stop renewal',
     'בטל מנוי',
     'בטל תוכנית',
     'סיום מנוי'
@@ -47,18 +66,35 @@
     'אין מנוי פעיל'
   ]
 
+  function isDisallowedElement(el) {
+    if (!el) return true
+    const tag = el.tagName.toUpperCase()
+    // Headings, articles, paragraphs are NEVER cancel buttons
+    if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'ARTICLE', 'P', 'HEADER'].includes(tag)) {
+      return true
+    }
+    // Elements inside post titles or forum discussion headers
+    if (el.closest('h1, h2, h3, article, [data-testid*="post-title"], [data-testid*="post-container"]')) {
+      return true
+    }
+    return false
+  }
+
   function isFreePlanAccount() {
     const bodyText = (document.body.innerText || '').toLowerCase()
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
   function findCancelButton() {
-    const elements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'))
+    const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
 
-    for (const el of elements) {
-      const text = (el.innerText || el.textContent || '').toLowerCase().trim()
-      // Make sure it's not a generic "cancel" (e.g. cancel dialog, cancel upload)
-      if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k))) {
+    for (const el of candidates) {
+      if (isDisallowedElement(el)) continue
+
+      const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+      
+      // Exact or direct phrase match on actual buttons
+      if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
         return el
       }
     }
@@ -67,13 +103,15 @@
       '[data-testid*="cancel-subscription"]',
       '[data-testid*="cancel-plan"]',
       'button[aria-label*="cancel subscription" i]',
-      'a[href*="/cancel"]'
+      'button[aria-label*="cancel plan" i]',
+      'a[href*="/cancelplan"]',
+      'a[href*="/cancel-subscription"]'
     ]
 
     for (const sel of specificSelectors) {
       try {
         const el = document.querySelector(sel)
-        if (el) return el
+        if (el && !isDisallowedElement(el)) return el
       } catch (e) {}
     }
 
@@ -258,10 +296,7 @@
   }
 
   function checkAndExecute() {
-    // Check if on billing/settings URL
-    const isBillingPage = href.includes('billing') || href.includes('cancel') || href.includes('subscription') || href.includes('plans') || href.includes('account')
-
-    if (!isBillingPage) return
+    if (!isExplicitSettingsPage) return
 
     const btn = findCancelButton()
     if (btn) {
@@ -279,7 +314,7 @@
 
   // Observe dynamically loaded SPAs on billing pages
   const observer = new MutationObserver(() => {
-    if (!hudInjected) {
+    if (!hudInjected && isExplicitSettingsPage) {
       checkAndExecute()
     }
   })
