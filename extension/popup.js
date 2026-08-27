@@ -141,13 +141,13 @@ function executeCancel(service) {
 
   resultCard.style.display = 'none'
   loadingState.style.display = 'block'
-  document.getElementById('loadingText').textContent = `Launching Auto-Pilot on ${service.name}...`
-  document.getElementById('loadingSub').textContent = 'Opening direct billing pathway'
+  document.getElementById('loadingText').textContent = `Opening ${service.name}...`
+  document.getElementById('loadingSub').textContent = 'Launching direct cancellation pathway'
 
-  chrome.runtime.sendMessage({ action: 'openCancelTab', url: service.cancelUrl }, () => {
+  chrome.tabs.create({ url: service.cancelUrl, active: true }, () => {
     setTimeout(() => {
       window.close()
-    }, 400)
+    }, 300)
   })
 }
 
@@ -159,7 +159,7 @@ searchInput.addEventListener('input', (e) => {
   const matched = matchService(val)
   if (matched) {
     showResult(matched)
-  } else if (val.length > 2) {
+  } else if (val.trim().length >= 2) {
     showResult({
       name: val,
       cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + val + ' subscription')}`,
@@ -173,6 +173,7 @@ searchInput.addEventListener('input', (e) => {
 // Enter key opens cancel link directly
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && currentEntry) {
+    e.preventDefault()
     executeCancel(currentEntry)
   }
 })
@@ -184,7 +185,8 @@ clearBtn.addEventListener('click', () => {
   searchInput.focus()
 })
 
-btnCancel.addEventListener('click', () => {
+btnCancel.addEventListener('click', (e) => {
+  e.preventDefault()
   executeCancel(currentEntry)
 })
 
