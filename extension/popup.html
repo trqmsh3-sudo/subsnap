@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SubSnap Auto-Pilot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     * {
@@ -16,7 +16,7 @@
     }
     body {
       width: 360px;
-      min-height: 480px;
+      min-height: 490px;
       background-color: #090a0f;
       color: #f4f4f6;
       padding: 16px;
@@ -27,7 +27,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       padding-bottom: 10px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
@@ -81,7 +81,7 @@
     }
     .search-container {
       position: relative;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .search-input {
       width: 100%;
@@ -124,7 +124,7 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 6px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .service-btn {
       background: rgba(255, 255, 255, 0.03);
@@ -208,9 +208,37 @@
       background: #34d399;
       transform: translateY(-1px);
     }
+    /* Mode Selector Pill Group */
+    .mode-container {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 6px;
+      margin-bottom: 12px;
+    }
+    .mode-label {
+      font-size: 10px;
+      color: #64748b;
+      margin-bottom: 4px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+    .mode-select {
+      width: 100%;
+      background: #0f121a;
+      color: #34d399;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
     .footer {
       border-top: 1px solid rgba(255, 255, 255, 0.05);
-      padding-top: 10px;
+      padding-top: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -267,7 +295,7 @@
     </button>
   </div>
 
-  <!-- Popular Services Grid (Raycast/Honey Style) -->
+  <!-- Popular Services Grid -->
   <div class="section-title">
     <span>ביטול מהיר בלחיצה אחת:</span>
     <span style="font-size: 9px; opacity: 0.6;">0 שניות</span>
@@ -305,6 +333,19 @@
       <span class="service-name">אפל / אייקלאוד</span>
       <span class="service-action">בטל ⚡</span>
     </button>
+  </div>
+
+  <!-- Mode Selector -->
+  <div class="mode-container">
+    <div class="mode-label">
+      <span>מצב ביטול אוטונומי:</span>
+      <span id="savedIndicator" style="color: #10b981; display: none;">נשמר ✓</span>
+    </div>
+    <select id="modeSelect" class="mode-select">
+      <option value="countdown_3s" selected>⏱️ ספירה לאחור 3 שנ' + עצור (ברירת מחדל)</option>
+      <option value="instant">🚀 אוטומטי מלא מיידי (0 שנ')</option>
+      <option value="manual_highlight">🎯 הדגשה ואישור ידני בלבד</option>
+    </select>
   </div>
 
   <!-- Minimal Footer -->

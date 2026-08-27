@@ -155,3 +155,24 @@ serviceGrid.addEventListener('click', (e) => {
 btnCancel.addEventListener('click', () => {
   executeCancel(currentEntry)
 })
+
+// Auto-Pilot Mode Selection Handling
+const modeSelect = document.getElementById('modeSelect')
+const savedIndicator = document.getElementById('savedIndicator')
+
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+  chrome.storage.local.get(['autopilot_mode'], (res) => {
+    if (res.autopilot_mode) {
+      modeSelect.value = res.autopilot_mode
+    }
+  })
+
+  modeSelect.addEventListener('change', (e) => {
+    chrome.storage.local.set({ autopilot_mode: e.target.value }, () => {
+      savedIndicator.style.display = 'inline'
+      setTimeout(() => {
+        savedIndicator.style.display = 'none'
+      }, 1500)
+    })
+  })
+}

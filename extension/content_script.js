@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Auto-Pilot Content Script
- * Automatically locates and highlights cancellation buttons on target websites.
+ * Intelligent Cancellation Engine with Countdown, Instant Auto-Pilot, and Manual Modes.
  */
 
 (function () {
@@ -30,7 +30,6 @@
   ]
 
   function findCancelButton() {
-    // 1. Exact text scan across buttons and links
     const elements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'))
     const keywords = [
       'cancel subscription',
@@ -53,7 +52,6 @@
       }
     }
 
-    // 2. Selectors fallback
     for (const sel of CANCEL_SELECTORS) {
       try {
         const el = document.querySelector(sel)
@@ -65,8 +63,9 @@
   }
 
   let hudInjected = false
+  let countdownTimer = null
 
-  function injectHUD(btn) {
+  function injectHUD(btn, mode = 'countdown_3s') {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
 
@@ -77,15 +76,15 @@
       bottom: 24px;
       left: 24px;
       z-index: 2147483647;
-      background: rgba(9, 10, 15, 0.95);
-      backdrop-filter: blur(16px);
+      background: rgba(9, 10, 15, 0.96);
+      backdrop-filter: blur(20px);
       border: 1px solid rgba(16, 185, 129, 0.4);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.2);
-      border-radius: 16px;
-      padding: 12px 18px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(16, 185, 129, 0.2);
+      border-radius: 18px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       font-family: system-ui, -apple-system, sans-serif;
       direction: rtl;
       animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -98,28 +97,39 @@
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes subsnapPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-          50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+          50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
         }
       </style>
-      <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #10b981; font-weight: bold;">
+      <div style="width: 32px; height: 32px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #10b981; font-weight: bold;">
         ⚡
       </div>
       <div>
-        <div style="font-size: 13px; font-weight: 800; color: #ffffff;">SubSnap Auto-Pilot</div>
-        <div style="font-size: 11px; color: #94a3b8;">כפתור הביטול אותר והודגש בירוק</div>
+        <div style="font-size: 13px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+          <span>SubSnap Auto-Pilot</span>
+          <span id="subsnap-timer-badge" style="font-size: 11px; font-weight: 700; color: #34d399; background: rgba(16, 185, 129, 0.15); padding: 1px 6px; border-radius: 6px;">3 שניות</span>
+        </div>
+        <div id="subsnap-desc" style="font-size: 11px; color: #94a3b8; margin-top: 1px;">כפתור הביטול זוהה. מבטל אוטומטית...</div>
       </div>
-      <button id="subsnap-click-btn" style="background: #10b981; color: #032014; font-weight: 800; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; cursor: pointer; margin-right: 6px; transition: transform 0.1s;">
-        בצע ביטול ➔
-      </button>
-      <button id="subsnap-close-btn" style="background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; padding: 2px 4px;">
-        ✕
-      </button>
+      <div style="display: flex; align-items: center; gap: 6px; margin-right: 8px;">
+        <button id="subsnap-action-btn" style="background: #10b981; color: #032014; font-weight: 800; border: none; border-radius: 9px; padding: 7px 12px; font-size: 11px; cursor: pointer; transition: transform 0.1s;">
+          בטל מיד ➔
+        </button>
+        <button id="subsnap-stop-btn" style="background: rgba(255, 255, 255, 0.08); color: #e2e8f0; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9px; padding: 7px 10px; font-size: 11px; cursor: pointer;">
+          עצור
+        </button>
+        <button id="subsnap-close-btn" style="background: none; border: none; color: #64748b; font-size: 14px; cursor: pointer; padding: 2px 6px;">
+          ✕
+        </button>
+      </div>
     `
 
     document.body.appendChild(hud)
 
-    const clickBtn = hud.querySelector('#subsnap-click-btn')
+    const timerBadge = hud.querySelector('#subsnap-timer-badge')
+    const descEl = hud.querySelector('#subsnap-desc')
+    const actionBtn = hud.querySelector('#subsnap-action-btn')
+    const stopBtn = hud.querySelector('#subsnap-stop-btn')
     const closeBtn = hud.querySelector('#subsnap-close-btn')
 
     if (btn) {
@@ -128,17 +138,59 @@
       btn.style.outlineOffset = '3px'
       btn.style.animation = 'subsnapPulse 2s infinite'
 
-      clickBtn.addEventListener('click', () => {
+      function triggerCancel() {
+        if (countdownTimer) clearInterval(countdownTimer)
+        descEl.textContent = 'מבצע ביטול עכשיו...'
+        timerBadge.textContent = 'מבוצע ⚡'
+        timerBadge.style.color = '#10b981'
         btn.click()
+        setTimeout(() => {
+          descEl.textContent = '✓ הפעולה בוצעה בהצלחה!'
+        }, 1500)
+      }
+
+      actionBtn.addEventListener('click', triggerCancel)
+
+      stopBtn.addEventListener('click', () => {
+        if (countdownTimer) clearInterval(countdownTimer)
+        timerBadge.style.display = 'none'
+        descEl.textContent = 'אוטו-פיילוט נעצר. אתה יכול ללחוץ ידנית.'
+        stopBtn.style.display = 'none'
+        actionBtn.textContent = 'בצע ביטול ➔'
       })
+
+      // Handle Modes
+      if (mode === 'instant') {
+        triggerCancel()
+      } else if (mode === 'manual_highlight') {
+        timerBadge.style.display = 'none'
+        stopBtn.style.display = 'none'
+        descEl.textContent = 'כפתור הביטול אותר והודגש בירוק'
+      } else {
+        // Default: 3s Countdown
+        let secondsLeft = 3
+        countdownTimer = setInterval(() => {
+          secondsLeft--
+          if (secondsLeft > 0) {
+            timerBadge.textContent = `${secondsLeft} שניות`
+          } else {
+            clearInterval(countdownTimer)
+            triggerCancel()
+          }
+        }, 1000)
+      }
     } else {
-      clickBtn.textContent = 'גלול לביטול'
-      clickBtn.addEventListener('click', () => {
+      timerBadge.style.display = 'none'
+      stopBtn.style.display = 'none'
+      descEl.textContent = 'גלול בעמוד לאיתור כפתור הביטול'
+      actionBtn.textContent = 'גלול למטה'
+      actionBtn.addEventListener('click', () => {
         window.scrollBy({ top: 400, behavior: 'smooth' })
       })
     }
 
     closeBtn.addEventListener('click', () => {
+      if (countdownTimer) clearInterval(countdownTimer)
       hud.remove()
       hudInjected = false
       if (btn) {
@@ -148,20 +200,25 @@
     })
   }
 
-  // Active scanning with MutationObserver for dynamic React/SPA apps like Adobe
-  function scan() {
-    const btn = findCancelButton()
-    if (btn) {
-      injectHUD(btn)
+  function getModeAndScan() {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['autopilot_mode'], (res) => {
+        const mode = res.autopilot_mode || 'countdown_3s'
+        const btn = findCancelButton()
+        if (btn) injectHUD(btn, mode)
+      })
+    } else {
+      const btn = findCancelButton()
+      if (btn) injectHUD(btn, 'countdown_3s')
     }
   }
 
-  scan()
-  const interval = setInterval(scan, 1000)
+  getModeAndScan()
+  const interval = setInterval(getModeAndScan, 1000)
   setTimeout(() => clearInterval(interval), 10000)
 
   const observer = new MutationObserver(() => {
-    if (!hudInjected) scan()
+    if (!hudInjected) getModeAndScan()
   })
   observer.observe(document.body, { childList: true, subtree: true })
 
