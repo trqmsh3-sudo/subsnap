@@ -75,93 +75,92 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-[#fafafc] text-slate-900">
       <Header />
 
-      <main className="flex-1 pt-20 lg:pt-24 pb-16">
-        {/* ── HERO SECTION: SPLIT SCREEN WITH SEAMLESS GRADIENT MASK ────────── */}
-        <section className="relative overflow-hidden bg-white border-b border-slate-200/80">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 min-h-[580px] lg:min-h-[660px]">
+      <main className="flex-1 pt-16">
+        {/* ── HERO SECTION: FULL OPENING VIEWPORT SCREEN (100vh FLUSH) ─────── */}
+        <section className="relative overflow-hidden bg-white border-b border-slate-200/80 h-[calc(100vh-64px)] min-h-[560px] max-h-[900px] flex">
+          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 h-full">
             
-            {/* Left Half: Shocked Statement Image with Gradient Mask into Studio White */}
-            <div className="lg:col-span-6 relative w-full h-[380px] sm:h-[460px] lg:h-full overflow-hidden bg-slate-100">
+            {/* Left Half: Shocked Statement Image filling 100% height of opening screen */}
+            <div className="hidden lg:block lg:col-span-6 relative w-full h-full overflow-hidden bg-slate-100">
               <Image
                 src="/hero-statement.jpg"
                 alt="Man shocked by recurring bank statement subscription charges"
                 fill
                 priority
-                className="object-cover object-center lg:object-left"
+                className="object-cover object-left"
               />
               {/* Desktop Gradient Mask: Fades out to Studio White seamlessly on the right */}
-              <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-[#fafafc]" />
-              {/* Mobile Gradient Mask: Fades out to Studio White at the bottom */}
-              <div className="block lg:hidden absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fafafc]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-[#fafafc]" />
             </div>
 
-            {/* Right Half: Studio White Typography, Headline, CTA & Spacious 3 Steps */}
-            <div className="lg:col-span-6 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12 lg:py-16 space-y-6 sm:space-y-7">
+            {/* Right Half: Perfectly Proportioned Inside 100% Opening Viewport */}
+            <div className="lg:col-span-6 h-full flex flex-col justify-between px-6 sm:px-10 lg:px-14 py-8 lg:py-10 space-y-4">
               
-              {/* Main Headline */}
-              <h1 className="text-3xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-950 leading-[1.15] text-shadow-title">
-                Stop Paying for Subscriptions You Forgot.
-              </h1>
+              {/* Upper Block */}
+              <div className="space-y-4 my-auto">
+                <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black tracking-tight text-slate-950 leading-[1.12] text-shadow-title">
+                  Stop Paying for Subscriptions You Forgot.
+                </h1>
 
-              {/* Sub-headline */}
-              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl text-shadow-subtle">
-                The smart Chrome extension that navigates right into your authenticated accounts and cancels recurring charges in 3 seconds flat.
-              </p>
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg text-shadow-subtle">
+                  The smart Chrome extension that navigates right into your authenticated accounts and cancels recurring charges in 3 seconds flat.
+                </p>
 
-              {/* Big Prominent CTA Button */}
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <a
-                  href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
-                  download
-                  className="btn-chrome px-8 py-4 rounded-2xl text-base font-extrabold flex items-center justify-center gap-3 shadow-xl"
-                >
-                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" fill="#4285F4"/>
-                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="white" strokeWidth="2"/>
-                    <circle cx="12" cy="12" r="4" fill="white"/>
-                  </svg>
-                  <span>Add to Chrome for Free</span>
-                  <span className="text-slate-400 font-normal">➔</span>
-                </a>
+                {/* Big Prominent CTA Button */}
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <a
+                    href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
+                    download
+                    className="btn-chrome px-8 py-4 rounded-2xl text-base font-extrabold flex items-center justify-center gap-3 shadow-xl"
+                  >
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+                      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="white" strokeWidth="2"/>
+                      <circle cx="12" cy="12" r="4" fill="white"/>
+                    </svg>
+                    <span>Add to Chrome for Free</span>
+                    <span className="text-slate-400 font-normal">➔</span>
+                  </a>
+                </div>
+
+                {/* Trust Indicators */}
+                <div className="text-xs text-slate-500 flex flex-wrap items-center gap-3 pt-0.5">
+                  <span className="font-semibold text-emerald-700">✓ 100% Free Forever</span>
+                  <span>·</span>
+                  <span>✓ Zero passwords stored</span>
+                  <span>·</span>
+                  <span>✓ Installs in 3 seconds</span>
+                </div>
               </div>
 
-              {/* Trust Indicators */}
-              <div className="text-xs text-slate-500 flex flex-wrap items-center gap-3 pt-0.5">
-                <span className="font-semibold text-emerald-700">✓ 100% Free Forever</span>
-                <span>·</span>
-                <span>✓ Zero passwords stored</span>
-                <span>·</span>
-                <span>✓ Installs in 3 seconds</span>
-              </div>
-
-              {/* Unboxed 3-Step Guide (Spacious, Clean on Studio White) */}
-              <div className="pt-6 border-t border-slate-200/80 space-y-3 text-xs text-slate-600">
-                <div className="font-bold text-slate-900 text-sm text-shadow-subtle">
+              {/* Lower Block: Unboxed 3 Steps Anchored at the Bottom of Opening Screen */}
+              <div className="pt-4 border-t border-slate-200/80 space-y-2.5 text-xs text-slate-600">
+                <div className="font-extrabold text-slate-900 text-xs tracking-wide uppercase text-shadow-subtle">
                   How SubSnap works in 3 simple steps:
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                  <div className="space-y-1">
-                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                <div className="grid grid-cols-3 gap-3 pt-0.5">
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
                       <span className="text-emerald-600 font-black">1.</span> Direct Entry
                     </div>
-                    <p className="text-slate-500 leading-snug">
-                      Opens directly inside your active logged-in billing page.
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Opens inside your active billing page.
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
                       <span className="text-emerald-600 font-black">2.</span> Bypass Traps
                     </div>
-                    <p className="text-slate-500 leading-snug">
-                      Skips tricky retention surveys, discount popups & penalties.
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Skips surveys, popups & penalties.
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
                       <span className="text-emerald-600 font-black">3.</span> 1-Click Done
                     </div>
-                    <p className="text-slate-500 leading-snug">
-                      Auto-Pilot confirms cancellation in 3 seconds.
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Auto-Pilot cancels in 3 seconds.
                     </p>
                   </div>
                 </div>
