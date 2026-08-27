@@ -1,87 +1,94 @@
 const TOP_SERVICES = [
   {
-    name: 'רידווייז (Readwise / Reader)',
-    keywords: ['readwise', 'readwise.io', 'רידווייז', 'reader'],
+    name: 'Readwise / Reader',
+    keywords: ['readwise', 'readwise.io', 'reader', 'רידווייז'],
     cancelUrl: 'https://readwise.io/preferences/account/',
-    notes: 'עמוד ניהול חשבון ומנוי ב-Readwise'
+    notes: 'Direct account & subscription management'
   },
   {
-    name: 'קלוד (Claude Pro / Max / Anthropic)',
-    keywords: ['claude', 'anthropic', 'קלוד', 'אנתרופיק', 'קלאוד'],
+    name: 'Claude Pro / Max (Anthropic)',
+    keywords: ['claude', 'anthropic', 'claude.ai', 'קלוד', 'קלאוד'],
     cancelUrl: 'https://claude.ai/settings/billing',
-    notes: 'עמוד ניהול חיובים וביטול מנוי Claude'
+    notes: 'Direct Anthropic billing & subscription cancellation'
   },
   {
-    name: 'גרוק / X פרימיום (טוויטר)',
+    name: 'Grok / X Premium (Twitter)',
     keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'x'],
     cancelUrl: 'https://x.com/settings/manage_subscriptions',
-    notes: 'ניהול וביטול ישיר בהגדרות X/Grok'
+    notes: 'Direct X/Grok subscription management'
   },
   {
-    name: 'נטפליקס (Netflix)',
+    name: 'Netflix',
     keywords: ['netflix', 'nflx', 'נטפליקס'],
     cancelUrl: 'https://www.netflix.com/cancelplan',
-    notes: 'מעבר ישיר לעמוד אישור ביטול נטפליקס'
+    notes: 'Direct 1-click Netflix cancellation confirmation'
   },
   {
-    name: 'ספוטיפיי (Spotify Premium)',
+    name: 'Spotify Premium',
     keywords: ['spotify', 'ספוטיפיי', 'ספוטיפי'],
     cancelUrl: 'https://www.spotify.com/account/subscription/change/',
-    notes: 'עמוד שינוי וביטול מנוי Spotify'
+    notes: 'Direct Spotify change & cancel plan page'
   },
   {
-    name: 'אדובי (Adobe Creative Cloud)',
-    keywords: ['adobe', 'creative cloud', 'photoshop', 'אדובי', 'פוטושופ'],
+    name: 'Adobe Creative Cloud',
+    keywords: ['adobe', 'creative cloud', 'photoshop', 'illustrator', 'אדובי'],
     cancelUrl: 'https://account.adobe.com/plans',
-    notes: 'עמוד ניהול התוכניות והביטול של אדובי'
+    notes: 'Direct Adobe plans & dark-pattern bypass'
   },
   {
-    name: 'צ\'אט ג\'יפיטי פלוס (ChatGPT)',
-    keywords: ['chatgpt', 'openai', 'צ\'אט ג\'יפיטי', 'chat gpt'],
+    name: 'ChatGPT Plus (OpenAI)',
+    keywords: ['chatgpt', 'openai', 'chat gpt', 'צ\'אט ג\'יפיטי'],
     cancelUrl: 'https://chatgpt.com/#settings/Subscription',
-    notes: 'עמוד ניהול מנוי בהגדרות ChatGPT'
+    notes: 'Direct ChatGPT subscription settings'
   },
   {
-    name: 'קנבה פרו (Canva Pro)',
+    name: 'Canva Pro',
     keywords: ['canva', 'קנבה', 'קנווה'],
     cancelUrl: 'https://www.canva.com/settings/billing-and-teams',
-    notes: 'עמוד חיובים וביטול מנוי ב-Canva'
+    notes: 'Direct Canva billing & team subscription'
   },
   {
-    name: 'אפל / אייקלאוד / App Store',
-    keywords: ['apple', 'icloud', 'itunes', 'אפל', 'אייקלאוד'],
-    cancelUrl: 'https://apps.apple.com/account/subscriptions',
-    notes: 'פותח ישירות את רשימת המנויים של Apple ID'
+    name: 'Midjourney',
+    keywords: ['midjourney', 'מי ג\'ורני', 'מיגורני'],
+    cancelUrl: 'https://www.midjourney.com/account',
+    notes: 'Direct Midjourney account subscription management'
   },
   {
-    name: 'אמזון פריים (Amazon Prime)',
+    name: 'Amazon Prime',
     keywords: ['amazon', 'prime', 'אמזון', 'אמזון פריים'],
     cancelUrl: 'https://www.amazon.com/mc/manage',
-    notes: 'עמוד ניהול וסיום מנוי Prime'
+    notes: 'Direct Amazon Prime membership termination'
   },
   {
-    name: 'יוטיוב פרימיום (YouTube Premium)',
-    keywords: ['youtube', 'יוטיוב', 'yt premium'],
+    name: 'Apple / iCloud+ Subscriptions',
+    keywords: ['apple', 'icloud', 'itunes', 'אפל', 'אייקלאוד'],
+    cancelUrl: 'https://apps.apple.com/account/subscriptions',
+    notes: 'Direct Apple ID active subscriptions'
+  },
+  {
+    name: 'YouTube Premium',
+    keywords: ['youtube', 'yt premium', 'יוטיוב'],
     cancelUrl: 'https://www.youtube.com/paid_memberships',
-    notes: 'ניהול וביטול מנוי YouTube'
+    notes: 'Direct YouTube paid memberships'
   },
   {
-    name: 'דיסני פלוס (Disney+)',
+    name: 'Disney+',
     keywords: ['disney', 'disney+', 'דיסני'],
     cancelUrl: 'https://www.disneyplus.com/account',
-    notes: 'ביטול מנוי בהגדרות Disney+'
+    notes: 'Direct Disney+ account cancellation'
   },
   {
-    name: 'גוגל פליי / מנויי אנדרואיד',
-    keywords: ['google play', 'android', 'גוגל פליי'],
+    name: 'Google One / Play Subscriptions',
+    keywords: ['google', 'google one', 'google play', 'גוגל פליי'],
     cancelUrl: 'https://play.google.com/store/account/subscriptions',
-    notes: 'ניהול וביטול כל מנויי Google Play'
+    notes: 'Direct Google Play active subscriptions'
   }
 ]
 
 const searchInput = document.getElementById('searchInput')
 const clearBtn = document.getElementById('clearBtn')
 const resultCard = document.getElementById('resultCard')
+const loadingState = document.getElementById('loadingState')
 const serviceNameEl = document.getElementById('serviceName')
 const serviceNotesEl = document.getElementById('serviceNotes')
 const btnCancel = document.getElementById('btnCancel')
@@ -106,13 +113,22 @@ function showResult(service) {
   }
   currentEntry = service
   serviceNameEl.textContent = service.name
-  serviceNotesEl.textContent = service.notes || 'קישור ביטול ישיר זוהה'
+  serviceNotesEl.textContent = service.notes || 'Direct billing pathway identified'
   resultCard.style.display = 'block'
 }
 
 function executeCancel(service) {
   if (!service || !service.cancelUrl) return
-  chrome.tabs.create({ url: service.cancelUrl })
+
+  // Show rolling logo animation
+  resultCard.style.display = 'none'
+  loadingState.style.display = 'block'
+
+  setTimeout(() => {
+    chrome.tabs.create({ url: service.cancelUrl }, () => {
+      window.close()
+    })
+  }, 600)
 }
 
 // Search input handling
@@ -126,7 +142,7 @@ searchInput.addEventListener('input', (e) => {
     showResult({
       name: val,
       cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + val + ' subscription')}`,
-      notes: 'חיפוש עמוד ביטול רשמי'
+      notes: 'Searching official cancellation pathway...'
     })
   } else {
     showResult(null)

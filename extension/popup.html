@@ -1,35 +1,36 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SubSnap Auto-Pilot</title>
+  <title>SubSnap — 1-Click Subscription Canceller</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Assistant', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
     body {
       width: 360px;
-      min-height: 490px;
-      background-color: #090a0f;
-      color: #f4f4f6;
+      min-height: 520px;
+      background-color: #fafafc;
+      color: #0f172a;
       padding: 16px;
       letter-spacing: -0.01em;
       -webkit-font-smoothing: antialiased;
     }
+    /* Header */
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
       padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid #e2e8f0;
     }
     .logo-group {
       display: flex;
@@ -40,160 +41,148 @@
       width: 28px;
       height: 28px;
       border-radius: 8px;
-      background: rgba(16, 185, 129, 0.12);
+      background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #10b981;
+      color: #059669;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
-      font-weight: 900;
     }
     .logo-text {
       font-size: 16px;
       font-weight: 800;
-      color: #ffffff;
+      color: #0f172a;
       letter-spacing: -0.02em;
     }
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 5px;
+    .pro-badge {
       font-size: 10px;
-      font-weight: 700;
-      color: #34d399;
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      font-weight: 800;
+      color: #047857;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
       padding: 3px 8px;
       border-radius: 999px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
     }
-    .pulse-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-      animation: pulse 2s infinite;
+    .pro-badge:hover {
+      background: #d1fae5;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-    }
+    /* Search Bar */
     .search-container {
       position: relative;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
-    .search-input {
-      width: 100%;
-      background: rgba(15, 18, 26, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #ffffff;
-      padding: 11px 12px 11px 36px;
-      border-radius: 12px;
-      font-size: 13px;
-      outline: none;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .search-input:focus {
-      border-color: rgba(16, 185, 129, 0.6);
-      background: #0f121a;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
-    }
-    .clear-btn {
+    .search-icon {
       position: absolute;
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+      font-size: 13px;
+    }
+    .search-input {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      padding: 10px 32px 10px 34px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      outline: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .search-input:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+    .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
       background: none;
       border: none;
-      color: #64748b;
+      color: #94a3b8;
       cursor: pointer;
-      font-size: 13px;
-      display: none;
-    }
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: #9499ad;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .service-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-    .service-btn {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      padding: 9px 10px;
-      text-align: right;
-      color: #f1f5f9;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .service-btn:hover {
-      background: rgba(16, 185, 129, 0.08);
-      border-color: rgba(16, 185, 129, 0.3);
-      color: #34d399;
-      transform: translateY(-1px);
-    }
-    .service-name {
       font-size: 12px;
-      font-weight: 600;
+      display: none;
+      padding: 4px;
     }
-    .service-action {
-      font-size: 10px;
-      font-weight: 700;
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-      padding: 2px 6px;
-      border-radius: 6px;
+    /* Notice: Active Logged In Account Requirement */
+    .account-notice {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 10.5px;
+      color: #475569;
+      line-height: 1.35;
     }
+    .notice-icon {
+      font-size: 12px;
+      color: #059669;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    /* Dynamic Result Capsule */
     .result-capsule {
-      background: rgba(16, 185, 129, 0.04);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      border-radius: 14px;
+      background: #ffffff;
+      border: 1.5px solid #10b981;
+      border-radius: 12px;
       padding: 12px;
       margin-bottom: 12px;
       display: none;
-      animation: fadeIn 0.2s ease;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(-4px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .result-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .result-name {
       font-size: 13px;
       font-weight: 800;
-      color: #34d399;
+      color: #0f172a;
     }
-    .result-status {
-      font-size: 10px;
-      color: #94a3b8;
-      line-height: 1.4;
+    .result-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #059669;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .result-desc {
+      font-size: 10.5px;
+      color: #64748b;
       margin-bottom: 10px;
+      line-height: 1.3;
     }
     .btn-autopilot {
       width: 100%;
-      background: #10b981;
-      color: #032014;
+      background: #0f172a;
+      color: #ffffff;
       font-weight: 800;
       border: none;
-      border-radius: 9px;
+      border-radius: 10px;
       padding: 9px;
       font-size: 12px;
       cursor: pointer;
@@ -202,156 +191,298 @@
       justify-content: center;
       gap: 6px;
       transition: all 0.15s ease;
-      box-shadow: 0 4px 15px -2px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
     }
     .btn-autopilot:hover {
-      background: #34d399;
+      background: #1e293b;
       transform: translateY(-1px);
     }
-    /* Mode Selector Pill Group */
+    /* Loading Spinner Animation */
+    .loading-state {
+      display: none;
+      text-align: center;
+      padding: 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .rolling-logo {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 6px;
+      animation: spinLogo 1s linear infinite;
+    }
+    @keyframes spinLogo {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .loading-sub {
+      font-size: 10px;
+      color: #64748b;
+    }
+    /* Quick Services Grid */
+    .section-title {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .service-btn {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      padding: 7px 9px;
+      text-align: left;
+      color: #0f172a;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .service-btn:hover {
+      border-color: #10b981;
+      background: #f0fdf4;
+      color: #047857;
+      transform: translateY(-1px);
+    }
+    .service-badge {
+      font-size: 9px;
+      font-weight: 800;
+      color: #059669;
+      background: #ecfdf5;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    /* Mode Selector */
     .mode-container {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 10px;
-      padding: 6px;
+      padding: 7px 9px;
       margin-bottom: 12px;
     }
     .mode-label {
       font-size: 10px;
       color: #64748b;
       margin-bottom: 4px;
-      font-weight: 600;
+      font-weight: 700;
       display: flex;
       justify-content: space-between;
     }
     .mode-select {
       width: 100%;
-      background: #0f121a;
-      color: #34d399;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 6px 8px;
+      background: #f8fafc;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 5px 7px;
       font-size: 11px;
       font-weight: 700;
       outline: none;
       cursor: pointer;
     }
+    /* Pro Upgrade Banner */
+    .pro-banner {
+      background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+      border: 1px solid #a7f3d0;
+      border-radius: 10px;
+      padding: 9px 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .pro-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #065f46;
+    }
+    .pro-sub {
+      font-size: 9.5px;
+      color: #047857;
+    }
+    .pro-btn {
+      background: #059669;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .pro-btn:hover {
+      background: #047857;
+    }
+    /* Footer */
     .footer {
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid #e2e8f0;
       padding-top: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       font-size: 10px;
-      color: #64748b;
+      color: #94a3b8;
     }
     .footer a {
-      color: #94a3b8;
+      color: #64748b;
       text-decoration: none;
-      transition: color 0.15s;
+      font-weight: 600;
     }
     .footer a:hover {
-      color: #34d399;
+      color: #059669;
     }
   </style>
 </head>
 <body>
-  <!-- Top Navigation Header -->
+  <!-- Header -->
   <div class="header">
     <div class="logo-group">
-      <div class="logo-icon">⚡</div>
+      <div class="logo-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19.439 7.85c0-1.571-1.285-2.85-2.87-2.85h-2.14a2.85 2.85 0 0 0-5.7 0H6.589c-1.585 0-2.87 1.279-2.87 2.85v2.14a2.85 2.85 0 0 0 0 5.7v2.14c0 1.571 1.285 2.85 2.87 2.85h2.14a2.85 2.85 0 0 1 5.7 0h2.14c1.585 0 2.87-1.279 2.87-2.85v-2.14a2.85 2.85 0 0 1 0-5.7v-2.14z"/>
+        </svg>
+      </div>
       <div class="logo-text">SubSnap</div>
     </div>
-    <div class="status-badge">
-      <span class="pulse-dot"></span>
-      <span>Auto-Pilot מוכן</span>
-    </div>
+    <a href="https://www.subsnap.net/app" target="_blank" class="pro-badge">
+      <span>👑 Pro ($7.99/yr)</span>
+    </a>
   </div>
 
-  <!-- Command Search Bar -->
+  <!-- Search Box -->
   <div class="search-container">
+    <span class="search-icon">🔍</span>
     <input
       type="text"
       id="searchInput"
       class="search-input"
-      placeholder="הקלד שם מנוי לביטול מיידי..."
+      placeholder="Type subscription name (e.g. Netflix, Adobe)..."
       autofocus
     />
     <button class="clear-btn" id="clearBtn">✕</button>
   </div>
 
+  <!-- Account Session Notice -->
+  <div class="account-notice">
+    <span class="notice-icon">🔒</span>
+    <div>
+      <strong>Active Login Notice:</strong> Ensure you are logged into your account in this browser. SubSnap executes cancellation directly inside your active billing tab.
+    </div>
+  </div>
+
   <!-- Dynamic Result Card -->
   <div class="result-capsule" id="resultCard">
     <div class="result-header">
-      <div class="result-name" id="serviceName">נטפליקס</div>
-      <div class="status-badge" style="font-size: 9px;">1-Click Auto</div>
+      <div class="result-name" id="serviceName">Netflix</div>
+      <div class="result-tag">Direct Pathway</div>
     </div>
-    <div class="result-status" id="serviceNotes">
-      עמוד הביטול הרשמי זוהה. לחץ למטה לפתיחה וביטול מיידי.
+    <div class="result-desc" id="serviceNotes">
+      Official billing pathway identified. Click below to launch 3-second Auto-Pilot.
     </div>
     <button class="btn-autopilot" id="btnCancel">
-      <span>בטל מנוי זה עכשיו</span>
+      <span>Launch Auto-Pilot Cancel</span>
       <span>➔</span>
     </button>
   </div>
 
-  <!-- Popular Services Grid -->
+  <!-- Loading / Scanning State Animation -->
+  <div class="loading-state" id="loadingState">
+    <div class="rolling-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19.439 7.85c0-1.571-1.285-2.85-2.87-2.85h-2.14a2.85 2.85 0 0 0-5.7 0H6.589c-1.585 0-2.87 1.279-2.87 2.85v2.14a2.85 2.85 0 0 0 0 5.7v2.14c0 1.571 1.285 2.85 2.87 2.85h2.14a2.85 2.85 0 0 1 5.7 0h2.14c1.585 0 2.87-1.279 2.87-2.85v-2.14a2.85 2.85 0 0 1 0-5.7v-2.14z"/>
+      </svg>
+    </div>
+    <div class="loading-text">Locating cancellation pathway...</div>
+    <div class="loading-sub">Preparing 3-second Auto-Pilot HUD</div>
+  </div>
+
+  <!-- Quick 1-Click Grid -->
   <div class="section-title">
-    <span>ביטול מהיר בלחיצה אחת:</span>
-    <span style="font-size: 9px; opacity: 0.6;">0 שניות</span>
+    <span>Popular Services:</span>
+    <span style="font-size: 9px; color: #059669;">3s Auto-Pilot</span>
   </div>
   <div class="service-grid" id="serviceGrid">
-    <button class="service-btn" data-query="קלוד">
-      <span class="service-name">קלוד (Claude)</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Claude">
+      <span>Claude (Anthropic)</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="גרוק">
-      <span class="service-name">גרוק / X</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Grok">
+      <span>Grok / X Premium</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="נטפליקס">
-      <span class="service-name">נטפליקס</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Netflix">
+      <span>Netflix</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="ספוטיפיי">
-      <span class="service-name">ספוטיפיי</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Spotify">
+      <span>Spotify</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="אדובי">
-      <span class="service-name">אדובי</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Adobe">
+      <span>Adobe CC</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="צ'אט ג'יפיטי">
-      <span class="service-name">צ'אט GPT</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="ChatGPT">
+      <span>ChatGPT Plus</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="קנבה">
-      <span class="service-name">קנבה</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Canva">
+      <span>Canva Pro</span>
+      <span class="service-badge">Cancel</span>
     </button>
-    <button class="service-btn" data-query="אפל">
-      <span class="service-name">אפל / אייקלאוד</span>
-      <span class="service-action">בטל ⚡</span>
+    <button class="service-btn" data-query="Midjourney">
+      <span>Midjourney</span>
+      <span class="service-badge">Cancel</span>
     </button>
   </div>
 
-  <!-- Mode Selector -->
+  <!-- Auto-Pilot Mode Selector -->
   <div class="mode-container">
     <div class="mode-label">
-      <span>מצב ביטול אוטונומי:</span>
-      <span id="savedIndicator" style="color: #10b981; display: none;">נשמר ✓</span>
+      <span>Auto-Pilot Execution Mode:</span>
+      <span id="savedIndicator" style="color: #059669; display: none;">Saved ✓</span>
     </div>
     <select id="modeSelect" class="mode-select">
-      <option value="countdown_3s" selected>⏱️ ספירה לאחור 3 שנ' + עצור (ברירת מחדל)</option>
-      <option value="instant">🚀 אוטומטי מלא מיידי (0 שנ')</option>
-      <option value="manual_highlight">🎯 הדגשה ואישור ידני בלבד</option>
+      <option value="countdown_3s" selected>⏱️ 3-Second Countdown + Stop (Default)</option>
+      <option value="instant">🚀 Instant Auto-Pilot (0s)</option>
+      <option value="manual_highlight">🎯 In-Page Highlight & Manual Click</option>
     </select>
   </div>
 
-  <!-- Minimal Footer -->
+  <!-- Pro Upgrade Box -->
+  <div class="pro-banner">
+    <div>
+      <div class="pro-title">👑 SubSnap Pro · $7.99/yr</div>
+      <div class="pro-sub">Unlimited Auto-Pilot + AI Statement Scans</div>
+    </div>
+    <a href="https://www.subsnap.net/app" target="_blank" class="pro-btn">Upgrade ➔</a>
+  </div>
+
+  <!-- Footer -->
   <div class="footer">
-    <span>🔒 100% פרטיות מקומית</span>
-    <a href="https://www.subsnap.net" target="_blank">אתר SubSnap ↗</a>
+    <span>Zero Passwords Stored</span>
+    <a href="https://www.subsnap.net" target="_blank">subsnap.net ↗</a>
   </div>
 
   <script src="popup.js"></script>
