@@ -3,186 +3,315 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SubSnap</title>
+  <title>SubSnap Auto-Pilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Heebo', sans-serif;
+      font-family: 'Assistant', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
     body {
       width: 360px;
-      background-color: #ffffff;
-      color: #0f172a;
+      min-height: 480px;
+      background-color: #090a0f;
+      color: #f4f4f6;
       padding: 16px;
-      border-radius: 16px;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
     }
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .logo {
-      font-size: 17px;
-      font-weight: 900;
-      color: #0f172a;
+    .logo-group {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
-    .logo span {
-      color: #059669;
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 900;
     }
-    .badge {
+    .logo-text {
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
       font-size: 10px;
-      background: #ecfdf5;
-      color: #059669;
-      border: 1px solid #a7f3d0;
+      font-weight: 700;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
       padding: 3px 8px;
       border-radius: 999px;
-      font-weight: 700;
     }
-    .search-box {
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .search-container {
       position: relative;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
     }
-    input {
+    .search-input {
       width: 100%;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      color: #0f172a;
-      padding: 10px 12px 10px 36px;
+      background: rgba(15, 18, 26, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      padding: 11px 12px 11px 36px;
       border-radius: 12px;
       font-size: 13px;
       outline: none;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    input:focus {
-      border-color: #059669;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    .search-input:focus {
+      border-color: rgba(16, 185, 129, 0.6);
+      background: #0f121a;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
     }
     .clear-btn {
       position: absolute;
-      left: 10px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: #94a3b8;
+      color: #64748b;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
       display: none;
     }
-    .tags-container {
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9499ad;
+      margin-bottom: 8px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
       margin-bottom: 14px;
     }
-    .tag {
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      color: #334155;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 6px;
+    .service-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 9px 10px;
+      text-align: right;
+      color: #f1f5f9;
       cursor: pointer;
-      transition: all 0.15s;
-      font-weight: 500;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .tag:hover {
-      background: #ecfdf5;
-      border-color: #059669;
-      color: #059669;
+    .service-btn:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      transform: translateY(-1px);
     }
-    .result-card {
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      border-radius: 12px;
+    .service-name {
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .service-action {
+      font-size: 10px;
+      font-weight: 700;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .result-capsule {
+      background: rgba(16, 185, 129, 0.04);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 14px;
       padding: 12px;
       margin-bottom: 12px;
       display: none;
+      animation: fadeIn 0.2s ease;
     }
-    .result-title {
-      font-size: 14px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .result-name {
+      font-size: 13px;
       font-weight: 800;
-      color: #065f46;
-      margin-bottom: 3px;
+      color: #34d399;
     }
-    .result-notes {
-      font-size: 11px;
-      color: #047857;
+    .result-status {
+      font-size: 10px;
+      color: #94a3b8;
+      line-height: 1.4;
       margin-bottom: 10px;
     }
-    .btn-cancel {
+    .btn-autopilot {
       width: 100%;
-      background: #059669;
-      color: #ffffff;
-      font-weight: 700;
+      background: #10b981;
+      color: #032014;
+      font-weight: 800;
       border: none;
-      border-radius: 8px;
+      border-radius: 9px;
       padding: 9px;
       font-size: 12px;
       cursor: pointer;
-      transition: background-color 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 15px -2px rgba(16, 185, 129, 0.3);
     }
-    .btn-cancel:hover {
-      background: #047857;
-      transform: scale(1.01);
+    .btn-autopilot:hover {
+      background: #34d399;
+      transform: translateY(-1px);
     }
-    .btn-cancel:active {
-      transform: scale(0.98);
-    }
-    .footer-link {
-      display: block;
-      text-align: center;
-      font-size: 11px;
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
       color: #64748b;
-      text-decoration: none;
-      padding-top: 8px;
-      border-top: 1px solid #f1f5f9;
     }
-    .footer-link span {
-      color: #059669;
-      font-weight: 700;
+    .footer a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer a:hover {
+      color: #34d399;
     }
   </style>
 </head>
 <body>
+  <!-- Top Navigation Header -->
   <div class="header">
-    <div class="logo"><span>⚡</span> SubSnap</div>
-    <div class="badge">ביטול בלחיצה אחת</div>
+    <div class="logo-group">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">SubSnap</div>
+    </div>
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      <span>Auto-Pilot מוכן</span>
+    </div>
   </div>
 
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="איזה מנוי תרצה לבטל? (גרוק, נטפליקס...)" autofocus />
+  <!-- Command Search Bar -->
+  <div class="search-container">
+    <input
+      type="text"
+      id="searchInput"
+      class="search-input"
+      placeholder="הקלד שם מנוי לביטול מיידי..."
+      autofocus
+    />
     <button class="clear-btn" id="clearBtn">✕</button>
   </div>
 
-  <div class="tags-container" id="tagsContainer">
-    <div class="tag" data-service="Grok / X Premium">גרוק / X</div>
-    <div class="tag" data-service="Netflix">נטפליקס</div>
-    <div class="tag" data-service="Spotify">ספוטיפיי</div>
-    <div class="tag" data-service="Adobe">אדובי</div>
-    <div class="tag" data-service="ChatGPT Plus">ChatGPT</div>
-    <div class="tag" data-service="Canva">קנבה</div>
-    <div class="tag" data-service="Amazon Prime">אמזון פריים</div>
+  <!-- Dynamic Result Card -->
+  <div class="result-capsule" id="resultCard">
+    <div class="result-header">
+      <div class="result-name" id="serviceName">נטפליקס</div>
+      <div class="status-badge" style="font-size: 9px;">1-Click Auto</div>
+    </div>
+    <div class="result-status" id="serviceNotes">
+      עמוד הביטול הרשמי זוהה. לחץ למטה לפתיחה וביטול מיידי.
+    </div>
+    <button class="btn-autopilot" id="btnCancel">
+      <span>בטל מנוי זה עכשיו</span>
+      <span>➔</span>
+    </button>
   </div>
 
-  <div class="result-card" id="resultCard">
-    <div class="result-title" id="serviceName">Grok / X Premium</div>
-    <div class="result-notes" id="serviceNotes">ביטול ישיר בהגדרות החשבון</div>
-    <button class="btn-cancel" id="btnCancel">בטל מנוי זה עכשיו ➔</button>
+  <!-- Popular Services Grid (Raycast/Honey Style) -->
+  <div class="section-title">
+    <span>ביטול מהיר בלחיצה אחת:</span>
+    <span style="font-size: 9px; opacity: 0.6;">0 שניות</span>
+  </div>
+  <div class="service-grid" id="serviceGrid">
+    <button class="service-btn" data-query="קלוד">
+      <span class="service-name">קלוד (Claude)</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="גרוק">
+      <span class="service-name">גרוק / X</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="נטפליקס">
+      <span class="service-name">נטפליקס</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="ספוטיפיי">
+      <span class="service-name">ספוטיפיי</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="אדובי">
+      <span class="service-name">אדובי</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="צ'אט ג'יפיטי">
+      <span class="service-name">צ'אט GPT</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="קנבה">
+      <span class="service-name">קנבה</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
+    <button class="service-btn" data-query="אפל">
+      <span class="service-name">אפל / אייקלאוד</span>
+      <span class="service-action">בטל ⚡</span>
+    </button>
   </div>
 
-  <a href="https://www.subsnap.net/app" target="_blank" class="footer-link">
-    רוצה לסרוק תדפיס אשראי מלא? <span>פתח את האתר ↗</span>
-  </a>
+  <!-- Minimal Footer -->
+  <div class="footer">
+    <span>🔒 100% פרטיות מקומית</span>
+    <a href="https://www.subsnap.net" target="_blank">אתר SubSnap ↗</a>
+  </div>
 
   <script src="popup.js"></script>
 </body>
