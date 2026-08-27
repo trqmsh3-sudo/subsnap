@@ -251,6 +251,9 @@ export default function HomePage() {
               >
                 שדרג ל-Pro עכשיו ➔
               </a>
+              <p className="text-[10px] text-zinc-500 text-center -mt-2">
+                * שימוש הוגן: עד 10 סריקות תדפיסים בחודש למנוי.
+              </p>
             </div>
           </div>
         </section>

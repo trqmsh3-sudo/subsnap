@@ -97,7 +97,15 @@ export default function TermsPage() {
 
           {/* Section 4 */}
           <div className="studio-capsule p-6 sm:p-8 space-y-4">
-            <h2 className="font-semibold text-lg text-white">4. יצירת קשר ופניות</h2>
+            <h2 className="font-semibold text-lg text-white">4. מדיניות שימוש הוגן (Fair Use Policy)</h2>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              שירותי ה-Pro ומנוע סריקת התדפיסים מיועדים לשימוש אישי וצרכני סביר. מנוי Pro כולל מכסת שימוש הוגן של עד 10 סריקות תדפיסים בחודש קלנדרי לכל חשבון. חל איסור מוחלט על שימוש בבוטים, סריקות אוטומטיות המוניות או ניסיונות הפצצת שרתים.
+            </p>
+          </div>
+
+          {/* Section 5 */}
+          <div className="studio-capsule p-6 sm:p-8 space-y-4">
+            <h2 className="font-semibold text-lg text-white">5. יצירת קשר ופניות</h2>
             <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
               לכל שאלה, עדכון קישור שבור או משוב, ניתן לפנות אלינו בדוא&quot;ל:{' '}
               <a href="mailto:contact@subsnap.net" className="text-emerald-400 hover:underline font-mono">
