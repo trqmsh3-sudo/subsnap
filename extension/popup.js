@@ -92,7 +92,6 @@ const loadingState = document.getElementById('loadingState')
 const serviceNameEl = document.getElementById('serviceName')
 const serviceNotesEl = document.getElementById('serviceNotes')
 const btnCancel = document.getElementById('btnCancel')
-const serviceGrid = document.getElementById('serviceGrid')
 
 let currentEntry = null
 
@@ -161,17 +160,6 @@ clearBtn.addEventListener('click', () => {
   clearBtn.style.display = 'none'
   showResult(null)
   searchInput.focus()
-})
-
-// 1-Click Grid Button Clicks
-serviceGrid.addEventListener('click', (e) => {
-  const btn = e.target.closest('.service-btn')
-  if (!btn) return
-  const q = btn.getAttribute('data-query')
-  const matched = matchService(q)
-  if (matched) {
-    executeCancel(matched)
-  }
 })
 
 btnCancel.addEventListener('click', () => {

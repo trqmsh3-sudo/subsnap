@@ -1,58 +1,76 @@
 /**
  * SubSnap In-Page Auto-Pilot Content Script
- * Intelligent Cancellation Engine with Countdown, Instant Auto-Pilot, and Manual Modes.
+ * Intelligent Cancellation Engine with Safeguards for Free Tiers & Non-Billing Pages.
  */
 
 (function () {
   if (window.__subsnap_loaded) return
   window.__subsnap_loaded = true
 
-  const CANCEL_SELECTORS = [
-    'button:contains("Cancel plan")',
-    'button:contains("Cancel subscription")',
-    'button:contains("Cancel membership")',
-    'button:contains("End membership")',
-    'button:contains("Deactivate")',
-    'button:contains("Finish Cancellation")',
-    'button:contains("Manage plan")',
-    'button:contains("Cancel your plan")',
-    'a:contains("Cancel plan")',
-    'a:contains("Cancel subscription")',
-    'a:contains("Cancel membership")',
-    'a:contains("Cancel your plan")',
-    'a:contains("Manage plan")',
-    '[data-testid*="cancel"]',
-    '[data-testid*="manage-plan"]',
-    '[aria-label*="cancel" i]',
-    'button[class*="cancel" i]',
-    'a[href*="cancel" i]',
-    'a[href*="plans" i]'
+  const pathname = window.location.pathname.toLowerCase()
+  const href = window.location.href.toLowerCase()
+
+  // Safeguard 1: Do not auto-run on main chat feeds, homepages, search results
+  const isGenericPage = (
+    pathname.startsWith('/chat') ||
+    pathname.startsWith('/search') ||
+    pathname === '/' ||
+    pathname === '/home' ||
+    pathname === '/feed'
+  ) && !href.includes('cancel') && !href.includes('billing') && !href.includes('settings') && !href.includes('subscription')
+
+  if (isGenericPage) {
+    return
+  }
+
+  const STRICT_CANCEL_KEYWORDS = [
+    'cancel subscription',
+    'cancel your plan',
+    'cancel plan',
+    'cancel membership',
+    'finish cancellation',
+    'end membership',
+    'deactivate subscription',
+    'בטל מנוי',
+    'בטל תוכנית',
+    'סיום מנוי'
   ]
+
+  const FREE_TIER_KEYWORDS = [
+    'free plan',
+    'free tier',
+    'current plan: free',
+    'no active subscription',
+    'upgrade to pro',
+    'upgrade to plus',
+    'תוכנית חינם',
+    'אין מנוי פעיל'
+  ]
+
+  function isFreePlanAccount() {
+    const bodyText = (document.body.innerText || '').toLowerCase()
+    return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
+  }
 
   function findCancelButton() {
     const elements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'))
-    const keywords = [
-      'cancel subscription',
-      'cancel your plan',
-      'cancel plan',
-      'cancel membership',
-      'finish cancellation',
-      'end membership',
-      'manage plan',
-      'בטל מנוי',
-      'בטל תוכנית',
-      'בטל את התוכנית שלך',
-      'סיום ביטול'
-    ]
 
     for (const el of elements) {
       const text = (el.innerText || el.textContent || '').toLowerCase().trim()
-      if (keywords.some(k => text.includes(k))) {
+      // Make sure it's not a generic "cancel" (e.g. cancel dialog, cancel upload)
+      if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k))) {
         return el
       }
     }
 
-    for (const sel of CANCEL_SELECTORS) {
+    const specificSelectors = [
+      '[data-testid*="cancel-subscription"]',
+      '[data-testid*="cancel-plan"]',
+      'button[aria-label*="cancel subscription" i]',
+      'a[href*="/cancel"]'
+    ]
+
+    for (const sel of specificSelectors) {
       try {
         const el = document.querySelector(sel)
         if (el) return el
@@ -64,6 +82,56 @@
 
   let hudInjected = false
   let countdownTimer = null
+
+  function injectInfoHUD(title, desc) {
+    if (hudInjected || document.getElementById('subsnap-hud')) return
+    hudInjected = true
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-hud'
+    hud.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 2147483647;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+      border-radius: 16px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      direction: ltr;
+      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop {
+          from { opacity: 0; transform: translateY(12px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      </style>
+      <div style="width: 32px; height: 32px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+        ℹ️
+      </div>
+      <div>
+        <div style="font-size: 13px; font-weight: 800; color: #0f172a;">${title}</div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 1px;">${desc}</div>
+      </div>
+      <button id="subsnap-close-info" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 8px;">
+        Got it ✕
+      </button>
+    `
+
+    document.body.appendChild(hud)
+    hud.querySelector('#subsnap-close-info').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
 
   function injectHUD(btn, mode = 'countdown_3s') {
     if (hudInjected || document.getElementById('subsnap-hud')) return
@@ -190,19 +258,26 @@
   }
 
   function checkAndExecute() {
-    chrome.storage.local.get(['autopilot_mode'], (res) => {
-      const mode = res.autopilot_mode || 'countdown_3s'
-      const btn = findCancelButton()
-      if (btn) {
+    // Check if on billing/settings URL
+    const isBillingPage = href.includes('billing') || href.includes('cancel') || href.includes('subscription') || href.includes('plans') || href.includes('account')
+
+    if (!isBillingPage) return
+
+    const btn = findCancelButton()
+    if (btn) {
+      chrome.storage.local.get(['autopilot_mode'], (res) => {
+        const mode = res.autopilot_mode || 'countdown_3s'
         injectHUD(btn, mode)
-      }
-    })
+      })
+    } else if (isFreePlanAccount()) {
+      injectInfoHUD('No Active Paid Subscription', 'This account is currently on a Free tier. No recurring charges detected.')
+    }
   }
 
   setTimeout(checkAndExecute, 1000)
   setTimeout(checkAndExecute, 2500)
 
-  // Observe dynamically loaded SPAs
+  // Observe dynamically loaded SPAs on billing pages
   const observer = new MutationObserver(() => {
     if (!hudInjected) {
       checkAndExecute()
