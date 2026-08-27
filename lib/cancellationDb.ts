@@ -13,6 +13,22 @@ export interface CancellationEntry {
 
 export const CANCELLATION_DB: CancellationEntry[] = [
   {
+    name: 'Readwise',
+    nameHe: 'רידווייז (Readwise / Reader)',
+    keywords: ['readwise', 'readwise.io', 'רידווייז', 'reader'],
+    loginUrl: 'https://readwise.io/accounts/login/',
+    cancelUrl: 'https://readwise.io/preferences/account/',
+    method: 'url',
+    notes: 'עמוד ניהול חשבון ומנוי ב-Readwise',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'העמוד נפתח ישירות על הגדרות החשבון והמנוי של Readwise',
+      'לוחצים על Manage Subscription / Cancel',
+      'מאשרים את הביטול בפורטל התשלומים',
+    ],
+  },
+  {
     name: 'Claude / Anthropic',
     nameHe: 'קלוד (Claude Pro / Max / Anthropic)',
     keywords: ['claude', 'anthropic', 'claude.ai', 'claude pro', 'claude max', 'קלוד', 'אנתרופיק', 'קלוד פרו', 'קלאוד'],

@@ -1,5 +1,11 @@
 const TOP_SERVICES = [
   {
+    name: 'רידווייז (Readwise / Reader)',
+    keywords: ['readwise', 'readwise.io', 'רידווייז', 'reader'],
+    cancelUrl: 'https://readwise.io/preferences/account/',
+    notes: 'עמוד ניהול חשבון ומנוי ב-Readwise'
+  },
+  {
     name: 'קלוד (Claude Pro / Max / Anthropic)',
     keywords: ['claude', 'anthropic', 'קלוד', 'אנתרופיק', 'קלאוד'],
     cancelUrl: 'https://claude.ai/settings/billing',
