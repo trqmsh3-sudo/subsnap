@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import SmartTagBar from '@/components/SmartTagBar'
 
 function Header() {
   return (
@@ -82,6 +84,18 @@ export default function HomePage() {
       <main className="flex-1 pt-32 pb-20 px-4 sm:px-6 max-w-4xl mx-auto w-full space-y-16">
         {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
         <section className="text-center space-y-5 pt-4">
+          <div className="flex items-center justify-center mb-2">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden border border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.35)]">
+              <Image
+                src="/hero-badge.jpg"
+                alt="SubSnap 3D Titanium Core"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-emerald-500/30 text-xs font-semibold text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>תוסף כרום חדשני · 100% חינם · ללא סיסמאות</span>
@@ -118,6 +132,11 @@ export default function HomePage() {
             <span>·</span>
             <span>✓ מותקן תוך 3 שניות</span>
           </p>
+        </section>
+
+        {/* ── SMART MULTI-LOCALE TAGGING & SEARCH BAR ───────────────────────── */}
+        <section id="tags-section" className="relative">
+          <SmartTagBar />
         </section>
 
         {/* ── HIGH-LEVEL BENEFIT SHOWCASE (ZERO TECHNICAL LEAKS) ──────────── */}
