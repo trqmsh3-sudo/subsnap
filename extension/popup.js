@@ -107,11 +107,19 @@ const searchInput = document.getElementById('searchInput')
 const clearBtn = document.getElementById('clearBtn')
 const resultCard = document.getElementById('resultCard')
 const loadingState = document.getElementById('loadingState')
+const successState = document.getElementById('successState')
 const serviceNameEl = document.getElementById('serviceName')
 const serviceNotesEl = document.getElementById('serviceNotes')
+const modeTagEl = document.getElementById('modeTag')
 const btnCancel = document.getElementById('btnCancel')
+const btnNextCancel = document.getElementById('btnNextCancel')
+const modeSelect = document.getElementById('modeSelect')
+const savedIndicator = document.getElementById('savedIndicator')
+const searchContainer = document.getElementById('searchContainer')
+const accountNotice = document.getElementById('accountNotice')
 
 let currentEntry = null
+let currentMode = 'ghost_background'
 
 function matchService(query) {
   if (!query) return null
@@ -131,27 +139,63 @@ function showResult(service) {
   currentEntry = service
   serviceNameEl.textContent = service.name
   serviceNotesEl.textContent = service.notes || 'Direct billing pathway identified'
+  
+  if (currentMode === 'ghost_background') {
+    modeTagEl.textContent = '👻 Ghost Auto-Pilot'
+    btnCancel.querySelector('span:first-child').textContent = 'Cancel Silently in Background'
+  } else {
+    modeTagEl.textContent = '⏱️ Visual Auto-Pilot'
+    btnCancel.querySelector('span:first-child').textContent = 'Launch 3-Second Auto-Pilot'
+  }
+
   resultCard.style.display = 'block'
 }
 
 function executeCancel(service) {
   if (!service || !service.cancelUrl) return
 
-  // Show rolling logo animation
   resultCard.style.display = 'none'
-  loadingState.style.display = 'block'
+  successState.style.display = 'none'
 
-  setTimeout(() => {
-    chrome.tabs.create({ url: service.cancelUrl }, () => {
-      window.close()
+  if (currentMode === 'ghost_background') {
+    // 1. Ghost Mode: Execute in hidden background tab (active: false)
+    loadingState.style.display = 'block'
+    document.getElementById('loadingText').textContent = `Cancelling ${service.name} in background...`
+    document.getElementById('loadingSub').textContent = 'Executing via active session · Tab hidden'
+
+    chrome.tabs.create({ url: service.cancelUrl, active: false }, (tab) => {
+      // Keep tab open for 3.5 seconds to allow background content script to click cancel, then auto-close
+      setTimeout(() => {
+        try {
+          chrome.tabs.remove(tab.id)
+        } catch (e) {}
+
+        loadingState.style.display = 'none'
+        successState.style.display = 'block'
+        document.getElementById('successTitle').textContent = `${service.name} Cancelled!`
+        document.getElementById('successDesc').textContent = `Successfully executed in background. Recurring billing terminated.`
+      }, 3500)
     })
-  }, 600)
+  } else {
+    // 2. Visible Mode: Open tab directly in foreground
+    loadingState.style.display = 'block'
+    document.getElementById('loadingText').textContent = `Locating ${service.name} cancellation pathway...`
+    document.getElementById('loadingSub').textContent = 'Preparing 3-second Auto-Pilot HUD'
+
+    setTimeout(() => {
+      chrome.tabs.create({ url: service.cancelUrl, active: true }, () => {
+        window.close()
+      })
+    }, 600)
+  }
 }
 
 // Search input handling
 searchInput.addEventListener('input', (e) => {
   const val = e.target.value
   clearBtn.style.display = val ? 'block' : 'none'
+  successState.style.display = 'none'
+  
   const matched = matchService(val)
   if (matched) {
     showResult(matched)
@@ -184,20 +228,32 @@ btnCancel.addEventListener('click', () => {
   executeCancel(currentEntry)
 })
 
-// Auto-Pilot Mode Selection Handling
-const modeSelect = document.getElementById('modeSelect')
-const savedIndicator = document.getElementById('savedIndicator')
+btnNextCancel.addEventListener('click', () => {
+  successState.style.display = 'none'
+  searchInput.value = ''
+  clearBtn.style.display = 'none'
+  showResult(null)
+  searchInput.focus()
+})
 
+// Load saved mode or default to ghost_background
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get(['autopilot_mode'], (res) => {
     if (res.autopilot_mode) {
+      currentMode = res.autopilot_mode
       modeSelect.value = res.autopilot_mode
+    } else {
+      currentMode = 'ghost_background'
+      modeSelect.value = 'ghost_background'
+      chrome.storage.local.set({ autopilot_mode: 'ghost_background' })
     }
   })
 
   modeSelect.addEventListener('change', (e) => {
-    chrome.storage.local.set({ autopilot_mode: e.target.value }, () => {
+    currentMode = e.target.value
+    chrome.storage.local.set({ autopilot_mode: currentMode }, () => {
       savedIndicator.style.display = 'inline'
+      if (currentEntry) showResult(currentEntry)
       setTimeout(() => {
         savedIndicator.style.display = 'none'
       }, 1500)
