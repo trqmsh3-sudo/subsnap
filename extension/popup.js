@@ -118,7 +118,6 @@ const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
 let currentMode = 'ghost_background'
-let activeGhostTabId = null
 let ghostTimeout = null
 
 function matchService(query) {
@@ -153,12 +152,6 @@ function showResult(service) {
 
 function showStatusResult(status, serviceName, customDesc) {
   if (ghostTimeout) clearTimeout(ghostTimeout)
-  if (activeGhostTabId) {
-    try {
-      chrome.tabs.remove(activeGhostTabId)
-    } catch (e) {}
-    activeGhostTabId = null
-  }
 
   loadingState.style.display = 'none'
   successState.style.display = 'block'
@@ -173,7 +166,7 @@ function showStatusResult(status, serviceName, customDesc) {
     iconEl.style.background = '#ecfdf5'
     iconEl.style.borderColor = '#a7f3d0'
     titleEl.textContent = `${serviceName} Cancelled!`
-    descEl.textContent = customDesc || `Subscription cancelled successfully via active session. No future charges.`
+    descEl.textContent = customDesc || `Subscription cancelled successfully in background. No future charges.`
   } else if (status === 'free_tier' || status === 'no_subscription') {
     iconEl.textContent = '🎉'
     iconEl.style.color = '#059669'
@@ -198,7 +191,7 @@ function showStatusResult(status, serviceName, customDesc) {
   }
 }
 
-// Listen for Real-Time Messages from background content_script
+// Listen for Real-Time Messages from Offscreen Headless Worker
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.action === 'subsnap_result' && currentEntry) {
     showStatusResult(msg.status, currentEntry.name, msg.message)
@@ -214,17 +207,21 @@ function executeCancel(service) {
   if (currentMode === 'ghost_background') {
     loadingState.style.display = 'block'
     document.getElementById('loadingText').textContent = `Inspecting ${service.name} in background...`
-    document.getElementById('loadingSub').textContent = 'Checking active subscription status'
+    document.getElementById('loadingSub').textContent = 'Zero tab movement · 100% headless'
 
-    chrome.tabs.create({ url: service.cancelUrl, active: false }, (tab) => {
-      activeGhostTabId = tab.id
-
-      // Fallback timeout in case page does not respond
-      ghostTimeout = setTimeout(() => {
-        showStatusResult('no_subscription', service.name)
-      }, 4000)
+    // Send headless offscreen message (0 tabs opened in tab strip!)
+    chrome.runtime.sendMessage({
+      action: 'startGhostInspection',
+      url: service.cancelUrl,
+      serviceName: service.name
     })
+
+    // Fallback timer if background fetch takes longer than 3.5s
+    ghostTimeout = setTimeout(() => {
+      showStatusResult('no_subscription', service.name)
+    }, 3500)
   } else {
+    // Visible Mode: Opens tab with HUD
     loadingState.style.display = 'block'
     document.getElementById('loadingText').textContent = `Locating ${service.name} cancellation pathway...`
     document.getElementById('loadingSub').textContent = 'Preparing 3-second Auto-Pilot HUD'
