@@ -4,23 +4,23 @@ import Image from 'next/image'
 
 function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 py-3.5 px-6">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-base shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 h-16 px-6">
+      <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 font-black text-base shadow-sm group-hover:scale-105 transition-transform">
             ⚡
           </div>
-          <span className="font-extrabold text-xl tracking-tight text-slate-900 text-shadow-subtle">
+          <span className="font-extrabold text-xl tracking-tight text-slate-950 text-shadow-subtle">
             SubSnap
           </span>
-          <span className="hidden sm:inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+          <span className="hidden sm:inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
             Chrome Extension
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-600">
-          <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How It Works</a>
-          <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
+        <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-slate-600">
+          <a href="#how-it-works" className="hover:text-slate-950 transition-colors">How It Works</a>
+          <a href="#pricing" className="hover:text-slate-950 transition-colors">Pricing</a>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -55,32 +55,32 @@ function Footer() {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-600 font-medium">
-          <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
-          <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
-          <Link href="/refund" className="hover:text-slate-900 transition-colors">Service Policy</Link>
+        <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-600 font-semibold">
+          <Link href="/privacy" className="hover:text-slate-950 transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-slate-950 transition-colors">Terms of Service</Link>
+          <Link href="/refund" className="hover:text-slate-950 transition-colors">Service Policy</Link>
         </div>
       </div>
 
-      <div className="text-center text-[11px] text-slate-400 mt-8 pt-6 border-t border-slate-100">
-        © 2026 SubSnap. Official Chrome Extension. Zero-Knowledge Client-Side Privacy.
+      <div className="text-center text-[11px] text-slate-400 mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+        <span>© 2026 SubSnap. Zero-Knowledge Local Browser Execution. All Systems Operational.</span>
       </div>
     </footer>
   )
 }
 
 export default function HomePage() {
-
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafc] text-slate-900">
       <Header />
 
       <main className="flex-1 pt-16">
         {/* ── HERO SECTION: FULL OPENING VIEWPORT SCREEN (100vh FLUSH) ─────── */}
-        <section className="relative overflow-hidden bg-white border-b border-slate-200/80 h-[calc(100vh-64px)] min-h-[560px] max-h-[900px] flex">
+        <section className="relative overflow-hidden bg-white border-b border-slate-200/80 h-[calc(100vh-64px)] min-h-[580px] max-h-[920px] flex">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 h-full">
             
-            {/* Left Half: Shocked Statement Image filling 100% height of opening screen */}
+            {/* Left Half: Shocked Statement Image with Smart Floating Glass Pill */}
             <div className="hidden lg:block lg:col-span-6 relative w-full h-full overflow-hidden bg-slate-100">
               <Image
                 src="/hero-statement.jpg"
@@ -89,20 +89,37 @@ export default function HomePage() {
                 priority
                 className="object-cover object-left"
               />
-              {/* Desktop Gradient Mask: Fades out to Studio White seamlessly on the right */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-[#fafafc]" />
+              {/* Soft Gradient Fade-out into Studio White on the right */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-[#fafafc]" />
+
+              {/* Floating Intelligence Glass Badge on Photo */}
+              <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-3.5 shadow-xl shadow-slate-900/10 flex items-center gap-3 animate-fadeIn">
+                <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 font-bold text-sm">
+                  💸
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>Recurring charges detected</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium">SubSnap 3-second cancellation ready</div>
+                </div>
+              </div>
             </div>
 
-            {/* Right Half: Perfectly Proportioned Inside 100% Opening Viewport */}
+            {/* Right Half: Studio White Typography, Headline, CTA & Micro 3-Step Cards */}
             <div className="lg:col-span-6 h-full flex flex-col justify-between px-6 sm:px-10 lg:px-14 py-8 lg:py-10 space-y-4">
               
               {/* Upper Block */}
               <div className="space-y-4 my-auto">
                 <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black tracking-tight text-slate-950 leading-[1.12] text-shadow-title">
-                  Stop Paying for Subscriptions You Forgot.
+                  Stop Paying for Subscriptions{' '}
+                  <span className="bg-gradient-to-r from-emerald-600 to-teal-700 bg-clip-text text-transparent">
+                    You Forgot You Had.
+                  </span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg text-shadow-subtle">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg text-shadow-subtle font-medium">
                   The smart Chrome extension that navigates right into your authenticated accounts and cancels recurring charges in 3 seconds flat.
                 </p>
 
@@ -111,7 +128,7 @@ export default function HomePage() {
                   <a
                     href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
                     download
-                    className="btn-chrome px-8 py-4 rounded-2xl text-base font-extrabold flex items-center justify-center gap-3 shadow-xl"
+                    className="btn-chrome px-8 py-4 rounded-2xl text-base font-extrabold flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:shadow-slate-900/20 group"
                   >
                     <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
                       <circle cx="12" cy="12" r="10" fill="#4285F4"/>
@@ -119,50 +136,66 @@ export default function HomePage() {
                       <circle cx="12" cy="12" r="4" fill="white"/>
                     </svg>
                     <span>Add to Chrome for Free</span>
-                    <span className="text-slate-400 font-normal">➔</span>
+                    <span className="text-slate-400 group-hover:translate-x-0.5 transition-transform font-normal">➔</span>
                   </a>
                 </div>
 
                 {/* Trust Indicators */}
                 <div className="text-xs text-slate-500 flex flex-wrap items-center gap-3 pt-0.5">
-                  <span className="font-semibold text-emerald-700">✓ 100% Free Forever</span>
+                  <span className="font-semibold text-emerald-700 flex items-center gap-1">
+                    <span className="text-emerald-500 font-bold">✓</span> 100% Free Forever
+                  </span>
                   <span>·</span>
-                  <span>✓ Zero passwords stored</span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-emerald-500 font-bold">✓</span> Zero passwords stored
+                  </span>
                   <span>·</span>
-                  <span>✓ Installs in 3 seconds</span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-emerald-500 font-bold">✓</span> Installs in 3 seconds
+                  </span>
                 </div>
               </div>
 
-              {/* Lower Block: Unboxed 3 Steps Anchored at the Bottom of Opening Screen */}
-              <div className="pt-4 border-t border-slate-200/80 space-y-2.5 text-xs text-slate-600">
-                <div className="font-extrabold text-slate-900 text-xs tracking-wide uppercase text-shadow-subtle">
-                  How SubSnap works in 3 simple steps:
+              {/* Lower Block: Elegant 3-Step Micro-Cards Anchored at Bottom */}
+              <div className="pt-4 border-t border-slate-200/80 space-y-2.5">
+                <div className="font-extrabold text-slate-900 text-xs tracking-wide uppercase text-shadow-subtle flex items-center justify-between">
+                  <span>How SubSnap works:</span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                    ⚡ 3-Second Speed
+                  </span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 pt-0.5">
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
-                      <span className="text-emerald-600 font-black">1.</span> Direct Entry
+                <div className="grid grid-cols-3 gap-2.5">
+                  
+                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-1">
+                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center">1</span>
+                      <span>Direct Entry</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-snug">
-                      Opens inside your active billing page.
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Opens inside active billing page.
                     </p>
                   </div>
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
-                      <span className="text-emerald-600 font-black">2.</span> Bypass Traps
+
+                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-1">
+                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center">2</span>
+                      <span>Bypass Traps</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-snug">
-                      Skips surveys, popups & penalties.
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Skips surveys & exit penalty fees.
                     </p>
                   </div>
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
-                      <span className="text-emerald-600 font-black">3.</span> 1-Click Done
+
+                  <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-2.5 space-y-1">
+                    <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black flex items-center justify-center">3</span>
+                      <span>1-Click Done</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-snug">
-                      Auto-Pilot cancels in 3 seconds.
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Auto-Pilot cancels automatically.
                     </p>
                   </div>
+
                 </div>
               </div>
 
@@ -170,9 +203,8 @@ export default function HomePage() {
           </div>
         </section>
 
-
         {/* ── WHY BROWSER EXTENSION (10X BETTER THAN A WEBSITE) ────────────── */}
-        <section id="how-it-works" className="max-w-5xl mx-auto px-6 pt-16 space-y-12">
+        <section id="how-it-works" className="max-w-5xl mx-auto px-6 pt-20 space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
               The Extension Superpower
@@ -248,7 +280,7 @@ export default function HomePage() {
         </section>
 
         {/* ── SIDE-BY-SIDE PRICING (STUDIO WHITE) ────────────────────────────── */}
-        <section id="pricing" className="max-w-5xl mx-auto px-6 pt-20 space-y-10">
+        <section id="pricing" className="max-w-5xl mx-auto px-6 pt-24 space-y-10">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
               Transparent Pricing
