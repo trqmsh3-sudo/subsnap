@@ -1,24 +1,6 @@
-'use client'
-
-import React, { useState, useEffect, useRef } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CANCELLATION_DB, CancellationEntry, findCancellationEntry } from '@/lib/cancellationDb'
-
-const POPULAR_GLOBAL_SERVICES = [
-  { name: 'Claude Pro / Max', q: 'Claude', tag: 'AI', desc: 'Anthropic AI subscription' },
-  { name: 'Grok / X Premium', q: 'Grok', tag: 'X', desc: 'X Corp subscription' },
-  { name: 'Netflix', q: 'Netflix', tag: 'Stream', desc: 'Streaming membership' },
-  { name: 'Spotify Premium', q: 'Spotify', tag: 'Music', desc: 'Audio streaming' },
-  { name: 'Adobe Creative Cloud', q: 'Adobe', tag: 'Design', desc: 'Adobe plan & apps' },
-  { name: 'ChatGPT Plus', q: 'ChatGPT', tag: 'AI', desc: 'OpenAI subscription' },
-  { name: 'Canva Pro', q: 'Canva', tag: 'Design', desc: 'Canva team/pro plan' },
-  { name: 'Apple / iCloud+', q: 'Apple', tag: 'iOS', desc: 'Apple ID subscriptions' },
-  { name: 'Amazon Prime', q: 'Amazon Prime', tag: 'Shopping', desc: 'Prime delivery & video' },
-  { name: 'YouTube Premium', q: 'YouTube', tag: 'Video', desc: 'Ad-free & Music' },
-  { name: 'Microsoft 365', q: 'Microsoft', tag: 'Office', desc: 'Word, Excel & OneDrive' },
-  { name: 'Midjourney', q: 'Midjourney', tag: 'AI', desc: 'AI image subscription' },
-]
 
 function Header() {
   return (
@@ -38,7 +20,6 @@ function Header() {
 
         <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-600">
           <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How It Works</a>
-          <a href="#search" className="hover:text-slate-900 transition-colors">Supported Services</a>
           <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
         </nav>
 
@@ -89,62 +70,6 @@ function Footer() {
 }
 
 export default function HomePage() {
-  const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState<CancellationEntry[]>([])
-  const [selectedService, setSelectedService] = useState<CancellationEntry | null>(null)
-  const [showDropdown, setShowDropdown] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const searchRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!query.trim()) {
-      setSuggestions([])
-      setShowDropdown(false)
-      return
-    }
-    const q = query.toLowerCase().trim()
-    const matches = CANCELLATION_DB.filter(item =>
-      item.name.toLowerCase().includes(q) ||
-      (item.nameHe && item.nameHe.toLowerCase().includes(q)) ||
-      item.keywords.some(k => k.includes(q) || q.includes(k))
-    ).slice(0, 5)
-
-    setSuggestions(matches)
-    setShowDropdown(matches.length > 0)
-  }, [query])
-
-  function handleCancelClick(item: CancellationEntry) {
-    setSelectedService(item)
-    setShowDropdown(false)
-    if (item.cancelUrl) {
-      window.open(item.cancelUrl, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  async function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!query.trim()) return
-
-    setShowDropdown(false)
-    const direct = findCancellationEntry(query)
-    if (direct) {
-      handleCancelClick(direct)
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/lookup?q=${encodeURIComponent(query)}`)
-      const data = await res.json()
-      if (data.entry) {
-        handleCancelClick(data.entry)
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafc] text-slate-900">
@@ -252,97 +177,79 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── INTERACTIVE SEARCH & SUPPORTED SERVICES (STUDIO WHITE) ─────────── */}
-        <section id="search" className="max-w-5xl mx-auto px-6 pt-16 space-y-8">
+        {/* ── WHY BROWSER EXTENSION (10X BETTER THAN A WEBSITE) ────────────── */}
+        <section id="how-it-works" className="max-w-5xl mx-auto px-6 pt-16 space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
+            <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
+              The Extension Superpower
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight text-shadow-title">
-              Cancel Any Subscription Instantly
+              Why SubSnap Lives Inside Your Browser
             </h2>
             <p className="text-sm text-slate-500 text-shadow-subtle">
-              Type any app or service name to launch its direct cancellation pathway:
+              Websites require passwords and manual searching. The SubSnap extension takes action directly where you are already logged in.
             </p>
           </div>
 
-          {/* Search Box */}
-          <div ref={searchRef} className="max-w-2xl mx-auto relative">
-            <form onSubmit={handleSearchSubmit} className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Type any service (e.g. Claude, Netflix, Adobe, Spotify, Grok)..."
-                  className="w-full command-input-light px-4 py-3.5 rounded-xl text-sm outline-none font-medium"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => { setQuery(''); setSuggestions([]); setShowDropdown(false); }}
-                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
+          {/* 3 Value Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div className="studio-white-card p-7 space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-black text-lg shadow-sm">
+                🔒
               </div>
-              <button
-                type="submit"
-                disabled={loading || !query.trim()}
-                className="btn-emerald px-6 py-3.5 rounded-xl text-xs font-bold shrink-0 disabled:opacity-50"
-              >
-                {loading ? 'Locating...' : 'Cancel Now'}
-              </button>
-            </form>
+              <h3 className="font-extrabold text-base text-slate-900 text-shadow-subtle">
+                Zero Password Friction
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Because SubSnap runs directly in your Chrome browser, it utilizes your existing active logins. You never have to re-enter passwords, credit cards, or 2FA SMS codes.
+              </p>
+            </div>
 
-            {/* Suggestions Dropdown */}
-            {showDropdown && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl p-2 shadow-2xl z-50 space-y-1 animate-fadeIn">
-                {suggestions.map((item) => (
-                  <button
-                    key={item.name}
-                    type="button"
-                    onClick={() => handleCancelClick(item)}
-                    className="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-emerald-50 flex items-center justify-between transition-colors group"
-                  >
-                    <div>
-                      <div className="font-bold text-sm text-slate-900 group-hover:text-emerald-700">
-                        {item.name}
-                      </div>
-                      {item.notes && (
-                        <div className="text-xs text-slate-500">{item.notes}</div>
-                      )}
-                    </div>
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800">
-                      Cancel ➔
-                    </span>
-                  </button>
-                ))}
+            <div className="studio-white-card p-7 space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-200 text-sky-600 flex items-center justify-center font-black text-lg shadow-sm">
+                ⚡
               </div>
-            )}
+              <h3 className="font-extrabold text-base text-slate-900 text-shadow-subtle">
+                In-Page Auto-Pilot HUD
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                When you open a subscription page, a floating assistant automatically scrolls to the hidden cancel button, highlights it, and counts down 3 seconds to cancel.
+              </p>
+            </div>
+
+            <div className="studio-white-card p-7 space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center font-black text-lg shadow-sm">
+                🛡️
+              </div>
+              <h3 className="font-extrabold text-base text-slate-900 text-shadow-subtle">
+                Retention Trap Bypass
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Services like Adobe and Amazon deliberately hide cancellation behind surveys and fake discount popups. SubSnap navigates straight to the clean exit.
+              </p>
+            </div>
+
           </div>
 
-          {/* Quick Service Tags Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
-            {POPULAR_GLOBAL_SERVICES.map((s) => (
-              <button
-                key={s.name}
-                type="button"
-                onClick={() => {
-                  const matched = findCancellationEntry(s.q)
-                  if (matched) handleCancelClick(matched)
-                }}
-                className="studio-white-card p-4 text-left flex items-center justify-between hover:border-emerald-300 transition-all group"
-              >
-                <div>
-                  <div className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">
-                    {s.name}
-                  </div>
-                  <div className="text-[10px] text-slate-400">{s.desc}</div>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                  Cancel ⚡
-                </span>
-              </button>
-            ))}
+          {/* Value Banner CTA */}
+          <div className="p-6 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="space-y-0.5">
+              <div className="font-extrabold text-sm text-slate-900">
+                Ready to stop wasted monthly charges?
+              </div>
+              <div className="text-xs text-slate-600">
+                Average user saves over <strong>$490 every year</strong> with SubSnap.
+              </div>
+            </div>
+            <a
+              href="https://github.com/trqmsh3-sudo/subsnap/raw/main/subsnap-extension.zip"
+              download
+              className="btn-chrome px-6 py-3 rounded-xl text-xs font-extrabold shrink-0 flex items-center gap-2"
+            >
+              <span>Add to Chrome (Free)</span>
+              <span>➔</span>
+            </a>
           </div>
         </section>
 
