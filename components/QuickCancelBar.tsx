@@ -4,11 +4,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { CANCELLATION_DB, CancellationEntry, findCancellationEntry } from '@/lib/cancellationDb'
 
 const HEBREW_TAGS = [
+  { label: 'קלוד (Claude)', q: 'קלוד' },
   { label: 'גרוק / X', q: 'גרוק' },
   { label: 'נטפליקס', q: 'נטפליקס' },
   { label: 'ספוטיפיי', q: 'ספוטיפיי' },
   { label: 'אדובי', q: 'אדובי' },
   { label: 'צ\'אט GPT', q: 'צ\'אט ג\'יפיטי' },
+  { label: 'מידג\'ורני', q: 'מידג\'ורני' },
   { label: 'קנבה', q: 'קנבה' },
   { label: 'אפל / אייקלאוד', q: 'אפל' },
   { label: 'גוגל פליי', q: 'גוגל פליי' },
