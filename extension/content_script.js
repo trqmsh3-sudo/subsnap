@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Google Play Survey Solver · Multi-Step Modal Engine · Strict Search Guard.
+ * Post-Cancellation Celebration · Deep Survey Solver · Google Play & Multi-Step Auto-Pilot.
  */
 
 (function () {
@@ -17,7 +17,6 @@
     const href = window.location.href.toLowerCase()
     const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
-    // Guard ONLY Search Engines (Google Search, Bing Search) without blocking Google Play or Google One
     const isSearchEngine = (
       ((hostname === 'google.com' || hostname.startsWith('google.') || hostname.endsWith('.google.com')) &&
         (pathname === '/' || pathname.startsWith('/search') || pathname.startsWith('/webhp') || pathname.startsWith('/imghp'))) ||
@@ -77,9 +76,7 @@
     '[data-testid*="cancel-subscription"]',
     '[data-testid*="cancel-plan"]',
     '[data-action*="cancel-subscription"]',
-    'a[href*="/store/account/subscriptions/subscription?sku="]',
-    '[aria-label*="ניהול המינוי"]',
-    '[aria-label*="Manage subscription"]'
+    'a[href*="/store/account/subscriptions/subscription?sku="]'
   ]
 
   const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
@@ -108,7 +105,9 @@
     'סגירת חשבון',
     'ביטול הזמנה',
     'הקודם',
-    'back'
+    'back',
+    'להרשמה מחדש',
+    'resubscribe'
   ]
 
   const STRICT_CANCEL_KEYWORDS = [
@@ -163,6 +162,21 @@
     'אין לך מינויים פעילים'
   ]
 
+  const ALREADY_CANCELLED_KEYWORDS = [
+    'בוטל',
+    'להרשמה מחדש',
+    'המנוי שלך יסתיים',
+    'המינוי שלך יסתיים',
+    'מנוי מבוטל',
+    'מינוי מבוטל',
+    'cancelled',
+    'canceled',
+    'subscription cancelled',
+    'subscription canceled',
+    'your subscription will end',
+    'resubscribe'
+  ]
+
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
     const style = window.getComputedStyle(el)
@@ -183,7 +197,7 @@
       return true
     }
     const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
-    if (DISALLOWED_KEYWORDS.some(k => text === k || text.includes(k))) {
+    if (DISALLOWED_KEYWORDS.some(k => text.includes(k))) {
       return true
     }
     return false
@@ -192,6 +206,22 @@
   function isFreePlanAccount() {
     const bodyText = (document.body.innerText || '').toLowerCase()
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
+  }
+
+  function isAlreadyCancelled() {
+    const bodyText = (document.body.innerText || '').toLowerCase()
+    // Must contain exact cancellation marker
+    return ALREADY_CANCELLED_KEYWORDS.some(k => bodyText.includes(k))
+  }
+
+  function forceClick(el) {
+    if (!el) return
+    try {
+      el.click()
+      el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+      el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    } catch (e) {}
   }
 
   function findDarkPatternContinueBtn() {
@@ -207,6 +237,9 @@
   }
 
   function findCancelButton() {
+    // If already cancelled, NEVER target Manage or Resubscribe buttons!
+    if (isAlreadyCancelled()) return null
+
     const darkPatternBtn = findDarkPatternContinueBtn()
     if (darkPatternBtn) return darkPatternBtn
 
@@ -219,7 +252,6 @@
 
     const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]'))
 
-    // 1. Direct cancellation keywords
     for (const el of candidates) {
       if (isDisallowedElement(el) || !isVisible(el)) continue
       const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
@@ -228,7 +260,7 @@
       }
     }
 
-    // 2. Google Play / Store Subscriptions "ניהול" / "Manage" button
+    // Google Play active subscription "ניהול" / "Manage" button (ONLY if not already cancelled!)
     const pathname = window.location.pathname.toLowerCase()
     if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
       for (const el of candidates) {
@@ -261,49 +293,63 @@
     return null
   }
 
-  function requestAIDOMScout() {
-    return new Promise((resolve) => {
-      try {
-        const rawElements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
-          .filter(el => !isDisallowedElement(el) && isVisible(el))
-          .slice(0, 35)
+  // 1. Success Celebration HUD
+  function injectSuccessHUD(title, desc) {
+    if (document.getElementById('subsnap-hud')) {
+      document.getElementById('subsnap-hud').remove()
+    }
+    hudInjected = true
 
-        if (rawElements.length === 0 || !chrome.runtime || !chrome.runtime.sendMessage) {
-          return resolve(null)
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-hud'
+    hud.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 2147483647;
+      background: #ffffff;
+      border: 2px solid #10b981;
+      box-shadow: 0 16px 40px rgba(16, 185, 129, 0.25);
+      border-radius: 16px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      direction: rtl;
+      min-width: 340px;
+      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop {
+          from { opacity: 0; transform: translateY(12px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
+      </style>
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        🎉
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13.5px; font-weight: 800; color: #065f46;">${title}</div>
+        <div style="font-size: 11.5px; color: #047857; margin-top: 1px; font-weight: 500;">${desc}</div>
+      </div>
+      <button id="subsnap-success-close" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+        מעולה ✕
+      </button>
+    `
 
-        const snapshot = rawElements.map(el => ({
-          tag: el.tagName.toLowerCase(),
-          text: (el.innerText || el.textContent || el.value || '').trim().slice(0, 40),
-          aria: el.getAttribute('aria-label') || null,
-          id: el.id || null,
-          testid: el.getAttribute('data-testid') || null,
-          uia: el.getAttribute('data-uia') || null,
-          className: (el.className || '').toString().slice(0, 40)
-        }))
+    document.body.appendChild(hud)
 
-        chrome.runtime.sendMessage({
-          action: 'domScout',
-          payload: { hostname, elements: snapshot }
-        }, (res) => {
-          if (res && res.success && res.data) {
-            if (typeof res.data.bestMatchIndex === 'number' && res.data.bestMatchIndex >= 0 && res.data.bestMatchIndex < rawElements.length) {
-              const matchedNode = rawElements[res.data.bestMatchIndex]
-              if (matchedNode && isVisible(matchedNode)) {
-                return resolve(matchedNode)
-              }
-            }
-            if (res.data.targetSelector) {
-              const el = document.querySelector(res.data.targetSelector)
-              if (el && isVisible(el)) return resolve(el)
-            }
-          }
-          resolve(null)
-        })
-      } catch (e) {
-        resolve(null)
-      }
-    })
+    const closeBtn = hud.querySelector('#subsnap-success-close')
+    function close() {
+      hud.remove()
+      hudInjected = false
+    }
+
+    closeBtn.addEventListener('click', close)
+    setTimeout(close, 5000) // Auto-dismiss after 5s
   }
 
   function injectGuidanceHUD(title, desc) {
@@ -451,12 +497,20 @@
         timerBadge.textContent = 'Active ⚡'
         timerBadge.style.color = '#059669'
 
-        btn.click()
+        forceClick(btn)
 
-        // Reactive Multi-Step Survey & Modal Poller (watches for up to 8s across dynamic dialogs)
+        // Reactive Multi-Step Survey & Modal Poller (watches up to 10s across dynamic dialogs)
         let modalPollCount = 0
         const modalPoll = setInterval(() => {
           modalPollCount++
+
+          // If cancellation succeeded, show celebration and stop
+          if (isAlreadyCancelled()) {
+            clearInterval(modalPoll)
+            if (activeObserver) activeObserver.disconnect()
+            injectSuccessHUD('המנוי בוטל בהצלחה! 🎉', 'המערכת זיהתה את הביטול. החיוב החודשי הופסק.')
+            return
+          }
 
           // 1. Solve survey if a survey modal is open
           const surveyOptions = Array.from(document.querySelectorAll('[role="radio"], input[type="radio"], label, div[data-value], li[role="radio"], span'))
@@ -470,7 +524,10 @@
               text.includes('decline to answer') ||
               text === 'other'
             ) {
-              opt.click()
+              forceClick(opt)
+              // Also click the input inside if present
+              const innerInput = opt.querySelector('input[type="radio"]') || opt.parentElement?.querySelector('input[type="radio"]')
+              if (innerInput) forceClick(innerInput)
               break
             }
           }
@@ -481,16 +538,20 @@
             if (modalBtn && modalBtn !== btn) {
               const isDisabled = modalBtn.disabled || modalBtn.getAttribute('aria-disabled') === 'true'
               if (!isDisabled) {
-                modalBtn.click()
+                forceClick(modalBtn)
                 descEl.textContent = 'Advancing to cancellation...'
               }
             }
-          }, 200)
+          }, 300)
 
-          if (modalPollCount >= 16) {
+          if (modalPollCount >= 20) {
             clearInterval(modalPoll)
-            descEl.textContent = '✓ Action confirmed successfully!'
-            timerBadge.textContent = 'Done ✓'
+            if (isAlreadyCancelled()) {
+              injectSuccessHUD('המנוי בוטל בהצלחה! 🎉', 'המערכת זיהתה את הביטול. החיוב החודשי הופסק.')
+            } else {
+              descEl.textContent = '✓ Action confirmed successfully!'
+              timerBadge.textContent = 'Done ✓'
+            }
           }
         }, 500)
       }
@@ -537,6 +598,14 @@
   async function performScan() {
     if (hudInjected || !isDedicatedBillingPath()) return false
 
+    // 1. Check if already cancelled! If so, celebrate and exit immediately
+    if (isAlreadyCancelled()) {
+      injectSuccessHUD('המנוי כבר בוטל בהצלחה! 🎉', 'המינוי סומן כמבוטל ולא תחויב שוב.')
+      if (activeObserver) activeObserver.disconnect()
+      if (activeScanInterval) clearInterval(activeScanInterval)
+      return true
+    }
+
     const btn = findCancelButton()
     if (btn) {
       chrome.storage.local.get(['autopilot_mode'], (res) => {
@@ -580,19 +649,11 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
-        if (!found && !hudInjected && isDedicatedBillingPath()) {
-          const aiBtn = await requestAIDOMScout()
-          if (aiBtn) {
-            chrome.storage.local.get(['autopilot_mode'], (res) => {
-              const mode = res.autopilot_mode || 'countdown_5s'
-              injectHUD(aiBtn, mode, true)
-            })
-          } else {
-            injectGuidanceHUD(
-              'SubSnap Cancellation Assistant',
-              'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'
-            )
-          }
+        if (!found && !hudInjected && isDedicatedBillingPath() && !isAlreadyCancelled()) {
+          injectGuidanceHUD(
+            'SubSnap Cancellation Assistant',
+            'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'
+          )
         }
       }
     }, 500)
