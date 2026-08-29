@@ -1,53 +1,54 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * CSP-Immune Network Bridge · Strict Visibility Verification · Reactive MutationObserver.
+ * Direct Node AI Resolution · SPA Navigation Listener · Modal Polling Engine · CSP-Immune.
  */
 
 (function () {
   if (window.__subsnap_loaded) return
-
-  const pathname = window.location.pathname.toLowerCase()
-  const href = window.location.href.toLowerCase()
-  const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
-
-  // 1. HARD GUARD: Never touch general browsing, chats, search feeds, or homepages
-  const isGeneralBrowsing = (
-    pathname === '/' ||
-    pathname === '' ||
-    pathname.startsWith('/new') ||
-    pathname.startsWith('/chat') ||
-    pathname.startsWith('/watch') ||
-    pathname.startsWith('/feed') ||
-    pathname.startsWith('/search') ||
-    pathname.startsWith('/browse') ||
-    pathname.includes('/comments/') ||
-    pathname.includes('/discussion/') ||
-    hostname.includes('google.') ||
-    hostname.includes('bing.')
-  )
-
-  // 2. ONLY activate on verified, dedicated subscription/billing management paths
-  const isDedicatedBillingPath = (
-    pathname.includes('/billing') ||
-    pathname.includes('/cancelplan') ||
-    pathname.includes('/cancel-plan') ||
-    pathname.includes('/cancel_subscription') ||
-    pathname.includes('/manage_subscriptions') ||
-    pathname.includes('/preferences/account') ||
-    pathname.includes('/settings/premium') ||
-    pathname.includes('/settings/subscription') ||
-    pathname.includes('/account/subscription') ||
-    pathname.includes('/plans') ||
-    href.includes('subsnap=1')
-  )
-
-  if (isGeneralBrowsing || !isDedicatedBillingPath) {
-    return
-  }
-
   window.__subsnap_loaded = true
 
-  // 3. Fallback Local Selectors
+  let hudInjected = false
+  let countdownTimer = null
+  let activeObserver = null
+  let activeScanInterval = null
+
+  function isDedicatedBillingPath() {
+    const pathname = window.location.pathname.toLowerCase()
+    const href = window.location.href.toLowerCase()
+    const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
+
+    const isGeneralBrowsing = (
+      pathname === '/' ||
+      pathname === '' ||
+      pathname.startsWith('/new') ||
+      pathname.startsWith('/chat') ||
+      pathname.startsWith('/watch') ||
+      pathname.startsWith('/feed') ||
+      pathname.startsWith('/search') ||
+      pathname.startsWith('/browse') ||
+      pathname.includes('/comments/') ||
+      pathname.includes('/discussion/') ||
+      hostname.includes('google.') ||
+      hostname.includes('bing.')
+    )
+
+    const isExplicitBilling = (
+      pathname.includes('/billing') ||
+      pathname.includes('/cancelplan') ||
+      pathname.includes('/cancel-plan') ||
+      pathname.includes('/cancel_subscription') ||
+      pathname.includes('/manage_subscriptions') ||
+      pathname.includes('/preferences/account') ||
+      pathname.includes('/settings/premium') ||
+      pathname.includes('/settings/subscription') ||
+      pathname.includes('/account/subscription') ||
+      pathname.includes('/plans') ||
+      href.includes('subsnap=1')
+    )
+
+    return !isGeneralBrowsing && isExplicitBilling
+  }
+
   let ACTIVE_SELECTORS = [
     '[data-uia="action-cancel-plan"]',
     '[data-uia="btn-cancel-membership"]',
@@ -68,7 +69,7 @@
     '[data-action*="cancel-subscription"]'
   ]
 
-  // Fetch remote healed selectors via background proxy (CSP-Immune)
+  const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
   if (chrome.runtime && chrome.runtime.sendMessage) {
     chrome.runtime.sendMessage({ action: 'fetchPlaybook', hostname }, (res) => {
       if (res && res.success && res.data && Array.isArray(res.data.selectors)) {
@@ -77,7 +78,6 @@
     })
   }
 
-  // 4. Strict Safety Filter
   const DISALLOWED_KEYWORDS = [
     'delete account',
     'delete my account',
@@ -132,7 +132,6 @@
     'אין מנוי פעיל'
   ]
 
-  // Rigorous Visibility Check (Never target hidden/collapsed DOM elements)
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
     const style = window.getComputedStyle(el)
@@ -165,7 +164,7 @@
   }
 
   function findDarkPatternContinueBtn() {
-    const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
+    const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'))
     for (const b of continueBtns) {
       if (isDisallowedElement(b) || !isVisible(b)) continue
       const text = (b.innerText || b.textContent || '').toLowerCase().trim()
@@ -187,7 +186,7 @@
       } catch (e) {}
     }
 
-    const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
+    const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]'))
 
     for (const el of candidates) {
       if (isDisallowedElement(el) || !isVisible(el)) continue
@@ -203,7 +202,7 @@
   function findModalConfirmBtn() {
     const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"]'))
     for (const m of modals) {
-      const btns = Array.from(m.querySelectorAll('button, a, div[role="button"]'))
+      const btns = Array.from(m.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
       for (const b of btns) {
         if (!isVisible(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
@@ -215,37 +214,46 @@
     return null
   }
 
-  // 5. In-Page AI DOM Scout Fallback (CSP-Immune via Background Gateway)
+  // In-Page AI DOM Scout with Direct Node Resolution
   function requestAIDOMScout() {
     return new Promise((resolve) => {
       try {
-        const interactiveElements = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
+        const rawElements = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
           .filter(el => !isDisallowedElement(el) && isVisible(el))
           .slice(0, 35)
-          .map(el => ({
-            tag: el.tagName.toLowerCase(),
-            text: (el.innerText || el.textContent || '').trim().slice(0, 40),
-            aria: el.getAttribute('aria-label') || null,
-            id: el.id || null,
-            testid: el.getAttribute('data-testid') || null,
-            uia: el.getAttribute('data-uia') || null,
-            className: (el.className || '').toString().slice(0, 40)
-          }))
 
-        if (interactiveElements.length === 0 || !chrome.runtime || !chrome.runtime.sendMessage) {
+        if (rawElements.length === 0 || !chrome.runtime || !chrome.runtime.sendMessage) {
           return resolve(null)
         }
 
+        const snapshot = rawElements.map(el => ({
+          tag: el.tagName.toLowerCase(),
+          text: (el.innerText || el.textContent || el.value || '').trim().slice(0, 40),
+          aria: el.getAttribute('aria-label') || null,
+          id: el.id || null,
+          testid: el.getAttribute('data-testid') || null,
+          uia: el.getAttribute('data-uia') || null,
+          className: (el.className || '').toString().slice(0, 40)
+        }))
+
         chrome.runtime.sendMessage({
           action: 'domScout',
-          payload: { hostname, elements: interactiveElements }
+          payload: { hostname, elements: snapshot }
         }, (res) => {
-          if (res && res.success && res.data && res.data.targetSelector) {
-            const el = document.querySelector(res.data.targetSelector)
-            resolve(el && isVisible(el) ? el : null)
-          } else {
-            resolve(null)
+          if (res && res.success && res.data) {
+            // Direct index reference (100% infallible)
+            if (typeof res.data.bestMatchIndex === 'number' && res.data.bestMatchIndex >= 0 && res.data.bestMatchIndex < rawElements.length) {
+              const matchedNode = rawElements[res.data.bestMatchIndex]
+              if (matchedNode && isVisible(matchedNode)) {
+                return resolve(matchedNode)
+              }
+            }
+            if (res.data.targetSelector) {
+              const el = document.querySelector(res.data.targetSelector)
+              if (el && isVisible(el)) return resolve(el)
+            }
           }
+          resolve(null)
         })
       } catch (e) {
         resolve(null)
@@ -253,10 +261,6 @@
     })
   }
 
-  let hudInjected = false
-  let countdownTimer = null
-
-  // 6. Graceful Assistant Guidance HUD (NEVER FAILS SILENTLY)
   function injectGuidanceHUD(title, desc) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -321,7 +325,6 @@
     doneBtn.addEventListener('click', close)
   }
 
-  // 7. Active Visual Auto-Pilot HUD
   function injectHUD(btn, mode = 'countdown_5s', isAIRepaired = false) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -404,13 +407,20 @@
         timerBadge.style.color = '#059669'
         btn.click()
 
-        setTimeout(() => {
+        // Reactive modal polling (up to 3.5s)
+        let modalPollCount = 0
+        const modalPoll = setInterval(() => {
+          modalPollCount++
           const modalBtn = findModalConfirmBtn()
           if (modalBtn && modalBtn !== btn) {
+            clearInterval(modalPoll)
             modalBtn.click()
+            descEl.textContent = '✓ Action confirmed successfully!'
+          } else if (modalPollCount >= 7) {
+            clearInterval(modalPoll)
+            descEl.textContent = '✓ Action executed successfully!'
           }
-          descEl.textContent = '✓ Action executed successfully!'
-        }, 1500)
+        }, 500)
       }
 
       if (mode === 'manual_highlight') {
@@ -452,9 +462,8 @@
     })
   }
 
-  // 8. Reactive Scan with MutationObserver & AI DOM Fallback
   async function performScan() {
-    if (hudInjected) return
+    if (hudInjected || !isDedicatedBillingPath()) return false
 
     const btn = findCancelButton()
     if (btn) {
@@ -473,40 +482,72 @@
     return false
   }
 
-  let scanAttempts = 0
-  const maxAttempts = 10
+  function startScanningEngine() {
+    if (!isDedicatedBillingPath()) return
 
-  const observer = new MutationObserver(async () => {
-    if (!hudInjected) {
+    if (activeObserver) activeObserver.disconnect()
+    if (activeScanInterval) clearInterval(activeScanInterval)
+
+    let scanAttempts = 0
+    const maxAttempts = 10
+
+    activeObserver = new MutationObserver(async () => {
+      if (!hudInjected) {
+        const found = await performScan()
+        if (found && activeObserver) activeObserver.disconnect()
+      }
+    })
+
+    activeObserver.observe(document.body, { childList: true, subtree: true })
+
+    activeScanInterval = setInterval(async () => {
+      scanAttempts++
       const found = await performScan()
-      if (found) observer.disconnect()
-    }
-  })
 
-  observer.observe(document.body, { childList: true, subtree: true })
+      if (found || scanAttempts >= maxAttempts) {
+        clearInterval(activeScanInterval)
+        if (activeObserver) activeObserver.disconnect()
 
-  const scanInterval = setInterval(async () => {
-    scanAttempts++
-    const found = await performScan()
-
-    if (found || scanAttempts >= maxAttempts) {
-      clearInterval(scanInterval)
-      observer.disconnect()
-
-      if (!found && !hudInjected) {
-        const aiBtn = await requestAIDOMScout()
-        if (aiBtn) {
-          chrome.storage.local.get(['autopilot_mode'], (res) => {
-            const mode = res.autopilot_mode || 'countdown_5s'
-            injectHUD(aiBtn, mode, true)
-          })
-        } else {
-          injectGuidanceHUD(
-            'SubSnap Cancellation Assistant',
-            'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'
-          )
+        if (!found && !hudInjected && isDedicatedBillingPath()) {
+          const aiBtn = await requestAIDOMScout()
+          if (aiBtn) {
+            chrome.storage.local.get(['autopilot_mode'], (res) => {
+              const mode = res.autopilot_mode || 'countdown_5s'
+              injectHUD(aiBtn, mode, true)
+            })
+          } else {
+            injectGuidanceHUD(
+              'SubSnap Cancellation Assistant',
+              'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'
+            )
+          }
         }
       }
-    }
-  }, 500)
+    }, 500)
+  }
+
+  // Initial Scan
+  startScanningEngine()
+
+  // SPA Navigation Hooks (React/Next.js/Vue Client-Side Routing Listener)
+  window.addEventListener('popstate', () => {
+    setTimeout(startScanningEngine, 300)
+  })
+
+  window.addEventListener('hashchange', () => {
+    setTimeout(startScanningEngine, 300)
+  })
+
+  // Hook into pushState/replaceState
+  const originalPushState = history.pushState
+  history.pushState = function () {
+    originalPushState.apply(this, arguments)
+    setTimeout(startScanningEngine, 300)
+  }
+
+  const originalReplaceState = history.replaceState
+  history.replaceState = function () {
+    originalReplaceState.apply(this, arguments)
+    setTimeout(startScanningEngine, 300)
+  }
 })()

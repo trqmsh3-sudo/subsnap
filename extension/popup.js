@@ -121,7 +121,6 @@ const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
 
-// Strict Prefix & Keyword Matching (Min 2 chars, No single-letter false matches)
 function matchLocalService(query) {
   if (!query || query.trim().length < 2) return null
   const q = query.toLowerCase().trim()
@@ -146,7 +145,6 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
   resultCard.style.display = 'block'
 }
 
-// Query AI Scout
 async function queryAIScout(query) {
   try {
     const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
@@ -184,16 +182,21 @@ function executeCancel(service) {
   })
 }
 
-// Unified Dispatcher: Handles both Enter Key and Click Button identically
 async function handleActionDispatch() {
   const val = searchInput.value.trim()
-  if (!val || val.length < 2) return
+  if (!val || val.length < 2) {
+    searchInput.focus()
+    searchInput.style.borderColor = '#ef4444'
+    setTimeout(() => {
+      searchInput.style.borderColor = '#cbd5e1'
+    }, 800)
+    return
+  }
 
   const localMatch = matchLocalService(val)
   if (localMatch) {
     executeCancel(localMatch)
   } else {
-    // Show AI lookup state and fetch verified route
     resultCard.style.display = 'none'
     loadingState.style.display = 'block'
     document.getElementById('loadingText').textContent = `AI Scout Analyzing "${val}"...`
@@ -206,7 +209,6 @@ async function handleActionDispatch() {
   }
 }
 
-// Search input handling
 searchInput.addEventListener('input', (e) => {
   const val = e.target.value
   clearBtn.style.display = val ? 'block' : 'none'
@@ -228,7 +230,6 @@ searchInput.addEventListener('input', (e) => {
   }
 })
 
-// Enter key trigger
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault()
@@ -243,13 +244,11 @@ clearBtn.addEventListener('click', () => {
   searchInput.focus()
 })
 
-// Button click trigger
 btnCancel.addEventListener('click', (e) => {
   e.preventDefault()
   handleActionDispatch()
 })
 
-// Load saved mode or default to countdown_5s
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get(['autopilot_mode'], (res) => {
     if (res.autopilot_mode && res.autopilot_mode !== 'instant') {

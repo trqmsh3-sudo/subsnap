@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { serviceName, hostname, elements } = body
 
     if (!Array.isArray(elements) || elements.length === 0) {
-      return NextResponse.json({ targetSelector: null, reason: 'no_elements' })
+      return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, reason: 'no_elements' })
     }
 
     // 1. Check if we have an AI-healed selector in Redis
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       try {
         const cachedSelector = await redis.get<string>(`selector:${hostname.toLowerCase()}`)
         if (cachedSelector) {
-          return NextResponse.json({ targetSelector: cachedSelector, source: 'cached_playbook' })
+          return NextResponse.json({ targetSelector: cachedSelector, bestMatchIndex: -1, source: 'cached_playbook' })
         }
       } catch {}
     }
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     // 2. Run Gemini 2.5 Flash on the DOM snapshot
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ targetSelector: null, reason: 'no_api_key' })
+      return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, reason: 'no_api_key' })
     }
 
     const genai = new GoogleGenerativeAI(apiKey)
@@ -52,7 +52,7 @@ SAFETY RULE:
 Return ONLY a JSON object:
 {
   "bestMatchIndex": number (0-based index in the elements array, or -1 if none found),
-  "targetSelector": "CSS selector or unique identifier if applicable",
+  "targetSelector": "CSS selector if uniquely identifiable, or null",
   "confidence": number (0.0 to 1.0),
   "explanation": "Short reason"
 }
@@ -68,7 +68,8 @@ Return ONLY a JSON object:
       const derivedSelector = matched.testid ? `[data-testid="${matched.testid}"]` :
                               matched.uia ? `[data-uia="${matched.uia}"]` :
                               matched.id ? `#${matched.id}` :
-                              matched.selector || null
+                              matched.aria ? `${matched.tag}[aria-label="${matched.aria}"]` :
+                              parsed.targetSelector || null
 
       if (derivedSelector && redis && hostname) {
         try {
@@ -84,9 +85,9 @@ Return ONLY a JSON object:
       })
     }
 
-    return NextResponse.json({ targetSelector: null, source: 'no_confident_match' })
+    return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, source: 'no_confident_match' })
   } catch (err) {
     console.warn('[DOM Scout Error]:', err)
-    return NextResponse.json({ targetSelector: null, error: String(err) })
+    return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, error: String(err) })
   }
 }
