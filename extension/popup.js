@@ -1,6 +1,6 @@
 /**
  * SubSnap Popup Controller (v1.0.0)
- * 100% Local-First Privacy · Strict Prefix Matching · Unified AI Scout Dispatcher
+ * 100% Local-First Privacy · Active Intent Tracking · Unified AI Scout Dispatcher
  */
 
 const TOP_SERVICES = [
@@ -31,7 +31,7 @@ const TOP_SERVICES = [
   {
     name: 'Grok / X Premium (Twitter)',
     keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'x'],
-    cancelUrl: 'https://x.com/settings/manage_subscriptions',
+    cancelUrl: 'https://x.com/settings/premium',
     notes: 'Direct X/Grok subscription management'
   },
   {
@@ -175,11 +175,29 @@ function executeCancel(service) {
   document.getElementById('loadingText').textContent = `Opening ${service.name}...`
   document.getElementById('loadingSub').textContent = 'Launching direct cancellation pathway'
 
-  chrome.tabs.create({ url: service.cancelUrl, active: true }, () => {
-    setTimeout(() => {
-      window.close()
-    }, 300)
-  })
+  let targetHost = ''
+  try {
+    targetHost = new URL(service.cancelUrl).hostname.replace(/^www\./, '')
+  } catch (e) {}
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set({
+      subsnap_active_intent: {
+        name: service.name,
+        targetHost: targetHost,
+        cancelUrl: service.cancelUrl,
+        timestamp: Date.now()
+      }
+    }, () => {
+      chrome.tabs.create({ url: service.cancelUrl, active: true }, () => {
+        setTimeout(() => {
+          window.close()
+        }, 300)
+      })
+    })
+  } else {
+    chrome.tabs.create({ url: service.cancelUrl, active: true })
+  }
 }
 
 async function handleActionDispatch() {

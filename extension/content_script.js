@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Precision Confirmation Clicker · Linguistic Tense Distinction · Multi-Step Modal Engine.
+ * In-Page Rescue Detective · Precision Confirmation Clicker · Linguistic Tense Distinction.
  */
 
 (function () {
@@ -17,6 +17,7 @@
     const href = window.location.href.toLowerCase()
     const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
+    // Guard Search Engines
     const isSearchEngine = (
       ((hostname === 'google.com' || hostname.startsWith('google.') || hostname.endsWith('.google.com')) &&
         (pathname === '/' || pathname.startsWith('/search') || pathname.startsWith('/webhp') || pathname.startsWith('/imghp'))) ||
@@ -195,9 +196,7 @@
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
-  // Precise cancellation state: Must NOT match "יבוטל" (future tense in confirmation modal)
   function isAlreadyCancelled() {
-    // If confirmation modal is open, we are NOT yet cancelled!
     if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"]')) {
       return false
     }
@@ -254,7 +253,6 @@
       }
     }
 
-    // Google Play active subscription "ניהול" / "Manage" button
     const pathname = window.location.pathname.toLowerCase()
     if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
       for (const el of candidates) {
@@ -269,13 +267,11 @@
     return null
   }
 
-  // Find confirmation button inside modal (Highest priority to "ביטול המינוי" / "Cancel subscription")
   function findModalConfirmBtn() {
     const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup, [role="region"], div[aria-modal="true"]'))
     for (const m of modals) {
       const btns = Array.from(m.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
 
-      // Step A: Look for explicit cancellation button ("ביטול המינוי")
       for (const b of btns) {
         if (!isVisible(b) || isDisallowedElement(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
@@ -284,7 +280,6 @@
         }
       }
 
-      // Step B: Look for general continue keywords ("המשך")
       for (const b of btns) {
         if (!isVisible(b) || isDisallowedElement(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
@@ -297,6 +292,135 @@
       }
     }
     return null
+  }
+
+  // 1. Rescue Detective: Handles Intermediate / Redirected Pages (URL Drift Solution)
+  function runRescueDetective(intent) {
+    if (hudInjected || document.getElementById('subsnap-rescue-hud')) return
+
+    // Search for navigation items leading to Settings, Premium, Billing, Subscriptions
+    const navCandidates = Array.from(document.querySelectorAll('a, button, div[role="button"]'))
+    let targetLink = null
+    let targetText = ''
+
+    for (const el of navCandidates) {
+      if (!isVisible(el)) continue
+      const href = (el.getAttribute('href') || '').toLowerCase()
+      const text = (el.innerText || el.textContent || el.getAttribute('aria-label') || '').toLowerCase().trim()
+
+      if (
+        href.includes('/settings') ||
+        href.includes('/premium') ||
+        href.includes('/billing') ||
+        text === 'premium' ||
+        text === 'settings' ||
+        text === 'grok' ||
+        text === 'הגדרות' ||
+        text === 'מנויים' ||
+        text.includes('settings and privacy') ||
+        text.includes('manage subscription')
+      ) {
+        targetLink = el
+        targetText = text || 'Settings / Premium'
+        break
+      }
+    }
+
+    // Determine resolved destination URL
+    let resolvedUrl = ''
+    if (targetLink && targetLink.getAttribute('href')) {
+      const h = targetLink.getAttribute('href')
+      resolvedUrl = h.startsWith('http') ? h : `${window.location.origin}${h.startsWith('/') ? '' : '/'}${h}`
+    } else if (hostname.includes('x.com') || hostname.includes('twitter.com')) {
+      resolvedUrl = 'https://x.com/settings/premium'
+    } else {
+      resolvedUrl = `${window.location.origin}/settings`
+    }
+
+    hudInjected = true
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-rescue-hud'
+    hud.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 2147483647;
+      background: #ffffff;
+      border: 2px solid #0284c7;
+      box-shadow: 0 16px 40px rgba(2, 132, 199, 0.25);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      direction: rtl;
+      min-width: 340px;
+      max-width: 440px;
+      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop {
+          from { opacity: 0; transform: translateY(12px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      </style>
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #e0f2fe; border: 1.5px solid #bae6fd; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        🧭
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #0369a1; display: flex; align-items: center; gap: 6px;">
+          <span>סייר הניווט של SubSnap</span>
+          <span id="subsnap-rescue-timer" style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 4px; font-weight: 800;">4s</span>
+        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
+          נחתת בעמוד ביניים. מנווט ישירות להגדרות המנוי של <strong>${intent.name}</strong>...
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button id="subsnap-nav-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          נווט עכשיו ➔
+        </button>
+        <button id="subsnap-rescue-close" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 4px;">
+          ✕
+        </button>
+      </div>
+    `
+
+    document.body.appendChild(hud)
+
+    function doNavigate() {
+      if (targetLink) {
+        forceClick(targetLink)
+      } else if (resolvedUrl) {
+        window.location.href = resolvedUrl
+      }
+    }
+
+    let timerSec = 4
+    const timerBadge = hud.querySelector('#subsnap-rescue-timer')
+    const navInterval = setInterval(() => {
+      timerSec--
+      if (timerSec > 0) {
+        if (timerBadge) timerBadge.textContent = `${timerSec}s`
+      } else {
+        clearInterval(navInterval)
+        doNavigate()
+      }
+    }, 1000)
+
+    hud.querySelector('#subsnap-nav-btn').addEventListener('click', () => {
+      clearInterval(navInterval)
+      doNavigate()
+    })
+
+    hud.querySelector('#subsnap-rescue-close').addEventListener('click', () => {
+      clearInterval(navInterval)
+      hud.remove()
+      hudInjected = false
+    })
   }
 
   function injectSuccessHUD(title, desc) {
@@ -440,12 +564,19 @@
 
         forceClick(btn)
 
-        // Reactive Multi-Step Survey & Confirmation Poller
         let modalPollCount = 0
         const modalPoll = setInterval(() => {
           modalPollCount++
 
-          // 1. Solve survey if a survey modal is open
+          // If cancellation succeeded, show celebration and stop
+          if (isAlreadyCancelled()) {
+            clearInterval(modalPoll)
+            if (activeObserver) activeObserver.disconnect()
+            injectSuccessHUD('המנוי בוטל בהצלחה! 🎉', 'המערכת זיהתה את הביטול. החיוב החודשי הופסק.')
+            return
+          }
+
+          // 1. Solve survey if present
           const surveyOptions = Array.from(document.querySelectorAll('[role="radio"], input[type="radio"], label, div[data-value], li[role="radio"], span'))
           for (const opt of surveyOptions) {
             if (!isVisible(opt)) continue
@@ -476,7 +607,6 @@
             }
           }, 300)
 
-          // 3. Stop and check if cancelled
           if (isAlreadyCancelled()) {
             clearInterval(modalPoll)
             if (activeObserver) activeObserver.disconnect()
@@ -563,6 +693,22 @@
   }
 
   function startScanningEngine() {
+    // 1. Check if we arrived with an active cancellation intent on an intermediate page
+    if (chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['subsnap_active_intent'], (res) => {
+        const intent = res.subsnap_active_intent
+        if (intent && (Date.now() - intent.timestamp < 180000)) {
+          const currentHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+          if (currentHost.includes(intent.targetHost) || intent.targetHost.includes(currentHost)) {
+            if (!isDedicatedBillingPath()) {
+              runRescueDetective(intent)
+              return
+            }
+          }
+        }
+      })
+    }
+
     if (!isDedicatedBillingPath()) return
 
     if (activeObserver) activeObserver.disconnect()
