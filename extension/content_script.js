@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * In-Page Rescue Detective · Precision Confirmation Clicker · Linguistic Tense Distinction.
+ * Dead Link / 404 Auto-Recovery · In-Page Rescue Detective · Multi-Step Auto-Pilot.
  */
 
 (function () {
@@ -12,12 +12,31 @@
   let activeObserver = null
   let activeScanInterval = null
 
+  function isDeadOr404Page() {
+    const pageTitle = (document.title || '').toLowerCase()
+    const bodyText = (document.body.innerText || '').toLowerCase()
+
+    return (
+      pageTitle.includes('page not found') ||
+      pageTitle.includes('404') ||
+      pageTitle.includes('לא נמצא') ||
+      bodyText.includes("this page doesn’t exist") ||
+      bodyText.includes("this page does not exist") ||
+      bodyText.includes("page not found") ||
+      bodyText.includes("404 not found") ||
+      bodyText.includes("העמוד אינו קיים") ||
+      bodyText.includes("דף זה אינו קיים")
+    )
+  }
+
   function isDedicatedBillingPath() {
+    // If it's a 404 or dead link, it is NOT a valid billing path!
+    if (isDeadOr404Page()) return false
+
     const pathname = window.location.pathname.toLowerCase()
     const href = window.location.href.toLowerCase()
     const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
-    // Guard Search Engines
     const isSearchEngine = (
       ((hostname === 'google.com' || hostname.startsWith('google.') || hostname.endsWith('.google.com')) &&
         (pathname === '/' || pathname.startsWith('/search') || pathname.startsWith('/webhp') || pathname.startsWith('/imghp'))) ||
@@ -231,7 +250,7 @@
   }
 
   function findCancelButton() {
-    if (isAlreadyCancelled()) return null
+    if (isAlreadyCancelled() || isDeadOr404Page()) return null
 
     const darkPatternBtn = findDarkPatternContinueBtn()
     if (darkPatternBtn) return darkPatternBtn
@@ -294,14 +313,13 @@
     return null
   }
 
-  // 1. Rescue Detective: Handles Intermediate / Redirected Pages (URL Drift Solution)
-  function runRescueDetective(intent) {
+  // 1. Rescue Detective: Handles Dead Links, 404s, or Intermediate Pages
+  function runRescueDetective(intent, isDeadLink = false) {
     if (hudInjected || document.getElementById('subsnap-rescue-hud')) return
 
-    // Search for navigation items leading to Settings, Premium, Billing, Subscriptions
+    // Search navigation elements
     const navCandidates = Array.from(document.querySelectorAll('a, button, div[role="button"]'))
     let targetLink = null
-    let targetText = ''
 
     for (const el of navCandidates) {
       if (!isVisible(el)) continue
@@ -310,29 +328,29 @@
 
       if (
         href.includes('/settings') ||
+        href.includes('/monetization') ||
         href.includes('/premium') ||
         href.includes('/billing') ||
-        text === 'premium' ||
         text === 'settings' ||
+        text === 'premium' ||
+        text === 'monetization' ||
         text === 'grok' ||
         text === 'הגדרות' ||
         text === 'מנויים' ||
-        text.includes('settings and privacy') ||
-        text.includes('manage subscription')
+        text.includes('settings and privacy')
       ) {
         targetLink = el
-        targetText = text || 'Settings / Premium'
         break
       }
     }
 
-    // Determine resolved destination URL
+    // Resolved target URL
     let resolvedUrl = ''
     if (targetLink && targetLink.getAttribute('href')) {
       const h = targetLink.getAttribute('href')
       resolvedUrl = h.startsWith('http') ? h : `${window.location.origin}${h.startsWith('/') ? '' : '/'}${h}`
     } else if (hostname.includes('x.com') || hostname.includes('twitter.com')) {
-      resolvedUrl = 'https://x.com/settings/premium'
+      resolvedUrl = 'https://x.com/settings'
     } else {
       resolvedUrl = `${window.location.origin}/settings`
     }
@@ -373,10 +391,10 @@
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #0369a1; display: flex; align-items: center; gap: 6px;">
           <span>סייר הניווט של SubSnap</span>
-          <span id="subsnap-rescue-timer" style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 4px; font-weight: 800;">4s</span>
+          <span id="subsnap-rescue-timer" style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 4px; font-weight: 800;">3s</span>
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
-          נחתת בעמוד ביניים. מנווט ישירות להגדרות המנוי של <strong>${intent.name}</strong>...
+          ${isDeadLink ? 'הקישור הישן השתנה ע&quot;י השירות. מנווט להגדרות הראשיות...' : `נחתת בעמוד ביניים. מנווט להגדרות ${intent ? intent.name : ''}...`}
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
@@ -399,7 +417,7 @@
       }
     }
 
-    let timerSec = 4
+    let timerSec = 3
     const timerBadge = hud.querySelector('#subsnap-rescue-timer')
     const navInterval = setInterval(() => {
       timerSec--
@@ -568,7 +586,6 @@
         const modalPoll = setInterval(() => {
           modalPollCount++
 
-          // If cancellation succeeded, show celebration and stop
           if (isAlreadyCancelled()) {
             clearInterval(modalPoll)
             if (activeObserver) activeObserver.disconnect()
@@ -576,7 +593,6 @@
             return
           }
 
-          // 1. Solve survey if present
           const surveyOptions = Array.from(document.querySelectorAll('[role="radio"], input[type="radio"], label, div[data-value], li[role="radio"], span'))
           for (const opt of surveyOptions) {
             if (!isVisible(opt)) continue
@@ -595,7 +611,6 @@
             }
           }
 
-          // 2. Click modal confirmation / continue button (Prioritizes "ביטול המינוי")
           setTimeout(() => {
             const modalBtn = findModalConfirmBtn()
             if (modalBtn && modalBtn !== btn) {
@@ -693,7 +708,15 @@
   }
 
   function startScanningEngine() {
-    // 1. Check if we arrived with an active cancellation intent on an intermediate page
+    // 1. Check if the page is a 404 / dead link!
+    if (isDeadOr404Page()) {
+      chrome.storage.local.get(['subsnap_active_intent'], (res) => {
+        runRescueDetective(res ? res.subsnap_active_intent : null, true)
+      })
+      return
+    }
+
+    // 2. Check if we arrived with active intent on an intermediate page
     if (chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(['subsnap_active_intent'], (res) => {
         const intent = res.subsnap_active_intent
@@ -701,7 +724,7 @@
           const currentHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
           if (currentHost.includes(intent.targetHost) || intent.targetHost.includes(currentHost)) {
             if (!isDedicatedBillingPath()) {
-              runRescueDetective(intent)
+              runRescueDetective(intent, false)
               return
             }
           }
@@ -733,13 +756,6 @@
       if (found || scanAttempts >= maxAttempts) {
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
-
-        if (!found && !hudInjected && isDedicatedBillingPath() && !isAlreadyCancelled()) {
-          injectGuidanceHUD(
-            'SubSnap Cancellation Assistant',
-            'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'
-          )
-        }
       }
     }, 500)
   }
