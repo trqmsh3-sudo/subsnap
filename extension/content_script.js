@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Dead Link / 404 Auto-Recovery · In-Page Rescue Detective · Multi-Step Auto-Pilot.
+ * Reactive SPA Recovery · 404 In-Page Resolver · Multi-Column Navigation Engine.
  */
 
 (function () {
@@ -30,9 +30,6 @@
   }
 
   function isDedicatedBillingPath() {
-    // If it's a 404 or dead link, it is NOT a valid billing path!
-    if (isDeadOr404Page()) return false
-
     const pathname = window.location.pathname.toLowerCase()
     const href = window.location.href.toLowerCase()
     const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
@@ -64,8 +61,7 @@
       pathname.includes('/cancel_subscription') ||
       pathname.includes('/manage_subscriptions') ||
       pathname.includes('/preferences/account') ||
-      pathname.includes('/settings/premium') ||
-      pathname.includes('/settings/subscription') ||
+      pathname.includes('/settings') ||
       pathname.includes('/account/subscription') ||
       pathname.includes('/store/account/subscriptions') ||
       pathname.includes('/account') ||
@@ -250,7 +246,7 @@
   }
 
   function findCancelButton() {
-    if (isAlreadyCancelled() || isDeadOr404Page()) return null
+    if (isAlreadyCancelled()) return null
 
     const darkPatternBtn = findDarkPatternContinueBtn()
     if (darkPatternBtn) return darkPatternBtn
@@ -313,51 +309,41 @@
     return null
   }
 
-  // 1. Rescue Detective: Handles Dead Links, 404s, or Intermediate Pages
-  function runRescueDetective(intent, isDeadLink = false) {
-    if (hudInjected || document.getElementById('subsnap-rescue-hud')) return
-
-    // Search navigation elements
-    const navCandidates = Array.from(document.querySelectorAll('a, button, div[role="button"]'))
-    let targetLink = null
-
-    for (const el of navCandidates) {
+  // Find In-Page Navigation Recovery item (e.g. "Premium", "Monetization", "Subscriptions")
+  function findNavigationRecoveryElement() {
+    const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], [tabindex="0"], span'))
+    for (const el of elements) {
       if (!isVisible(el)) continue
-      const href = (el.getAttribute('href') || '').toLowerCase()
-      const text = (el.innerText || el.textContent || el.getAttribute('aria-label') || '').toLowerCase().trim()
+      const text = (el.innerText || el.textContent || '').trim()
 
       if (
-        href.includes('/settings') ||
-        href.includes('/monetization') ||
-        href.includes('/premium') ||
-        href.includes('/billing') ||
-        text === 'settings' ||
-        text === 'premium' ||
-        text === 'monetization' ||
-        text === 'grok' ||
-        text === 'הגדרות' ||
-        text === 'מנויים' ||
-        text.includes('settings and privacy')
+        text === 'Premium' ||
+        text === 'פרימיום' ||
+        text === 'Monetization' ||
+        text === 'מונטיזציה' ||
+        text === 'Creator Subscriptions' ||
+        text === 'Manage Subscriptions' ||
+        text === 'מינויים' ||
+        text === 'Manage subscription'
       ) {
-        targetLink = el
-        break
+        const clickable = el.closest('a, div[role="link"], div[role="button"], [tabindex="0"]') || el
+        return clickable
       }
     }
+    return null
+  }
 
-    // Resolved target URL
-    let resolvedUrl = ''
-    if (targetLink && targetLink.getAttribute('href')) {
-      const h = targetLink.getAttribute('href')
-      resolvedUrl = h.startsWith('http') ? h : `${window.location.origin}${h.startsWith('/') ? '' : '/'}${h}`
-    } else if (hostname.includes('x.com') || hostname.includes('twitter.com')) {
-      resolvedUrl = 'https://x.com/settings'
-    } else {
-      resolvedUrl = `${window.location.origin}/settings`
-    }
-
+  // 1. Reactive Recovery HUD: Highlights & clicks in-page recovery navigation item
+  function injectNavigationRecoveryHUD(el, title, desc) {
+    if (hudInjected || document.getElementById('subsnap-nav-hud')) return
     hudInjected = true
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.style.outline = '3px solid #0284c7'
+    el.style.outlineOffset = '3px'
+
     const hud = document.createElement('div')
-    hud.id = 'subsnap-rescue-hud'
+    hud.id = 'subsnap-nav-hud'
     hud.style.cssText = `
       position: fixed;
       bottom: 24px;
@@ -390,18 +376,16 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #0369a1; display: flex; align-items: center; gap: 6px;">
-          <span>סייר הניווט של SubSnap</span>
-          <span id="subsnap-rescue-timer" style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 4px; font-weight: 800;">3s</span>
+          <span>${title}</span>
+          <span id="subsnap-nav-timer" style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 4px; font-weight: 800;">3s</span>
         </div>
-        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
-          ${isDeadLink ? 'הקישור הישן השתנה ע&quot;י השירות. מנווט להגדרות הראשיות...' : `נחתת בעמוד ביניים. מנווט להגדרות ${intent ? intent.name : ''}...`}
-        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
-        <button id="subsnap-nav-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
-          נווט עכשיו ➔
+        <button id="subsnap-do-nav-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          פתח עכשיו ➔
         </button>
-        <button id="subsnap-rescue-close" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 4px;">
+        <button id="subsnap-nav-close" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 4px;">
           ✕
         </button>
       </div>
@@ -409,33 +393,32 @@
 
     document.body.appendChild(hud)
 
-    function doNavigate() {
-      if (targetLink) {
-        forceClick(targetLink)
-      } else if (resolvedUrl) {
-        window.location.href = resolvedUrl
-      }
+    function doClick() {
+      if (countdownTimer) clearInterval(countdownTimer)
+      forceClick(el)
+      hud.remove()
+      hudInjected = false
+      setTimeout(startScanningEngine, 800)
     }
 
     let timerSec = 3
-    const timerBadge = hud.querySelector('#subsnap-rescue-timer')
-    const navInterval = setInterval(() => {
+    const timerBadge = hud.querySelector('#subsnap-nav-timer')
+    countdownTimer = setInterval(() => {
       timerSec--
       if (timerSec > 0) {
         if (timerBadge) timerBadge.textContent = `${timerSec}s`
       } else {
-        clearInterval(navInterval)
-        doNavigate()
+        clearInterval(countdownTimer)
+        doClick()
       }
     }, 1000)
 
-    hud.querySelector('#subsnap-nav-btn').addEventListener('click', () => {
-      clearInterval(navInterval)
-      doNavigate()
+    hud.querySelector('#subsnap-do-nav-btn').addEventListener('click', () => {
+      doClick()
     })
 
-    hud.querySelector('#subsnap-rescue-close').addEventListener('click', () => {
-      clearInterval(navInterval)
+    hud.querySelector('#subsnap-nav-close').addEventListener('click', () => {
+      if (countdownTimer) clearInterval(countdownTimer)
       hud.remove()
       hudInjected = false
     })
@@ -681,7 +664,22 @@
   }
 
   async function performScan() {
-    if (hudInjected || !isDedicatedBillingPath()) return false
+    if (hudInjected) return false
+
+    // 1. Check if page is currently showing a 404 / Dead Pane in this SPA
+    if (isDeadOr404Page()) {
+      const recoveryNav = findNavigationRecoveryElement()
+      if (recoveryNav) {
+        injectNavigationRecoveryHUD(
+          recoveryNav,
+          'הגדרות פרימיום זוהו בעמוד 🧭',
+          'החלונית מימין אינה קיימת. מנווט ישירות לטאב הפרימיום שנמצא בעמוד...'
+        )
+        return true
+      }
+    }
+
+    if (!isDedicatedBillingPath()) return false
 
     if (isAlreadyCancelled()) {
       injectSuccessHUD('המנוי כבר בוטל בהצלחה! 🎉', 'המינוי סומן כמבוטל ולא תחויב שוב.')
@@ -698,47 +696,17 @@
       })
       return true
     } else if (isFreePlanAccount()) {
-      injectGuidanceHUD(
-        'Good News: No Active Paid Subscription',
-        'Your account on this service is currently on the Free tier. You are not being charged any recurring fees.'
-      )
       return true
     }
     return false
   }
 
   function startScanningEngine() {
-    // 1. Check if the page is a 404 / dead link!
-    if (isDeadOr404Page()) {
-      chrome.storage.local.get(['subsnap_active_intent'], (res) => {
-        runRescueDetective(res ? res.subsnap_active_intent : null, true)
-      })
-      return
-    }
-
-    // 2. Check if we arrived with active intent on an intermediate page
-    if (chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(['subsnap_active_intent'], (res) => {
-        const intent = res.subsnap_active_intent
-        if (intent && (Date.now() - intent.timestamp < 180000)) {
-          const currentHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-          if (currentHost.includes(intent.targetHost) || intent.targetHost.includes(currentHost)) {
-            if (!isDedicatedBillingPath()) {
-              runRescueDetective(intent, false)
-              return
-            }
-          }
-        }
-      })
-    }
-
-    if (!isDedicatedBillingPath()) return
-
     if (activeObserver) activeObserver.disconnect()
     if (activeScanInterval) clearInterval(activeScanInterval)
 
     let scanAttempts = 0
-    const maxAttempts = 10
+    const maxAttempts = 12
 
     activeObserver = new MutationObserver(async () => {
       if (!hudInjected) {
