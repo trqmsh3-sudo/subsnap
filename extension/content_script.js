@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Post-Cancellation Celebration · Deep Survey Solver · Google Play & Multi-Step Auto-Pilot.
+ * Precision Confirmation Clicker · Linguistic Tense Distinction · Multi-Step Modal Engine.
  */
 
 (function () {
@@ -106,11 +106,16 @@
     'ביטול הזמנה',
     'הקודם',
     'back',
+    'שמירה על המינוי',
+    'keep subscription',
     'להרשמה מחדש',
     'resubscribe'
   ]
 
   const STRICT_CANCEL_KEYWORDS = [
+    'ביטול המינוי',
+    'בטל מינוי',
+    'ביטול מינוי',
     'cancel subscription',
     'cancel your plan',
     'cancel plan',
@@ -126,9 +131,6 @@
     'end plan',
     'stop subscription',
     'בטל מנוי',
-    'בטל מינוי',
-    'ביטול המינוי',
-    'ביטול מינוי',
     'בטל תוכנית',
     'סיום מנוי',
     'ביטול מנוי',
@@ -162,21 +164,6 @@
     'אין לך מינויים פעילים'
   ]
 
-  const ALREADY_CANCELLED_KEYWORDS = [
-    'בוטל',
-    'להרשמה מחדש',
-    'המנוי שלך יסתיים',
-    'המינוי שלך יסתיים',
-    'מנוי מבוטל',
-    'מינוי מבוטל',
-    'cancelled',
-    'canceled',
-    'subscription cancelled',
-    'subscription canceled',
-    'your subscription will end',
-    'resubscribe'
-  ]
-
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
     const style = window.getComputedStyle(el)
@@ -208,19 +195,27 @@
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
+  // Precise cancellation state: Must NOT match "יבוטל" (future tense in confirmation modal)
   function isAlreadyCancelled() {
-    const bodyText = (document.body.innerText || '').toLowerCase()
-    // Must contain exact cancellation marker
-    return ALREADY_CANCELLED_KEYWORDS.some(k => bodyText.includes(k))
+    // If confirmation modal is open, we are NOT yet cancelled!
+    if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"]')) {
+      return false
+    }
+
+    const bodyText = document.body.innerText || ''
+    const hasCancelledHeader = /\bבוטל\b|להרשמה מחדש|המינוי שלך יסתיים בתאריך|subscription cancelled|subscription canceled/i.test(bodyText)
+    const isAskingConfirmation = /האם לבטל|המינוי יבוטל בסיום|are you sure you want to cancel/i.test(bodyText)
+
+    return hasCancelledHeader && !isAskingConfirmation
   }
 
   function forceClick(el) {
     if (!el) return
     try {
-      el.click()
+      el.focus()
       el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
       el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
-      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+      el.click()
     } catch (e) {}
   }
 
@@ -237,7 +232,6 @@
   }
 
   function findCancelButton() {
-    // If already cancelled, NEVER target Manage or Resubscribe buttons!
     if (isAlreadyCancelled()) return null
 
     const darkPatternBtn = findDarkPatternContinueBtn()
@@ -260,7 +254,7 @@
       }
     }
 
-    // Google Play active subscription "ניהול" / "Manage" button (ONLY if not already cancelled!)
+    // Google Play active subscription "ניהול" / "Manage" button
     const pathname = window.location.pathname.toLowerCase()
     if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
       for (const el of candidates) {
@@ -275,10 +269,22 @@
     return null
   }
 
+  // Find confirmation button inside modal (Highest priority to "ביטול המינוי" / "Cancel subscription")
   function findModalConfirmBtn() {
     const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup, [role="region"], div[aria-modal="true"]'))
     for (const m of modals) {
       const btns = Array.from(m.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
+
+      // Step A: Look for explicit cancellation button ("ביטול המינוי")
+      for (const b of btns) {
+        if (!isVisible(b) || isDisallowedElement(b)) continue
+        const text = (b.innerText || b.textContent || '').toLowerCase().trim()
+        if (text === 'ביטול המינוי' || text === 'בטל מינוי' || text === 'cancel subscription' || text === 'confirm cancellation') {
+          return b
+        }
+      }
+
+      // Step B: Look for general continue keywords ("המשך")
       for (const b of btns) {
         if (!isVisible(b) || isDisallowedElement(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
@@ -293,7 +299,6 @@
     return null
   }
 
-  // 1. Success Celebration HUD
   function injectSuccessHUD(title, desc) {
     if (document.getElementById('subsnap-hud')) {
       document.getElementById('subsnap-hud').remove()
@@ -349,71 +354,7 @@
     }
 
     closeBtn.addEventListener('click', close)
-    setTimeout(close, 5000) // Auto-dismiss after 5s
-  }
-
-  function injectGuidanceHUD(title, desc) {
-    if (hudInjected || document.getElementById('subsnap-hud')) return
-    hudInjected = true
-
-    const hud = document.createElement('div')
-    hud.id = 'subsnap-hud'
-    hud.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      z-index: 2147483647;
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(16, 185, 129, 0.1);
-      border-radius: 16px;
-      padding: 14px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      direction: ltr;
-      min-width: 320px;
-      max-width: 400px;
-      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    `
-
-    hud.innerHTML = `
-      <style>
-        @keyframes subsnapPop {
-          from { opacity: 0; transform: translateY(12px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      </style>
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="width: 28px; height: 28px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
-            🛡️
-          </div>
-          <span style="font-size: 13px; font-weight: 800; color: #0f172a;">${title}</span>
-        </div>
-        <button id="subsnap-close-info" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px;">✕</button>
-      </div>
-
-      <div style="font-size: 11.5px; color: #64748b; line-height: 1.35;">${desc}</div>
-
-      <button id="subsnap-done-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-weight: 800; cursor: pointer;">
-        Got it ✕
-      </button>
-    `
-
-    document.body.appendChild(hud)
-
-    const closeBtn = hud.querySelector('#subsnap-close-info')
-    const doneBtn = hud.querySelector('#subsnap-done-btn')
-
-    function close() {
-      hud.remove()
-      hudInjected = false
-    }
-
-    closeBtn.addEventListener('click', close)
-    doneBtn.addEventListener('click', close)
+    setTimeout(close, 5000)
   }
 
   function injectHUD(btn, mode = 'countdown_5s', isAIRepaired = false) {
@@ -493,24 +434,16 @@
 
       function triggerCancel() {
         if (countdownTimer) clearInterval(countdownTimer)
-        descEl.textContent = 'Navigating subscription pathway...'
+        descEl.textContent = 'Executing cancellation pathway...'
         timerBadge.textContent = 'Active ⚡'
         timerBadge.style.color = '#059669'
 
         forceClick(btn)
 
-        // Reactive Multi-Step Survey & Modal Poller (watches up to 10s across dynamic dialogs)
+        // Reactive Multi-Step Survey & Confirmation Poller
         let modalPollCount = 0
         const modalPoll = setInterval(() => {
           modalPollCount++
-
-          // If cancellation succeeded, show celebration and stop
-          if (isAlreadyCancelled()) {
-            clearInterval(modalPoll)
-            if (activeObserver) activeObserver.disconnect()
-            injectSuccessHUD('המנוי בוטל בהצלחה! 🎉', 'המערכת זיהתה את הביטול. החיוב החודשי הופסק.')
-            return
-          }
 
           // 1. Solve survey if a survey modal is open
           const surveyOptions = Array.from(document.querySelectorAll('[role="radio"], input[type="radio"], label, div[data-value], li[role="radio"], span'))
@@ -525,26 +458,33 @@
               text === 'other'
             ) {
               forceClick(opt)
-              // Also click the input inside if present
               const innerInput = opt.querySelector('input[type="radio"]') || opt.parentElement?.querySelector('input[type="radio"]')
               if (innerInput) forceClick(innerInput)
               break
             }
           }
 
-          // 2. Click modal confirmation / continue button (after radio unlock)
+          // 2. Click modal confirmation / continue button (Prioritizes "ביטול המינוי")
           setTimeout(() => {
             const modalBtn = findModalConfirmBtn()
             if (modalBtn && modalBtn !== btn) {
               const isDisabled = modalBtn.disabled || modalBtn.getAttribute('aria-disabled') === 'true'
               if (!isDisabled) {
                 forceClick(modalBtn)
-                descEl.textContent = 'Advancing to cancellation...'
+                descEl.textContent = 'Confirming cancellation...'
               }
             }
           }, 300)
 
-          if (modalPollCount >= 20) {
+          // 3. Stop and check if cancelled
+          if (isAlreadyCancelled()) {
+            clearInterval(modalPoll)
+            if (activeObserver) activeObserver.disconnect()
+            injectSuccessHUD('המנוי בוטל בהצלחה! 🎉', 'המערכת זיהתה את הביטול. החיוב החודשי הופסק.')
+            return
+          }
+
+          if (modalPollCount >= 24) {
             clearInterval(modalPoll)
             if (isAlreadyCancelled()) {
               injectSuccessHUD('המנוי בוטל בהצלחה! 🎉', 'המערכת זיהתה את הביטול. החיוב החודשי הופסק.')
@@ -598,7 +538,6 @@
   async function performScan() {
     if (hudInjected || !isDedicatedBillingPath()) return false
 
-    // 1. Check if already cancelled! If so, celebrate and exit immediately
     if (isAlreadyCancelled()) {
       injectSuccessHUD('המנוי כבר בוטל בהצלחה! 🎉', 'המינוי סומן כמבוטל ולא תחויב שוב.')
       if (activeObserver) activeObserver.disconnect()
