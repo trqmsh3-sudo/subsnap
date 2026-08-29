@@ -1,6 +1,6 @@
 /**
  * SubSnap Popup Controller (v1.0.0)
- * 100% Local-First Privacy · Zero Keystroke Telemetry · Safe Auto-Pilot Launcher
+ * 100% Local-First Privacy · Strict Prefix Matching · Unified AI Scout Dispatcher
  */
 
 const TOP_SERVICES = [
@@ -121,14 +121,16 @@ const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
 
-// 100% Local In-Memory Matching (Zero Network Calls)
+// Strict Prefix & Keyword Matching (Min 2 chars, No single-letter false matches)
 function matchLocalService(query) {
-  if (!query) return null
+  if (!query || query.trim().length < 2) return null
   const q = query.toLowerCase().trim()
-  return TOP_SERVICES.find(s => 
-    s.name.toLowerCase().includes(q) || 
-    s.keywords.some(k => q.includes(k) || k.includes(q))
-  )
+  
+  return TOP_SERVICES.find(s => {
+    const sName = s.name.toLowerCase()
+    if (sName === q || sName.startsWith(q)) return true
+    return s.keywords.some(k => k === q || k.startsWith(q) || (q.length >= 4 && k.includes(q)))
+  })
 }
 
 function showResult(service, sourceTag = '⚡ Verified Pathway') {
@@ -144,29 +146,27 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
   resultCard.style.display = 'block'
 }
 
-// Query AI Scout ONLY on explicit user intention (e.g. Enter pressed on unknown service)
+// Query AI Scout
 async function queryAIScout(query) {
   try {
     const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
     const data = await res.json()
     if (data && data.entry && data.entry.cancelUrl) {
-      showResult({
+      return {
         name: data.entry.name || query,
         cancelUrl: data.entry.cancelUrl,
-        notes: data.entry.notes || 'AI Scout identified direct billing pathway'
-      }, '🤖 AI Scout Located')
-      return data.entry
+        notes: data.entry.notes || 'AI Scout identified direct billing pathway',
+        isLocal: false
+      }
     }
   } catch (err) {}
   
-  // Safe Fallback
-  const fallback = {
+  return {
     name: query,
     cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + query + ' subscription')}`,
-    notes: 'Direct official billing & cancellation pathway locator'
+    notes: 'Direct official billing & cancellation pathway locator',
+    isLocal: false
   }
-  showResult(fallback, '🔍 Search')
-  return fallback
 }
 
 function executeCancel(service) {
@@ -184,44 +184,55 @@ function executeCancel(service) {
   })
 }
 
-// Search input handling (Local-First: ZERO network requests while typing)
+// Unified Dispatcher: Handles both Enter Key and Click Button identically
+async function handleActionDispatch() {
+  const val = searchInput.value.trim()
+  if (!val || val.length < 2) return
+
+  const localMatch = matchLocalService(val)
+  if (localMatch) {
+    executeCancel(localMatch)
+  } else {
+    // Show AI lookup state and fetch verified route
+    resultCard.style.display = 'none'
+    loadingState.style.display = 'block'
+    document.getElementById('loadingText').textContent = `AI Scout Analyzing "${val}"...`
+    document.getElementById('loadingSub').textContent = 'Extracting official billing & cancellation route'
+
+    const lookedUp = await queryAIScout(val)
+    if (lookedUp) {
+      executeCancel(lookedUp)
+    }
+  }
+}
+
+// Search input handling
 searchInput.addEventListener('input', (e) => {
   const val = e.target.value
   clearBtn.style.display = val ? 'block' : 'none'
   
+  if (val.trim().length < 2) {
+    showResult(null)
+    return
+  }
+
   const localMatch = matchLocalService(val)
   if (localMatch) {
     showResult(localMatch, '⚡ Verified Pathway')
-  } else if (val.trim().length >= 2) {
+  } else {
     showResult({
       name: val.trim(),
-      cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + val.trim() + ' subscription')}`,
-      notes: 'Press Enter or click below to launch Auto-Pilot pathway locator'
-    }, '⚡ Auto-Pilot Ready')
-  } else {
-    showResult(null)
+      cancelUrl: '',
+      notes: 'Click Launch or press Enter for AI Scout direct pathway discovery'
+    }, '🤖 AI Scout Ready')
   }
 })
 
-// Enter key executes or triggers AI Scout lookup if unknown
-searchInput.addEventListener('keydown', async (e) => {
+// Enter key trigger
+searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault()
-    const val = searchInput.value.trim()
-    if (!val) return
-
-    const localMatch = matchLocalService(val)
-    if (localMatch) {
-      executeCancel(localMatch)
-    } else {
-      // User explicitly hit enter on an unknown service: perform single targeted lookup
-      loadingState.style.display = 'block'
-      resultCard.style.display = 'none'
-      const lookedUp = await queryAIScout(val)
-      if (lookedUp) {
-        executeCancel(lookedUp)
-      }
-    }
+    handleActionDispatch()
   }
 })
 
@@ -232,21 +243,20 @@ clearBtn.addEventListener('click', () => {
   searchInput.focus()
 })
 
+// Button click trigger
 btnCancel.addEventListener('click', (e) => {
   e.preventDefault()
-  if (currentEntry) {
-    executeCancel(currentEntry)
-  }
+  handleActionDispatch()
 })
 
-// Load saved mode or default to countdown_3s
+// Load saved mode or default to countdown_5s
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get(['autopilot_mode'], (res) => {
     if (res.autopilot_mode && res.autopilot_mode !== 'instant') {
       modeSelect.value = res.autopilot_mode
     } else {
-      modeSelect.value = 'countdown_3s'
-      chrome.storage.local.set({ autopilot_mode: 'countdown_3s' })
+      modeSelect.value = 'countdown_5s'
+      chrome.storage.local.set({ autopilot_mode: 'countdown_5s' })
     }
   })
 

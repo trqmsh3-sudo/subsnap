@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v1.0.0)
- * Strict Dormancy Guard · Safe User-Controlled Execution · Universal Heuristics.
+ * Strict Dormancy Guard · Safe User-Controlled Execution · Zero Pre-Click Mutators.
  */
 
 (function () {
@@ -155,16 +155,8 @@
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
-  function handleDarkPatterns() {
-    const radioInputs = Array.from(document.querySelectorAll('input[type="radio"], input[type="checkbox"], label'))
-    for (const r of radioInputs) {
-      const text = (r.innerText || r.textContent || r.value || '').toLowerCase()
-      if (text.includes('too expensive') || text.includes('cost') || text.includes('other') || text.includes('not using enough')) {
-        r.click()
-        break
-      }
-    }
-
+  // Scan retention bypass buttons (100% Read-Only, NO pre-clicks)
+  function findDarkPatternContinueBtn() {
     const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
     for (const b of continueBtns) {
       if (isDisallowedElement(b)) continue
@@ -177,7 +169,7 @@
   }
 
   function findCancelButton() {
-    const darkPatternBtn = handleDarkPatterns()
+    const darkPatternBtn = findDarkPatternContinueBtn()
     if (darkPatternBtn) return darkPatternBtn
 
     for (const sel of SERVICE_SPECIFIC_SELECTORS) {
@@ -197,6 +189,21 @@
       }
     }
 
+    return null
+  }
+
+  // Strictly look for confirmation buttons INSIDE active modal dialogs
+  function findModalConfirmBtn() {
+    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"]'))
+    for (const m of modals) {
+      const btns = Array.from(m.querySelectorAll('button, a, div[role="button"]'))
+      for (const b of btns) {
+        const text = (b.innerText || b.textContent || '').toLowerCase().trim()
+        if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k))) {
+          return b
+        }
+      }
+    }
     return null
   }
 
@@ -267,7 +274,7 @@
     doneBtn.addEventListener('click', close)
   }
 
-  function injectHUD(btn, mode = 'countdown_3s') {
+  function injectHUD(btn, mode = 'countdown_5s') {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
 
@@ -310,9 +317,9 @@
       <div>
         <div style="font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
           <span>SubSnap Auto-Pilot</span>
-          <span id="subsnap-timer-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 6px;">3s</span>
+          <span id="subsnap-timer-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 6px;">5s</span>
         </div>
-        <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Cancel pathway located. Auto-cancelling...</div>
+        <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Cancel pathway located. Auto-cancelling in 5s...</div>
       </div>
       <div id="subsnap-controls" style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
         <button id="subsnap-action-btn" style="background: #0f172a; color: #ffffff; font-weight: 800; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; cursor: pointer; transition: transform 0.1s;">
@@ -348,31 +355,35 @@
         timerBadge.style.color = '#059669'
         btn.click()
 
+        // Safely check if a confirmation modal dialog appeared
         setTimeout(() => {
-          const nextBtn = findCancelButton()
-          if (nextBtn && nextBtn !== btn) {
-            nextBtn.click()
+          const modalBtn = findModalConfirmBtn()
+          if (modalBtn && modalBtn !== btn) {
+            modalBtn.click()
           }
           descEl.textContent = '✓ Action executed successfully!'
-        }, 1200)
+        }, 1500)
       }
 
-      if (mode === 'countdown_3s') {
-        let secondsLeft = 3
+      if (mode === 'manual_highlight') {
+        timerBadge.textContent = 'Manual'
+        descEl.textContent = 'Button highlighted. Click button or below to confirm.'
+      } else {
+        // Safe 5-second countdown default
+        let secondsLeft = 5
         timerBadge.textContent = `${secondsLeft}s`
+        descEl.textContent = `Cancel pathway located. Auto-cancelling in ${secondsLeft}s...`
 
         countdownTimer = setInterval(() => {
           secondsLeft -= 1
           if (secondsLeft > 0) {
             timerBadge.textContent = `${secondsLeft}s`
+            descEl.textContent = `Cancel pathway located. Auto-cancelling in ${secondsLeft}s...`
           } else {
             clearInterval(countdownTimer)
             triggerCancel()
           }
         }, 1000)
-      } else if (mode === 'manual_highlight') {
-        timerBadge.textContent = 'Manual'
-        descEl.textContent = 'Button highlighted. Click button or below to confirm.'
       }
 
       actionBtn.addEventListener('click', () => {
@@ -398,7 +409,7 @@
     const btn = findCancelButton()
     if (btn) {
       chrome.storage.local.get(['autopilot_mode'], (res) => {
-        const mode = res.autopilot_mode || 'countdown_3s'
+        const mode = res.autopilot_mode || 'countdown_5s'
         injectHUD(btn, mode)
       })
     } else if (isFreePlanAccount()) {
