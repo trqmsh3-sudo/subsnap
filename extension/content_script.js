@@ -1,7 +1,6 @@
 /**
- * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v6.0)
- * Strict Dormancy Guard: NEVER interferes with regular browsing, chats, or feeds.
- * Only activates on verified dedicated billing/cancellation endpoints.
+ * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v1.0.0)
+ * Strict Dormancy Guard · Safe User-Controlled Execution · Universal Heuristics.
  */
 
 (function () {
@@ -42,7 +41,6 @@
     href.includes('subsnap=1')
   )
 
-  // If not an explicit billing page, or if on a general chat/new screen: EXIT IMMEDIATELY
   if (isGeneralBrowsing || !isDedicatedBillingPath) {
     return
   }
@@ -81,7 +79,7 @@
     '[data-action*="cancel-subscription"]'
   ]
 
-  // 4. Strict Safety Filter: NEVER match destructive or general actions
+  // 4. Strict Safety Filter: NEVER match destructive or general UI actions
   const DISALLOWED_KEYWORDS = [
     'delete account',
     'delete my account',
@@ -345,7 +343,7 @@
 
       function triggerCancel() {
         if (countdownTimer) clearInterval(countdownTimer)
-        descEl.textContent = 'Bypassing retention & executing cancel...'
+        descEl.textContent = 'Executing cancellation...'
         timerBadge.textContent = 'Done ✓'
         timerBadge.style.color = '#059669'
         btn.click()
@@ -359,9 +357,7 @@
         }, 1200)
       }
 
-      if (mode === 'instant') {
-        triggerCancel()
-      } else if (mode === 'countdown_3s') {
+      if (mode === 'countdown_3s') {
         let secondsLeft = 3
         timerBadge.textContent = `${secondsLeft}s`
 

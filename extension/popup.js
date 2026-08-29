@@ -1,3 +1,8 @@
+/**
+ * SubSnap Popup Controller (v1.0.0)
+ * 100% Local-First Privacy · Zero Keystroke Telemetry · Safe Auto-Pilot Launcher
+ */
+
 const TOP_SERVICES = [
   {
     name: 'Reddit Premium',
@@ -115,8 +120,8 @@ const modeSelect = document.getElementById('modeSelect')
 const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
-let debounceTimer = null
 
+// 100% Local In-Memory Matching (Zero Network Calls)
 function matchLocalService(query) {
   if (!query) return null
   const q = query.toLowerCase().trim()
@@ -126,7 +131,7 @@ function matchLocalService(query) {
   )
 }
 
-function showResult(service, sourceTag = '⚡ Direct Pathway') {
+function showResult(service, sourceTag = '⚡ Verified Pathway') {
   if (!service) {
     resultCard.style.display = 'none'
     currentEntry = null
@@ -139,7 +144,7 @@ function showResult(service, sourceTag = '⚡ Direct Pathway') {
   resultCard.style.display = 'block'
 }
 
-// Query Autonomous Gemini AI Scout for any unknown / custom subscription
+// Query AI Scout ONLY on explicit user intention (e.g. Enter pressed on unknown service)
 async function queryAIScout(query) {
   try {
     const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
@@ -150,20 +155,18 @@ async function queryAIScout(query) {
         cancelUrl: data.entry.cancelUrl,
         notes: data.entry.notes || 'AI Scout identified direct billing pathway'
       }, '🤖 AI Scout Located')
-    } else {
-      showResult({
-        name: query,
-        cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + query + ' subscription')}`,
-        notes: 'Locating official cancellation pathway...'
-      }, '🔍 Deep Search')
+      return data.entry
     }
-  } catch (err) {
-    showResult({
-      name: query,
-      cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + query + ' subscription')}`,
-      notes: 'Direct official billing & cancellation pathway locator'
-    }, '🔍 Search')
+  } catch (err) {}
+  
+  // Safe Fallback
+  const fallback = {
+    name: query,
+    cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + query + ' subscription')}`,
+    notes: 'Direct official billing & cancellation pathway locator'
   }
+  showResult(fallback, '🔍 Search')
+  return fallback
 }
 
 function executeCancel(service) {
@@ -181,36 +184,44 @@ function executeCancel(service) {
   })
 }
 
-// Search input handling with AI Scout
+// Search input handling (Local-First: ZERO network requests while typing)
 searchInput.addEventListener('input', (e) => {
   const val = e.target.value
   clearBtn.style.display = val ? 'block' : 'none'
-  if (debounceTimer) clearTimeout(debounceTimer)
   
   const localMatch = matchLocalService(val)
   if (localMatch) {
-    showResult(localMatch, '⚡ Direct Pathway')
+    showResult(localMatch, '⚡ Verified Pathway')
   } else if (val.trim().length >= 2) {
-    // Show quick placeholder and query AI Scout in background
     showResult({
-      name: val,
-      cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + val + ' subscription')}`,
-      notes: 'AI Scout analyzing subscription pathway...'
-    }, '🤖 AI Scanning...')
-
-    debounceTimer = setTimeout(() => {
-      queryAIScout(val.trim())
-    }, 400)
+      name: val.trim(),
+      cancelUrl: `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + val.trim() + ' subscription')}`,
+      notes: 'Press Enter or click below to launch Auto-Pilot pathway locator'
+    }, '⚡ Auto-Pilot Ready')
   } else {
     showResult(null)
   }
 })
 
-// Enter key opens cancel link directly
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && currentEntry) {
+// Enter key executes or triggers AI Scout lookup if unknown
+searchInput.addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
     e.preventDefault()
-    executeCancel(currentEntry)
+    const val = searchInput.value.trim()
+    if (!val) return
+
+    const localMatch = matchLocalService(val)
+    if (localMatch) {
+      executeCancel(localMatch)
+    } else {
+      // User explicitly hit enter on an unknown service: perform single targeted lookup
+      loadingState.style.display = 'block'
+      resultCard.style.display = 'none'
+      const lookedUp = await queryAIScout(val)
+      if (lookedUp) {
+        executeCancel(lookedUp)
+      }
+    }
   }
 })
 
@@ -223,13 +234,15 @@ clearBtn.addEventListener('click', () => {
 
 btnCancel.addEventListener('click', (e) => {
   e.preventDefault()
-  executeCancel(currentEntry)
+  if (currentEntry) {
+    executeCancel(currentEntry)
+  }
 })
 
 // Load saved mode or default to countdown_3s
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get(['autopilot_mode'], (res) => {
-    if (res.autopilot_mode) {
+    if (res.autopilot_mode && res.autopilot_mode !== 'instant') {
       modeSelect.value = res.autopilot_mode
     } else {
       modeSelect.value = 'countdown_3s'

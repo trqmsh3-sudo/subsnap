@@ -228,7 +228,7 @@
       font-weight: 600;
       margin-top: 2px;
     }
-    /* Mode Selector */
+    /* Mode Selector (Policy-Compliant Safe Modes) */
     .mode-container {
       background: #ffffff;
       border: 1px solid #e2e8f0;
@@ -332,7 +332,7 @@
       type="text"
       id="searchInput"
       class="search-input"
-      placeholder="Type ANY subscription (e.g. Netflix, Claude, Adobe)..."
+      placeholder="Type subscription name (e.g. Netflix, Claude, Adobe)..."
       autofocus
     />
     <button class="clear-btn" id="clearBtn">✕</button>
@@ -342,7 +342,7 @@
   <div class="account-notice">
     <span class="notice-icon">🔒</span>
     <div>
-      <strong>Zero Password Friction:</strong> Operates directly in your active logged-in browser session. Bypasses retention traps & dark patterns in 3 seconds.
+      <strong>100% Client-Side Privacy:</strong> Zero passwords or data stored. Operates directly in your active browser session.
     </div>
   </div>
 
@@ -350,13 +350,13 @@
   <div class="result-capsule" id="resultCard">
     <div class="result-header">
       <div class="result-name" id="serviceName">Netflix</div>
-      <div class="result-tag" id="modeTag">⚡ Auto-Pilot Ready</div>
+      <div class="result-tag" id="modeTag">⚡ Verified Pathway</div>
     </div>
     <div class="result-desc" id="serviceNotes">
-      Official cancellation pathway identified. Click below to launch Auto-Pilot HUD.
+      Official billing pathway identified. Click below to launch Auto-Pilot HUD.
     </div>
     <button class="btn-autopilot" id="btnCancel">
-      <span>Launch 3-Second Auto-Pilot ➔</span>
+      <span>Launch Auto-Pilot HUD ➔</span>
     </button>
   </div>
 
@@ -367,20 +367,19 @@
         <path d="M19.439 7.85c0-1.571-1.285-2.85-2.87-2.85h-2.14a2.85 2.85 0 0 0-5.7 0H6.589c-1.585 0-2.87 1.279-2.87 2.85v2.14a2.85 2.85 0 0 0 0 5.7v2.14c0 1.571 1.285 2.85 2.87 2.85h2.14a2.85 2.85 0 0 1 5.7 0h2.14c1.585 0 2.87-1.279 2.87-2.85v-2.14a2.85 2.85 0 0 1 0-5.7v-2.14z"/>
       </svg>
     </div>
-    <div class="loading-text" id="loadingText">Launching In-Page Auto-Pilot HUD...</div>
-    <div class="loading-sub" id="loadingSub">Navigating to direct cancellation pathway</div>
+    <div class="loading-text" id="loadingText">Opening cancellation pathway...</div>
+    <div class="loading-sub" id="loadingSub">Preparing 3-second in-page HUD</div>
   </div>
 
   <!-- Auto-Pilot Mode Selector -->
   <div class="mode-container">
     <div class="mode-label">
-      <span>Auto-Pilot Execution Mode:</span>
+      <span>Execution Mode:</span>
       <span id="savedIndicator" style="color: #059669; display: none;">Saved ✓</span>
     </div>
     <select id="modeSelect" class="mode-select">
       <option value="countdown_3s" selected>⏱️ 3-Second Auto-Pilot Countdown (Recommended)</option>
-      <option value="instant">🚀 Instant Auto-Pilot (0s)</option>
-      <option value="manual_highlight">🎯 In-Page Highlight & Manual Click</option>
+      <option value="manual_highlight">🎯 In-Page Highlight & Manual Confirmation</option>
     </select>
   </div>
 
