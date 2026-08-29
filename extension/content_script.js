@@ -1,28 +1,64 @@
 /**
- * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v5.0)
- * Precision Multi-Step Automation · Dark Pattern & Survey Bypass · Universal Heuristics.
+ * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v6.0)
+ * Strict Dormancy Guard: NEVER interferes with regular browsing, chats, or feeds.
+ * Only activates on verified dedicated billing/cancellation endpoints.
  */
 
 (function () {
   if (window.__subsnap_loaded) return
-  window.__subsnap_loaded = true
 
   const pathname = window.location.pathname.toLowerCase()
   const href = window.location.href.toLowerCase()
   const hostname = window.location.hostname.toLowerCase()
 
-  // 1. Service-Specific Precision Selectors (Top Platforms)
+  // 1. HARD GUARD: Never touch general browsing, chats, search feeds, or homepages
+  const isGeneralBrowsing = (
+    pathname === '/' ||
+    pathname === '' ||
+    pathname.startsWith('/new') ||
+    pathname.startsWith('/chat') ||
+    pathname.startsWith('/watch') ||
+    pathname.startsWith('/feed') ||
+    pathname.startsWith('/search') ||
+    pathname.startsWith('/browse') ||
+    pathname.includes('/comments/') ||
+    pathname.includes('/discussion/') ||
+    hostname.includes('google.') ||
+    hostname.includes('bing.')
+  )
+
+  // 2. ONLY activate on verified, dedicated subscription/billing management paths
+  const isDedicatedBillingPath = (
+    pathname.includes('/billing') ||
+    pathname.includes('/cancelplan') ||
+    pathname.includes('/cancel-plan') ||
+    pathname.includes('/cancel_subscription') ||
+    pathname.includes('/manage_subscriptions') ||
+    pathname.includes('/preferences/account') ||
+    pathname.includes('/settings/premium') ||
+    pathname.includes('/settings/subscription') ||
+    pathname.includes('/account/subscription') ||
+    pathname.includes('/plans') ||
+    href.includes('subsnap=1')
+  )
+
+  // If not an explicit billing page, or if on a general chat/new screen: EXIT IMMEDIATELY
+  if (isGeneralBrowsing || !isDedicatedBillingPath) {
+    return
+  }
+
+  window.__subsnap_loaded = true
+
+  // 3. Service-Specific Precision Selectors (Top Platforms)
   const SERVICE_SPECIFIC_SELECTORS = [
     // Netflix
     '[data-uia="action-cancel-plan"]',
     '[data-uia="btn-cancel-membership"]',
-    'button[data-uia*="cancel"]',
     // Adobe Creative Cloud
     'button[data-testid*="cancel-plan"]',
     'button[data-testid*="end-service"]',
     'a[href*="/cancel-plan"]',
-    // Claude (Anthropic)
-    'button:has-text("Cancel plan")',
+    // Claude (Anthropic) - strictly within settings/billing
     'button[data-testid="cancel-subscription"]',
     // Spotify
     'button[data-testid="cancel-plan-button"]',
@@ -42,12 +78,10 @@
     // Generic high-confidence attributes
     '[data-testid*="cancel-subscription"]',
     '[data-testid*="cancel-plan"]',
-    '[data-action*="cancel-subscription"]',
-    'button[aria-label*="cancel subscription" i]',
-    'button[aria-label*="cancel plan" i]'
+    '[data-action*="cancel-subscription"]'
   ]
 
-  // 2. Strict Safety Filter: NEVER match destructive or order actions
+  // 4. Strict Safety Filter: NEVER match destructive or general actions
   const DISALLOWED_KEYWORDS = [
     'delete account',
     'delete my account',
@@ -56,6 +90,11 @@
     'cancel item',
     'remove card',
     'delete payment',
+    'pin',
+    'mark as unread',
+    'rename',
+    'add to project',
+    'move to group',
     'מחק חשבון',
     'סגירת חשבון',
     'ביטול הזמנה'
@@ -103,7 +142,7 @@
     if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'ARTICLE', 'P', 'HEADER'].includes(tag)) {
       return true
     }
-    if (el.closest('h1, h2, h3, article, [data-testid*="post-title"], [data-testid*="post-container"]')) {
+    if (el.closest('h1, h2, h3, article, [data-testid*="post-title"], [data-testid*="post-container"], nav, aside, [role="navigation"]')) {
       return true
     }
     const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
@@ -118,9 +157,7 @@
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
-  // Handle Dark Patterns & Surveys
   function handleDarkPatterns() {
-    // Check for "Too expensive" or "Other" radio buttons in surveys
     const radioInputs = Array.from(document.querySelectorAll('input[type="radio"], input[type="checkbox"], label'))
     for (const r of radioInputs) {
       const text = (r.innerText || r.textContent || r.value || '').toLowerCase()
@@ -130,7 +167,6 @@
       }
     }
 
-    // Check for "Continue to cancel" or "Cancel anyway" retention bypass buttons
     const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
     for (const b of continueBtns) {
       if (isDisallowedElement(b)) continue
@@ -143,11 +179,9 @@
   }
 
   function findCancelButton() {
-    // 1. Check for active dark-pattern/retention screens
     const darkPatternBtn = handleDarkPatterns()
     if (darkPatternBtn) return darkPatternBtn
 
-    // 2. Try High-Confidence Service-Specific Selectors
     for (const sel of SERVICE_SPECIFIC_SELECTORS) {
       try {
         const el = document.querySelector(sel)
@@ -155,7 +189,6 @@
       } catch (e) {}
     }
 
-    // 3. Fallback to Heuristic Text Analysis
     const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
 
     for (const el of candidates) {
@@ -172,7 +205,6 @@
   let hudInjected = false
   let countdownTimer = null
 
-  // 1. Reassuring Free-Tier Notification
   function injectInfoHUD(title, desc) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -237,7 +269,6 @@
     doneBtn.addEventListener('click', close)
   }
 
-  // 2. Active Visual Auto-Pilot HUD
   function injectHUD(btn, mode = 'countdown_3s') {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -319,7 +350,6 @@
         timerBadge.style.color = '#059669'
         btn.click()
 
-        // Handle multi-step cancel confirmation modals
         setTimeout(() => {
           const nextBtn = findCancelButton()
           if (nextBtn && nextBtn !== btn) {
@@ -385,12 +415,4 @@
 
   setTimeout(checkAndExecute, 800)
   setTimeout(checkAndExecute, 2000)
-
-  const observer = new MutationObserver(() => {
-    if (!hudInjected) {
-      checkAndExecute()
-    }
-  })
-
-  observer.observe(document.body, { childList: true, subtree: true })
 })()
