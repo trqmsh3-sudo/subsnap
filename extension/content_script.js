@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Direct Node AI Resolution · SPA Navigation Listener · Modal Polling Engine · CSP-Immune.
+ * Direct Node AI Resolution · SPA Navigation Listener · Modal Polling Engine · Multilingual & Survey Gates.
  */
 
 (function () {
@@ -42,7 +42,9 @@
       pathname.includes('/settings/premium') ||
       pathname.includes('/settings/subscription') ||
       pathname.includes('/account/subscription') ||
+      pathname.includes('/account') ||
       pathname.includes('/plans') ||
+      pathname.includes('/test-') ||
       href.includes('subsnap=1')
     )
 
@@ -107,9 +109,16 @@
     'stop renewal',
     'continue to cancel',
     'confirm cancellation',
+    'manage subscription',
+    'manage plan',
+    'end plan',
+    'stop subscription',
     'בטל מנוי',
     'בטל תוכנית',
-    'סיום מנוי'
+    'סיום מנוי',
+    'ביטול מנוי',
+    'ניהול מנוי',
+    'הפסקת מנוי'
   ]
 
   const DARK_PATTERN_CONTINUE_KEYWORDS = [
@@ -118,7 +127,9 @@
     'cancel anyway',
     'still want to cancel',
     'complete cancellation',
-    'confirm cancel'
+    'confirm cancel',
+    'המשך לביטול',
+    'אישור ביטול'
   ]
 
   const FREE_TIER_KEYWORDS = [
@@ -200,13 +211,13 @@
   }
 
   function findModalConfirmBtn() {
-    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"]'))
+    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup'))
     for (const m of modals) {
       const btns = Array.from(m.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
       for (const b of btns) {
         if (!isVisible(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
-        if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k))) {
+        if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k)) || DARK_PATTERN_CONTINUE_KEYWORDS.some(k => text === k || text.includes(k))) {
           return b
         }
       }
@@ -214,7 +225,6 @@
     return null
   }
 
-  // In-Page AI DOM Scout with Direct Node Resolution
   function requestAIDOMScout() {
     return new Promise((resolve) => {
       try {
@@ -241,7 +251,6 @@
           payload: { hostname, elements: snapshot }
         }, (res) => {
           if (res && res.success && res.data) {
-            // Direct index reference (100% infallible)
             if (typeof res.data.bestMatchIndex === 'number' && res.data.bestMatchIndex >= 0 && res.data.bestMatchIndex < rawElements.length) {
               const matchedNode = rawElements[res.data.bestMatchIndex]
               if (matchedNode && isVisible(matchedNode)) {
@@ -405,9 +414,20 @@
         descEl.textContent = 'Executing cancellation...'
         timerBadge.textContent = 'Done ✓'
         timerBadge.style.color = '#059669'
+
+        // Select survey reason if present on screen
+        const surveyRadios = Array.from(document.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
+          .filter(r => isVisible(r) && !r.checked)
+        for (const r of surveyRadios) {
+          const labelText = (r.closest('label')?.innerText || r.parentElement?.innerText || r.value || '').toLowerCase()
+          if (labelText.includes('too expensive') || labelText.includes('cost') || labelText.includes('other') || labelText.includes('יקר')) {
+            r.click()
+            break
+          }
+        }
+
         btn.click()
 
-        // Reactive modal polling (up to 3.5s)
         let modalPollCount = 0
         const modalPoll = setInterval(() => {
           modalPollCount++
@@ -526,19 +546,11 @@
     }, 500)
   }
 
-  // Initial Scan
   startScanningEngine()
 
-  // SPA Navigation Hooks (React/Next.js/Vue Client-Side Routing Listener)
-  window.addEventListener('popstate', () => {
-    setTimeout(startScanningEngine, 300)
-  })
+  window.addEventListener('popstate', () => setTimeout(startScanningEngine, 300))
+  window.addEventListener('hashchange', () => setTimeout(startScanningEngine, 300))
 
-  window.addEventListener('hashchange', () => {
-    setTimeout(startScanningEngine, 300)
-  })
-
-  // Hook into pushState/replaceState
   const originalPushState = history.pushState
   history.pushState = function () {
     originalPushState.apply(this, arguments)
