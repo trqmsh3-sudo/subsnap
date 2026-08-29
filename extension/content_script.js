@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Reactive MutationObserver · AI DOM Scout Fallback · Zero Silent Failures · Remote Playbooks.
+ * CSP-Immune Network Bridge · Strict Visibility Verification · Reactive MutationObserver.
  */
 
 (function () {
@@ -68,17 +68,14 @@
     '[data-action*="cancel-subscription"]'
   ]
 
-  // Try to fetch remote healed selectors in background
-  try {
-    fetch(`https://www.subsnap.net/api/playbooks?host=${encodeURIComponent(hostname)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && Array.isArray(data.selectors)) {
-          ACTIVE_SELECTORS = [...data.selectors, ...ACTIVE_SELECTORS]
-        }
-      })
-      .catch(() => {})
-  } catch (e) {}
+  // Fetch remote healed selectors via background proxy (CSP-Immune)
+  if (chrome.runtime && chrome.runtime.sendMessage) {
+    chrome.runtime.sendMessage({ action: 'fetchPlaybook', hostname }, (res) => {
+      if (res && res.success && res.data && Array.isArray(res.data.selectors)) {
+        ACTIVE_SELECTORS = [...res.data.selectors, ...ACTIVE_SELECTORS]
+      }
+    })
+  }
 
   // 4. Strict Safety Filter
   const DISALLOWED_KEYWORDS = [
@@ -135,6 +132,17 @@
     'אין מנוי פעיל'
   ]
 
+  // Rigorous Visibility Check (Never target hidden/collapsed DOM elements)
+  function isVisible(el) {
+    if (!el || el.offsetParent === null) return false
+    const style = window.getComputedStyle(el)
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+      return false
+    }
+    const rect = el.getBoundingClientRect()
+    return rect.width > 0 && rect.height > 0
+  }
+
   function isDisallowedElement(el) {
     if (!el) return true
     const tag = el.tagName.toUpperCase()
@@ -159,7 +167,7 @@
   function findDarkPatternContinueBtn() {
     const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
     for (const b of continueBtns) {
-      if (isDisallowedElement(b)) continue
+      if (isDisallowedElement(b) || !isVisible(b)) continue
       const text = (b.innerText || b.textContent || '').toLowerCase().trim()
       if (DARK_PATTERN_CONTINUE_KEYWORDS.some(k => text === k || text.includes(k))) {
         return b
@@ -175,14 +183,14 @@
     for (const sel of ACTIVE_SELECTORS) {
       try {
         const el = document.querySelector(sel)
-        if (el && !isDisallowedElement(el)) return el
+        if (el && !isDisallowedElement(el) && isVisible(el)) return el
       } catch (e) {}
     }
 
     const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
 
     for (const el of candidates) {
-      if (isDisallowedElement(el)) continue
+      if (isDisallowedElement(el) || !isVisible(el)) continue
       const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
       if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
         return el
@@ -197,6 +205,7 @@
     for (const m of modals) {
       const btns = Array.from(m.querySelectorAll('button, a, div[role="button"]'))
       for (const b of btns) {
+        if (!isVisible(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
         if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k))) {
           return b
@@ -206,39 +215,42 @@
     return null
   }
 
-  // 5. In-Page AI DOM Scout Fallback (When local selectors fail)
-  async function requestAIDOMScout() {
-    try {
-      const interactiveElements = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
-        .filter(el => !isDisallowedElement(el) && el.offsetParent !== null)
-        .slice(0, 35)
-        .map(el => ({
-          tag: el.tagName.toLowerCase(),
-          text: (el.innerText || el.textContent || '').trim().slice(0, 40),
-          aria: el.getAttribute('aria-label') || null,
-          id: el.id || null,
-          testid: el.getAttribute('data-testid') || null,
-          uia: el.getAttribute('data-uia') || null,
-          className: (el.className || '').toString().slice(0, 40)
-        }))
+  // 5. In-Page AI DOM Scout Fallback (CSP-Immune via Background Gateway)
+  function requestAIDOMScout() {
+    return new Promise((resolve) => {
+      try {
+        const interactiveElements = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
+          .filter(el => !isDisallowedElement(el) && isVisible(el))
+          .slice(0, 35)
+          .map(el => ({
+            tag: el.tagName.toLowerCase(),
+            text: (el.innerText || el.textContent || '').trim().slice(0, 40),
+            aria: el.getAttribute('aria-label') || null,
+            id: el.id || null,
+            testid: el.getAttribute('data-testid') || null,
+            uia: el.getAttribute('data-uia') || null,
+            className: (el.className || '').toString().slice(0, 40)
+          }))
 
-      if (interactiveElements.length === 0) return null
+        if (interactiveElements.length === 0 || !chrome.runtime || !chrome.runtime.sendMessage) {
+          return resolve(null)
+        }
 
-      const res = await fetch('https://www.subsnap.net/api/dom-scout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hostname,
-          elements: interactiveElements
+        chrome.runtime.sendMessage({
+          action: 'domScout',
+          payload: { hostname, elements: interactiveElements }
+        }, (res) => {
+          if (res && res.success && res.data && res.data.targetSelector) {
+            const el = document.querySelector(res.data.targetSelector)
+            resolve(el && isVisible(el) ? el : null)
+          } else {
+            resolve(null)
+          }
         })
-      })
-
-      const data = await res.json()
-      if (data && data.targetSelector) {
-        return document.querySelector(data.targetSelector)
+      } catch (e) {
+        resolve(null)
       }
-    } catch (e) {}
-    return null
+    })
   }
 
   let hudInjected = false
@@ -461,7 +473,6 @@
     return false
   }
 
-  // MutationObserver with 5-second SPA rendering window
   let scanAttempts = 0
   const maxAttempts = 10
 
@@ -474,7 +485,6 @@
 
   observer.observe(document.body, { childList: true, subtree: true })
 
-  // Polling interval up to 5s for lazy SPAs
   const scanInterval = setInterval(async () => {
     scanAttempts++
     const found = await performScan()
@@ -483,7 +493,6 @@
       clearInterval(scanInterval)
       observer.disconnect()
 
-      // If after 5s still nothing found -> Trigger In-Page AI DOM Scout Fallback!
       if (!found && !hudInjected) {
         const aiBtn = await requestAIDOMScout()
         if (aiBtn) {
@@ -492,7 +501,6 @@
             injectHUD(aiBtn, mode, true)
           })
         } else {
-          // Zero Silent Failures: Show Graceful Guidance HUD
           injectGuidanceHUD(
             'SubSnap Cancellation Assistant',
             'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'

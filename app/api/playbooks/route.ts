@@ -9,7 +9,6 @@ const redis = hasRedis
     })
   : null
 
-// Base static selectors (fallback)
 const BASE_PLAYBOOKS: Record<string, string[]> = {
   'netflix.com': ['[data-uia="action-cancel-plan"]', '[data-uia="btn-cancel-membership"]'],
   'adobe.com': ['button[data-testid*="cancel-plan"]', 'button[data-testid*="end-service"]', 'a[href*="/cancel-plan"]'],
@@ -36,7 +35,7 @@ export async function GET(req: NextRequest) {
           source: 'remote_redis'
         })
       }
-    } catch (e) {}
+    } catch {}
   }
 
   if (host && BASE_PLAYBOOKS[host]) {

@@ -11,7 +11,6 @@ const redis = hasRedis
     })
   : null
 
-// Dynamic runtime in-memory cache fallback
 const DYNAMIC_CACHE = new Map<string, CancellationEntry>()
 
 export async function GET(req: NextRequest) {
@@ -24,14 +23,14 @@ export async function GET(req: NextRequest) {
 
   const qLower = query.toLowerCase().trim()
 
-  // 1. Check Global Redis Distributed Cache (Shared across ALL users worldwide)
+  // 1. Check Global Redis Distributed Cache
   if (redis) {
     try {
       const cached = await redis.get<CancellationEntry>(`scout:${qLower}`)
       if (cached) {
         return NextResponse.json({ entry: cached, source: 'global_redis_cache' })
       }
-    } catch (e) {}
+    } catch {}
   }
 
   // 2. Check local in-memory cache
@@ -102,15 +101,13 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
           steps: Array.isArray(parsed.steps) ? parsed.steps : ['Go to account settings', 'Click cancel subscription', 'Confirm']
         }
 
-        // Save into Global Distributed Redis DB (Instantly shared with all users worldwide!)
         if (redis) {
           try {
             await redis.set(`scout:${qLower}`, entry)
             if (parsed.name) await redis.set(`scout:${parsed.name.toLowerCase()}`, entry)
-          } catch (e) {}
+          } catch {}
         }
 
-        // Cache in memory for local speed
         DYNAMIC_CACHE.set(qLower, entry)
         if (parsed.name) DYNAMIC_CACHE.set(parsed.name.toLowerCase(), entry)
 
@@ -121,7 +118,7 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
     }
   }
 
-  // 6. Smart Heuristic Fallback for arbitrary domain input
+  // 6. Smart Heuristic Fallback
   const isDomain = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(query) || query.includes('http')
   const cleanDomain = query.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim()
 
@@ -146,13 +143,12 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
     if (redis) {
       try {
         await redis.set(`scout:${qLower}`, heuristicEntry)
-      } catch (e) {}
+      } catch {}
     }
     DYNAMIC_CACHE.set(qLower, heuristicEntry)
     return NextResponse.json({ entry: heuristicEntry, source: 'heuristic_domain' })
   }
 
-  // Default fallback
   return NextResponse.json({
     entry: {
       name: query,

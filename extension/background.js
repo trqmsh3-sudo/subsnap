@@ -1,4 +1,29 @@
 // SubSnap Background Service Worker (v1.0.0)
+// Acts as a CSP-Immune Network Gateway for Content Scripts
+
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[SubSnap] Extension v1.0.0 installed successfully.')
+  console.log('[SubSnap] Background service ready.')
+})
+
+// Proxy API requests to bypass third-party page Content Security Policies (CSP)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'fetchPlaybook' && request.hostname) {
+    fetch(`https://www.subsnap.net/api/playbooks?host=${encodeURIComponent(request.hostname)}`)
+      .then(res => res.json())
+      .then(data => sendResponse({ success: true, data }))
+      .catch(err => sendResponse({ success: false, error: String(err) }))
+    return true // Keep channel open for async response
+  }
+
+  if (request.action === 'domScout' && request.payload) {
+    fetch('https://www.subsnap.net/api/dom-scout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request.payload)
+    })
+      .then(res => res.json())
+      .then(data => sendResponse({ success: true, data }))
+      .catch(err => sendResponse({ success: false, error: String(err) }))
+    return true
+  }
 })

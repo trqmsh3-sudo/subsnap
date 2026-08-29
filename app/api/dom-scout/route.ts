@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
 
     // 1. Check if we have an AI-healed selector in Redis
     if (redis && hostname) {
-      const cachedSelector = await redis.get<string>(`selector:${hostname.toLowerCase()}`)
-      if (cachedSelector) {
-        return NextResponse.json({ targetSelector: cachedSelector, source: 'cached_playbook' })
-      }
+      try {
+        const cachedSelector = await redis.get<string>(`selector:${hostname.toLowerCase()}`)
+        if (cachedSelector) {
+          return NextResponse.json({ targetSelector: cachedSelector, source: 'cached_playbook' })
+        }
+      } catch {}
     }
 
     // 2. Run Gemini 2.5 Flash on the DOM snapshot
@@ -71,7 +73,7 @@ Return ONLY a JSON object:
       if (derivedSelector && redis && hostname) {
         try {
           await redis.set(`selector:${hostname.toLowerCase()}`, derivedSelector, { ex: 60 * 60 * 24 * 7 })
-        } catch (e) {}
+        } catch {}
       }
 
       return NextResponse.json({
