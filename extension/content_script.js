@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Google Play/One Support · Strict Search Guard · Direct Node AI Resolution · Modal Polling.
+ * Google Play Survey Solver · Multi-Step Modal Engine · Strict Search Guard.
  */
 
 (function () {
@@ -106,7 +106,9 @@
     'move to group',
     'מחק חשבון',
     'סגירת חשבון',
-    'ביטול הזמנה'
+    'ביטול הזמנה',
+    'הקודם',
+    'back'
   ]
 
   const STRICT_CANCEL_KEYWORDS = [
@@ -143,7 +145,10 @@
     'complete cancellation',
     'confirm cancel',
     'המשך לביטול',
-    'אישור ביטול'
+    'אישור ביטול',
+    'המשך',
+    'continue',
+    'next'
   ]
 
   const FREE_TIER_KEYWORDS = [
@@ -178,7 +183,7 @@
       return true
     }
     const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
-    if (DISALLOWED_KEYWORDS.some(k => text.includes(k))) {
+    if (DISALLOWED_KEYWORDS.some(k => text === k || text.includes(k))) {
       return true
     }
     return false
@@ -223,7 +228,7 @@
       }
     }
 
-    // 2. Google Play / Store Subscriptions "ניהול" / "Manage" button on active subscription row
+    // 2. Google Play / Store Subscriptions "ניהול" / "Manage" button
     const pathname = window.location.pathname.toLowerCase()
     if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
       for (const el of candidates) {
@@ -239,13 +244,16 @@
   }
 
   function findModalConfirmBtn() {
-    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup, [role="region"]'))
+    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup, [role="region"], div[aria-modal="true"]'))
     for (const m of modals) {
       const btns = Array.from(m.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
       for (const b of btns) {
-        if (!isVisible(b)) continue
+        if (!isVisible(b) || isDisallowedElement(b)) continue
         const text = (b.innerText || b.textContent || '').toLowerCase().trim()
-        if (STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k)) || DARK_PATTERN_CONTINUE_KEYWORDS.some(k => text === k || text.includes(k))) {
+        if (
+          STRICT_CANCEL_KEYWORDS.some(k => text === k || text.includes(k)) ||
+          DARK_PATTERN_CONTINUE_KEYWORDS.some(k => text === k || text.includes(k))
+        ) {
           return b
         }
       }
@@ -440,33 +448,49 @@
       function triggerCancel() {
         if (countdownTimer) clearInterval(countdownTimer)
         descEl.textContent = 'Navigating subscription pathway...'
-        timerBadge.textContent = 'Done ✓'
+        timerBadge.textContent = 'Active ⚡'
         timerBadge.style.color = '#059669'
-
-        // Select survey reason if present on screen
-        const surveyRadios = Array.from(document.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
-          .filter(r => isVisible(r) && !r.checked)
-        for (const r of surveyRadios) {
-          const labelText = (r.closest('label')?.innerText || r.parentElement?.innerText || r.value || '').toLowerCase()
-          if (labelText.includes('too expensive') || labelText.includes('cost') || labelText.includes('other') || labelText.includes('יקר')) {
-            r.click()
-            break
-          }
-        }
 
         btn.click()
 
+        // Reactive Multi-Step Survey & Modal Poller (watches for up to 8s across dynamic dialogs)
         let modalPollCount = 0
         const modalPoll = setInterval(() => {
           modalPollCount++
-          const modalBtn = findModalConfirmBtn()
-          if (modalBtn && modalBtn !== btn) {
+
+          // 1. Solve survey if a survey modal is open
+          const surveyOptions = Array.from(document.querySelectorAll('[role="radio"], input[type="radio"], label, div[data-value], li[role="radio"], span'))
+          for (const opt of surveyOptions) {
+            if (!isVisible(opt)) continue
+            const text = (opt.innerText || opt.textContent || opt.value || '').toLowerCase().trim()
+            if (
+              text === 'לא רוצה להשיב' ||
+              text === 'אחר' ||
+              text.includes('לא רוצה להשיב') ||
+              text.includes('decline to answer') ||
+              text === 'other'
+            ) {
+              opt.click()
+              break
+            }
+          }
+
+          // 2. Click modal confirmation / continue button (after radio unlock)
+          setTimeout(() => {
+            const modalBtn = findModalConfirmBtn()
+            if (modalBtn && modalBtn !== btn) {
+              const isDisabled = modalBtn.disabled || modalBtn.getAttribute('aria-disabled') === 'true'
+              if (!isDisabled) {
+                modalBtn.click()
+                descEl.textContent = 'Advancing to cancellation...'
+              }
+            }
+          }, 200)
+
+          if (modalPollCount >= 16) {
             clearInterval(modalPoll)
-            modalBtn.click()
             descEl.textContent = '✓ Action confirmed successfully!'
-          } else if (modalPollCount >= 7) {
-            clearInterval(modalPoll)
-            descEl.textContent = '✓ Action executed successfully!'
+            timerBadge.textContent = 'Done ✓'
           }
         }, 500)
       }
