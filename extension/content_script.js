@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
- * Direct Node AI Resolution · SPA Navigation Listener · Modal Polling Engine · Multilingual & Survey Gates.
+ * Google Play/One Support · Strict Search Guard · Direct Node AI Resolution · Modal Polling.
  */
 
 (function () {
@@ -17,6 +17,14 @@
     const href = window.location.href.toLowerCase()
     const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
+    // Guard ONLY Search Engines (Google Search, Bing Search) without blocking Google Play or Google One
+    const isSearchEngine = (
+      ((hostname === 'google.com' || hostname.startsWith('google.') || hostname.endsWith('.google.com')) &&
+        (pathname === '/' || pathname.startsWith('/search') || pathname.startsWith('/webhp') || pathname.startsWith('/imghp'))) ||
+      ((hostname === 'bing.com' || hostname.endsWith('.bing.com')) &&
+        (pathname === '/' || pathname.startsWith('/search')))
+    )
+
     const isGeneralBrowsing = (
       pathname === '/' ||
       pathname === '' ||
@@ -24,12 +32,10 @@
       pathname.startsWith('/chat') ||
       pathname.startsWith('/watch') ||
       pathname.startsWith('/feed') ||
-      pathname.startsWith('/search') ||
       pathname.startsWith('/browse') ||
       pathname.includes('/comments/') ||
       pathname.includes('/discussion/') ||
-      hostname.includes('google.') ||
-      hostname.includes('bing.')
+      isSearchEngine
     )
 
     const isExplicitBilling = (
@@ -42,9 +48,11 @@
       pathname.includes('/settings/premium') ||
       pathname.includes('/settings/subscription') ||
       pathname.includes('/account/subscription') ||
+      pathname.includes('/store/account/subscriptions') ||
       pathname.includes('/account') ||
       pathname.includes('/plans') ||
       pathname.includes('/test-') ||
+      hostname.includes('one.google.com') ||
       href.includes('subsnap=1')
     )
 
@@ -68,7 +76,10 @@
     'button[data-testid="cancel-premium-btn"]',
     '[data-testid*="cancel-subscription"]',
     '[data-testid*="cancel-plan"]',
-    '[data-action*="cancel-subscription"]'
+    '[data-action*="cancel-subscription"]',
+    'a[href*="/store/account/subscriptions/subscription?sku="]',
+    '[aria-label*="ניהול המינוי"]',
+    '[aria-label*="Manage subscription"]'
   ]
 
   const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
@@ -114,6 +125,9 @@
     'end plan',
     'stop subscription',
     'בטל מנוי',
+    'בטל מינוי',
+    'ביטול המינוי',
+    'ביטול מינוי',
     'בטל תוכנית',
     'סיום מנוי',
     'ביטול מנוי',
@@ -140,7 +154,8 @@
     'upgrade to pro',
     'upgrade to plus',
     'תוכנית חינם',
-    'אין מנוי פעיל'
+    'אין מנוי פעיל',
+    'אין לך מינויים פעילים'
   ]
 
   function isVisible(el) {
@@ -199,6 +214,7 @@
 
     const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]'))
 
+    // 1. Direct cancellation keywords
     for (const el of candidates) {
       if (isDisallowedElement(el) || !isVisible(el)) continue
       const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
@@ -207,11 +223,23 @@
       }
     }
 
+    // 2. Google Play / Store Subscriptions "ניהול" / "Manage" button on active subscription row
+    const pathname = window.location.pathname.toLowerCase()
+    if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
+      for (const el of candidates) {
+        if (isDisallowedElement(el) || !isVisible(el)) continue
+        const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+        if (text === 'ניהול' || text === 'manage' || text === 'ניהול המינוי' || text === 'manage subscription') {
+          return el
+        }
+      }
+    }
+
     return null
   }
 
   function findModalConfirmBtn() {
-    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup'))
+    const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"], .overlay.active, .popup, [role="region"]'))
     for (const m of modals) {
       const btns = Array.from(m.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
       for (const b of btns) {
@@ -380,11 +408,11 @@
           <span id="subsnap-timer-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 6px;">5s</span>
           ${isAIRepaired ? '<span style="font-size: 9px; font-weight: 800; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; padding: 1px 5px; border-radius: 4px;">🤖 AI Healed</span>' : ''}
         </div>
-        <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Cancel pathway located. Auto-cancelling in 5s...</div>
+        <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Subscription pathway located. Proceeding in 5s...</div>
       </div>
       <div id="subsnap-controls" style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
         <button id="subsnap-action-btn" style="background: #0f172a; color: #ffffff; font-weight: 800; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; cursor: pointer; transition: transform 0.1s;">
-          Cancel Now ➔
+          Proceed ➔
         </button>
         <button id="subsnap-stop-btn" style="background: #f1f5f9; color: #475569; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11px; cursor: pointer;">
           Stop
@@ -411,7 +439,7 @@
 
       function triggerCancel() {
         if (countdownTimer) clearInterval(countdownTimer)
-        descEl.textContent = 'Executing cancellation...'
+        descEl.textContent = 'Navigating subscription pathway...'
         timerBadge.textContent = 'Done ✓'
         timerBadge.style.color = '#059669'
 
@@ -449,13 +477,13 @@
       } else {
         let secondsLeft = 5
         timerBadge.textContent = `${secondsLeft}s`
-        descEl.textContent = `Cancel pathway located. Auto-cancelling in ${secondsLeft}s...`
+        descEl.textContent = `Subscription pathway located. Proceeding in ${secondsLeft}s...`
 
         countdownTimer = setInterval(() => {
           secondsLeft -= 1
           if (secondsLeft > 0) {
             timerBadge.textContent = `${secondsLeft}s`
-            descEl.textContent = `Cancel pathway located. Auto-cancelling in ${secondsLeft}s...`
+            descEl.textContent = `Subscription pathway located. Proceeding in ${secondsLeft}s...`
           } else {
             clearInterval(countdownTimer)
             triggerCancel()
