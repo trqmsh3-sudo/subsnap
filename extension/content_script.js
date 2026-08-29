@@ -1,6 +1,6 @@
 /**
- * SubSnap In-Page Visual Auto-Pilot & Precision Selector Engine (v1.0.0)
- * Strict Dormancy Guard · Safe User-Controlled Execution · Zero Pre-Click Mutators.
+ * SubSnap In-Page Visual Auto-Pilot & Self-Healing DOM Engine (v1.0.0)
+ * Reactive MutationObserver · AI DOM Scout Fallback · Zero Silent Failures · Remote Playbooks.
  */
 
 (function () {
@@ -8,7 +8,7 @@
 
   const pathname = window.location.pathname.toLowerCase()
   const href = window.location.href.toLowerCase()
-  const hostname = window.location.hostname.toLowerCase()
+  const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
   // 1. HARD GUARD: Never touch general browsing, chats, search feeds, or homepages
   const isGeneralBrowsing = (
@@ -47,39 +47,40 @@
 
   window.__subsnap_loaded = true
 
-  // 3. Service-Specific Precision Selectors (Top Platforms)
-  const SERVICE_SPECIFIC_SELECTORS = [
-    // Netflix
+  // 3. Fallback Local Selectors
+  let ACTIVE_SELECTORS = [
     '[data-uia="action-cancel-plan"]',
     '[data-uia="btn-cancel-membership"]',
-    // Adobe Creative Cloud
     'button[data-testid*="cancel-plan"]',
     'button[data-testid*="end-service"]',
     'a[href*="/cancel-plan"]',
-    // Claude (Anthropic) - strictly within settings/billing
     'button[data-testid="cancel-subscription"]',
-    // Spotify
     'button[data-testid="cancel-plan-button"]',
     'a[data-testid="cancel-plan-link"]',
-    // ChatGPT / OpenAI
     'button[data-testid="cancel-subscription-button"]',
-    // Amazon Prime
     '#cancel-membership-button',
     'a[href*="cancelPrime"]',
-    // Grok / X Premium
     'div[data-testid="cancelSubscription"]',
     'button[data-testid="cancelPlan"]',
-    // Canva Pro
-    'button[data-testid="cancel-subscription-button"]',
-    // Reddit Premium
     'button[data-testid="cancel-premium-btn"]',
-    // Generic high-confidence attributes
     '[data-testid*="cancel-subscription"]',
     '[data-testid*="cancel-plan"]',
     '[data-action*="cancel-subscription"]'
   ]
 
-  // 4. Strict Safety Filter: NEVER match destructive or general UI actions
+  // Try to fetch remote healed selectors in background
+  try {
+    fetch(`https://www.subsnap.net/api/playbooks?host=${encodeURIComponent(hostname)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.selectors)) {
+          ACTIVE_SELECTORS = [...data.selectors, ...ACTIVE_SELECTORS]
+        }
+      })
+      .catch(() => {})
+  } catch (e) {}
+
+  // 4. Strict Safety Filter
   const DISALLOWED_KEYWORDS = [
     'delete account',
     'delete my account',
@@ -155,7 +156,6 @@
     return FREE_TIER_KEYWORDS.some(k => bodyText.includes(k))
   }
 
-  // Scan retention bypass buttons (100% Read-Only, NO pre-clicks)
   function findDarkPatternContinueBtn() {
     const continueBtns = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
     for (const b of continueBtns) {
@@ -172,7 +172,7 @@
     const darkPatternBtn = findDarkPatternContinueBtn()
     if (darkPatternBtn) return darkPatternBtn
 
-    for (const sel of SERVICE_SPECIFIC_SELECTORS) {
+    for (const sel of ACTIVE_SELECTORS) {
       try {
         const el = document.querySelector(sel)
         if (el && !isDisallowedElement(el)) return el
@@ -192,7 +192,6 @@
     return null
   }
 
-  // Strictly look for confirmation buttons INSIDE active modal dialogs
   function findModalConfirmBtn() {
     const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal, [data-testid*="modal"]'))
     for (const m of modals) {
@@ -207,10 +206,46 @@
     return null
   }
 
+  // 5. In-Page AI DOM Scout Fallback (When local selectors fail)
+  async function requestAIDOMScout() {
+    try {
+      const interactiveElements = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
+        .filter(el => !isDisallowedElement(el) && el.offsetParent !== null)
+        .slice(0, 35)
+        .map(el => ({
+          tag: el.tagName.toLowerCase(),
+          text: (el.innerText || el.textContent || '').trim().slice(0, 40),
+          aria: el.getAttribute('aria-label') || null,
+          id: el.id || null,
+          testid: el.getAttribute('data-testid') || null,
+          uia: el.getAttribute('data-uia') || null,
+          className: (el.className || '').toString().slice(0, 40)
+        }))
+
+      if (interactiveElements.length === 0) return null
+
+      const res = await fetch('https://www.subsnap.net/api/dom-scout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hostname,
+          elements: interactiveElements
+        })
+      })
+
+      const data = await res.json()
+      if (data && data.targetSelector) {
+        return document.querySelector(data.targetSelector)
+      }
+    } catch (e) {}
+    return null
+  }
+
   let hudInjected = false
   let countdownTimer = null
 
-  function injectInfoHUD(title, desc) {
+  // 6. Graceful Assistant Guidance HUD (NEVER FAILS SILENTLY)
+  function injectGuidanceHUD(title, desc) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
 
@@ -246,7 +281,7 @@
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <div style="width: 28px; height: 28px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
-            🎉
+            🛡️
           </div>
           <span style="font-size: 13px; font-weight: 800; color: #0f172a;">${title}</span>
         </div>
@@ -256,7 +291,7 @@
       <div style="font-size: 11.5px; color: #64748b; line-height: 1.35;">${desc}</div>
 
       <button id="subsnap-done-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-weight: 800; cursor: pointer;">
-        Got it, thanks! ✕
+        Got it ✕
       </button>
     `
 
@@ -274,7 +309,8 @@
     doneBtn.addEventListener('click', close)
   }
 
-  function injectHUD(btn, mode = 'countdown_5s') {
+  // 7. Active Visual Auto-Pilot HUD
+  function injectHUD(btn, mode = 'countdown_5s', isAIRepaired = false) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
 
@@ -318,6 +354,7 @@
         <div style="font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
           <span>SubSnap Auto-Pilot</span>
           <span id="subsnap-timer-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 6px;">5s</span>
+          ${isAIRepaired ? '<span style="font-size: 9px; font-weight: 800; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; padding: 1px 5px; border-radius: 4px;">🤖 AI Healed</span>' : ''}
         </div>
         <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Cancel pathway located. Auto-cancelling in 5s...</div>
       </div>
@@ -355,7 +392,6 @@
         timerBadge.style.color = '#059669'
         btn.click()
 
-        // Safely check if a confirmation modal dialog appeared
         setTimeout(() => {
           const modalBtn = findModalConfirmBtn()
           if (modalBtn && modalBtn !== btn) {
@@ -369,7 +405,6 @@
         timerBadge.textContent = 'Manual'
         descEl.textContent = 'Button highlighted. Click button or below to confirm.'
       } else {
-        // Safe 5-second countdown default
         let secondsLeft = 5
         timerBadge.textContent = `${secondsLeft}s`
         descEl.textContent = `Cancel pathway located. Auto-cancelling in ${secondsLeft}s...`
@@ -405,21 +440,65 @@
     })
   }
 
-  function checkAndExecute() {
+  // 8. Reactive Scan with MutationObserver & AI DOM Fallback
+  async function performScan() {
+    if (hudInjected) return
+
     const btn = findCancelButton()
     if (btn) {
       chrome.storage.local.get(['autopilot_mode'], (res) => {
         const mode = res.autopilot_mode || 'countdown_5s'
-        injectHUD(btn, mode)
+        injectHUD(btn, mode, false)
       })
+      return true
     } else if (isFreePlanAccount()) {
-      injectInfoHUD(
+      injectGuidanceHUD(
         'Good News: No Active Paid Subscription',
         'Your account on this service is currently on the Free tier. You are not being charged any recurring fees.'
       )
+      return true
     }
+    return false
   }
 
-  setTimeout(checkAndExecute, 800)
-  setTimeout(checkAndExecute, 2000)
+  // MutationObserver with 5-second SPA rendering window
+  let scanAttempts = 0
+  const maxAttempts = 10
+
+  const observer = new MutationObserver(async () => {
+    if (!hudInjected) {
+      const found = await performScan()
+      if (found) observer.disconnect()
+    }
+  })
+
+  observer.observe(document.body, { childList: true, subtree: true })
+
+  // Polling interval up to 5s for lazy SPAs
+  const scanInterval = setInterval(async () => {
+    scanAttempts++
+    const found = await performScan()
+
+    if (found || scanAttempts >= maxAttempts) {
+      clearInterval(scanInterval)
+      observer.disconnect()
+
+      // If after 5s still nothing found -> Trigger In-Page AI DOM Scout Fallback!
+      if (!found && !hudInjected) {
+        const aiBtn = await requestAIDOMScout()
+        if (aiBtn) {
+          chrome.storage.local.get(['autopilot_mode'], (res) => {
+            const mode = res.autopilot_mode || 'countdown_5s'
+            injectHUD(aiBtn, mode, true)
+          })
+        } else {
+          // Zero Silent Failures: Show Graceful Guidance HUD
+          injectGuidanceHUD(
+            'SubSnap Cancellation Assistant',
+            'You are on the official billing management page. Please locate and click your plan cancellation button on screen.'
+          )
+        }
+      }
+    }
+  }, 500)
 })()
