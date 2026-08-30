@@ -207,6 +207,72 @@ const TOP_SERVICES = [
     keywords: ['google connected apps', 'google apps', 'אפליקציות מחוברות', 'חיבורי חשבון גוגל', 'google sign in'],
     cancelUrl: 'https://myaccount.google.com/connections',
     notes: 'Direct Google account third-party connected apps management'
+  },
+  {
+    name: 'GitHub (Pro / Team / Copilot)',
+    keywords: ['github', 'גיטהאב'],
+    cancelUrl: 'https://github.com/settings/billing/summary',
+    notes: 'Direct GitHub billing & plan settings'
+  },
+  {
+    name: 'Tinder Plus / Gold / Platinum',
+    keywords: ['tinder', 'tinder gold', 'tinder plus', 'טינדר'],
+    cancelUrl: 'https://tinder.com/app/settings',
+    notes: 'Direct Tinder subscription settings'
+  },
+  {
+    name: 'Audible (Amazon)',
+    keywords: ['audible', 'אודיבל', 'אמזון אודיבל'],
+    cancelUrl: 'https://www.audible.com/account/overview',
+    notes: 'Direct Audible membership cancellation'
+  },
+  {
+    name: 'NordVPN',
+    keywords: ['nordvpn', 'nord vpn', 'נורד'],
+    cancelUrl: 'https://my.nordaccount.com/dashboard/nordvpn/',
+    notes: 'Direct NordVPN subscription cancellation'
+  },
+  {
+    name: 'Strava Summit / Premium',
+    keywords: ['strava', 'סטראבה'],
+    cancelUrl: 'https://www.strava.com/settings/account',
+    notes: 'Direct Strava account & membership management'
+  },
+  {
+    name: 'PlayStation Plus (Sony)',
+    keywords: ['playstation', 'ps plus', 'playstation plus', 'פלייסטיישן'],
+    cancelUrl: 'https://store.playstation.com/subscriptions',
+    notes: 'Direct PlayStation Plus subscriptions'
+  },
+  {
+    name: 'Xbox Game Pass (Microsoft)',
+    keywords: ['xbox', 'game pass', 'xbox game pass', 'אקסבוקס'],
+    cancelUrl: 'https://account.microsoft.com/services/xboxgamepass',
+    notes: 'Direct Xbox Game Pass subscription management'
+  },
+  {
+    name: 'Wix Premium',
+    keywords: ['wix', 'וויקס', 'ויקס'],
+    cancelUrl: 'https://manage.wix.com/account/premium-services',
+    notes: 'Direct Wix premium subscriptions'
+  },
+  {
+    name: 'Shopify Store Plan',
+    keywords: ['shopify', 'שופיפיי'],
+    cancelUrl: 'https://admin.shopify.com/store',
+    notes: 'Direct Shopify plan & store cancellation'
+  },
+  {
+    name: 'Coursera Plus',
+    keywords: ['coursera', 'קורסרה'],
+    cancelUrl: 'https://www.coursera.org/my-purchases',
+    notes: 'Direct Coursera purchases & subscriptions'
+  },
+  {
+    name: 'The New York Times',
+    keywords: ['nytimes', 'ny times', 'new york times', 'ניו יורק טיימס'],
+    cancelUrl: 'https://www.nytimes.com/subscription/cancel',
+    notes: 'Direct NYTimes subscription cancellation'
   }
 ]
 
