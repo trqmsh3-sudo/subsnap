@@ -405,7 +405,6 @@ async function queryAIScout(query) {
       }
     }
   } catch (err) {}
-  } catch (err) {}
   
   return {
     name: query,
