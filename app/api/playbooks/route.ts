@@ -25,17 +25,25 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const host = (searchParams.get('host') || '').toLowerCase().replace(/^www\./, '')
 
+  let healedUrl: string | null = null
+  let dynamicSelector: string | null = null
+
   if (host && redis) {
     try {
-      const dynamicSelector = await redis.get<string>(`selector:${host}`)
-      if (dynamicSelector) {
-        return NextResponse.json({
-          host,
-          selectors: [dynamicSelector, ...(BASE_PLAYBOOKS[host] || [])],
-          source: 'remote_redis'
-        })
-      }
+      [healedUrl, dynamicSelector] = await Promise.all([
+        redis.get<string>(`healed_url:${host}`),
+        redis.get<string>(`selector:${host}`)
+      ])
     } catch {}
+  }
+
+  if (dynamicSelector || healedUrl) {
+    return NextResponse.json({
+      host,
+      healedUrl,
+      selectors: dynamicSelector ? [dynamicSelector, ...(BASE_PLAYBOOKS[host] || [])] : (BASE_PLAYBOOKS[host] || []),
+      source: 'remote_redis'
+    })
   }
 
   if (host && BASE_PLAYBOOKS[host]) {
@@ -51,4 +59,35 @@ export async function GET(req: NextRequest) {
     version: '1.0.0',
     updatedAt: new Date().toISOString()
   })
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { host, healedUrl, selector } = body
+
+    if (!host) {
+      return NextResponse.json({ error: 'host is required' }, { status: 400 })
+    }
+
+    const cleanHost = host.toLowerCase().replace(/^www\./, '')
+
+    if (redis) {
+      if (healedUrl) {
+        await redis.set(`healed_url:${cleanHost}`, healedUrl, { ex: 60 * 60 * 24 * 30 })
+      }
+      if (selector) {
+        await redis.set(`selector:${cleanHost}`, selector, { ex: 60 * 60 * 24 * 30 })
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully self-healed playbook for ${cleanHost}`,
+      healedUrl,
+      selector
+    })
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to record healed playbook' }, { status: 500 })
+  }
 }
