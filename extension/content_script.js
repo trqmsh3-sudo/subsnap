@@ -354,12 +354,13 @@
   }
 
   function isNoActiveSubscriptionState() {
-    // 0. If an active modal, dialog, or survey is open, NEVER declare no active subscription!
-    if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"], .modal, [class*="modal"]')) {
-      return false
-    }
-    if (getActiveDialogScope() !== document) {
-      return false
+    // 0. Only an ACTIVE cancellation modal or survey blocks free-plan detection (feature tooltips do NOT block!)
+    const activeSurvey = document.querySelector('[role="dialog"], dialog, div[aria-modal="true"]')
+    if (activeSurvey) {
+      const sText = (activeSurvey.innerText || '').toLowerCase()
+      if (/למה.*לבטל|בטוח שברצונך לבטל|reason.*cancel|sure you want to cancel|keep my plan|stay on pro|keep pro/i.test(sText)) {
+        return false
+      }
     }
 
     const bodyText = (document.body.innerText || '').toLowerCase()
@@ -367,6 +368,25 @@
     // 0.1 If the page is in an active cancellation flow or survey, abort free-plan check
     if (/למה.*לבטל|בטוח שברצונך לבטל|תקופת הניסיון|להמשיך בביטול|בטל מינוי|בטל מנוי/i.test(bodyText)) {
       return false
+    }
+
+    // 0.2 Universal Modern SaaS "Current Plan: Free" card / badge detector (Grammarly, Notion, Figma, Canva, etc.)
+    const hasCurrentPlanBadge = Array.from(document.querySelectorAll('button, div, span, p, a, [role="button"]')).some(el => {
+      const t = (el.innerText || '').trim().toLowerCase()
+      if (t === 'current plan' || t === 'תוכנית נוכחית' || t === 'your plan' || t === 'active plan' || t === 'תוכנית נוכחית: חינם') {
+        const parentBox = el.closest('div, section, article, td, li') || el.parentElement
+        const boxText = parentBox ? (parentBox.innerText || '').toLowerCase() : ''
+        return boxText.includes('free') || boxText.includes('חינם') || boxText.includes('basic') || boxText.includes('בסיסי')
+      }
+      return false
+    })
+    if (hasCurrentPlanBadge) {
+      return true
+    }
+
+    // 0.3 Regex check for Free Plan container with current plan
+    if (/free[\s\S]{0,120}current plan/i.test(bodyText) || /current plan[\s\S]{0,120}free/i.test(bodyText)) {
+      return true
     }
 
     const hasXSignUpLink = !!document.querySelector('a[href*="premium_sign_up"], [data-testid*="premium_sign_up"]')
@@ -1921,14 +1941,16 @@
         return
       }
 
-      // Fix #1 (Part 2): Only show Peace of Mind if AI EXPLICITLY returned confidence 0 & bestMatchIndex -1.
-      // NEVER show Peace of Mind on selector resolution failure or parse errors!
-      if (res && res.success && res.data && res.data.bestMatchIndex === -1 && res.data.confidence === 0) {
+      // When AI confirms user is on a free tier OR confirms no cancellation button exists:
+      if (res && res.success && res.data && (res.data.isFreeTier || res.data.bestMatchIndex === -1)) {
         if (existingHud) existingHud.remove()
         hudInjected = false
+        if (chrome.storage && chrome.storage.local) {
+          chrome.storage.local.remove(['subsnap_active_intent'])
+        }
         injectPeaceOfMindHUD(
-          'בשורות טובות: לא נמצא מנוי פעיל ✨',
-          `סייר ה-AI סרק את אפשרויות העמוד עבור ${serviceName} ואימת שלא קיים מנוי בתשלום או כפתור ביטול פעיל.`
+          'בשורות טובות: לא נמצא מנוי פעיל! 🛡️',
+          `סייר ה-AI סרק את עמוד המנויים של ${serviceName || cleanHost} ואימת שאינך מחויב במנוי פעיל (תוכנית חינמית / ללא מנוי בתשלום).`
         )
         return
       }

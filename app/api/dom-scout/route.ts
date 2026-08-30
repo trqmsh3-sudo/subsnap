@@ -56,6 +56,7 @@ Return ONLY a JSON object:
   "bestMatchIndex": number (0-based index in the elements array, or -1 if no genuine cancel button is found),
   "targetSelector": "CSS selector if uniquely identifiable, or null",
   "confidence": number (0.0 to 1.0, must be 0 if bestMatchIndex is -1),
+  "isFreeTier": boolean (set to true if the elements show the user is currently on a Free/Basic plan, e.g. "Current Plan" on Free, or only upgrade/pro purchase buttons exist without an active paid subscription),
   "explanation": "Short reason"
 }
 `
@@ -83,11 +84,17 @@ Return ONLY a JSON object:
         targetSelector: derivedSelector,
         bestMatchIndex: parsed.bestMatchIndex,
         confidence: parsed.confidence,
+        isFreeTier: !!parsed.isFreeTier,
         source: 'gemini_dom_scout'
       })
     }
 
-    return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, source: 'no_confident_match' })
+    return NextResponse.json({
+      targetSelector: null,
+      bestMatchIndex: -1,
+      isFreeTier: !!(parsed && parsed.isFreeTier),
+      source: 'no_confident_match'
+    })
   } catch (err) {
     console.warn('[DOM Scout Error]:', err)
     return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, error: String(err) })
