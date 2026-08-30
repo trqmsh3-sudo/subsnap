@@ -544,22 +544,63 @@
   }
 
   function findNavigationRecoveryElement() {
-    const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], [tabindex="0"], span'))
+    // 1. Direct billing/subscription links
+    const billingCandidates = Array.from(document.querySelectorAll(
+      'a[href*="billing"], a[href*="subscription"], a[href*="plan"], a[href*="upgrade"], ' +
+      '[data-testid*="billing"], [data-testid*="subscription"], [data-testid*="plan"]'
+    )).filter(el => isVisible(el) && !isDisallowedElement(el))
+
+    if (billingCandidates.length > 0) {
+      return billingCandidates[0]
+    }
+
+    // 2. Account & Settings navigation
+    const settingsCandidates = Array.from(document.querySelectorAll(
+      'a[href*="settings"], a[href*="account"], [data-testid*="settings"], [data-testid*="account"], ' +
+      '[aria-label*="Settings" i], [aria-label*="Account" i], [aria-label*="הגדרות"], [aria-label*="חשבון"]'
+    )).filter(el => isVisible(el) && !isDisallowedElement(el))
+
+    if (settingsCandidates.length > 0) {
+      return settingsCandidates[0]
+    }
+
+    // 3. User Avatar / Profile Menu triggers (modern SaaS like Manus, OpenAI, Canva)
+    const avatarCandidates = Array.from(document.querySelectorAll(
+      '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
+      'button[aria-label*="Profile" i], button[aria-label*="User" i], button[aria-label*="Account" i], ' +
+      'div[aria-label*="Profile" i], div[aria-label*="Account" i], ' +
+      '[class*="avatar"], [class*="user-profile"], [class*="profile-button"]'
+    )).filter(el => isVisible(el) && !isDisallowedElement(el))
+
+    if (avatarCandidates.length > 0) {
+      return avatarCandidates[0]
+    }
+
+    // 4. Fallback text scanning for navigation anchors
+    const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], button, [tabindex="0"], span'))
     for (const el of elements) {
-      if (!isVisible(el)) continue
-      const text = (el.innerText || el.textContent || '').trim()
+      if (!isVisible(el) || isDisallowedElement(el)) continue
+      const text = (el.innerText || el.textContent || '').toLowerCase().trim()
 
       if (
-        text === 'Premium' ||
+        text === 'premium' ||
         text === 'פרימיום' ||
-        text === 'Monetization' ||
-        text === 'מונטיזציה' ||
-        text === 'Creator Subscriptions' ||
-        text === 'Manage Subscriptions' ||
+        text === 'billing' ||
+        text === 'חיוב' ||
+        text === 'subscription' ||
+        text === 'subscriptions' ||
         text === 'מינויים' ||
-        text === 'Manage subscription'
+        text === 'manage subscription' ||
+        text === 'manage subscriptions' ||
+        text === 'manage plan' ||
+        text === 'settings' ||
+        text === 'הגדרות' ||
+        text === 'account' ||
+        text === 'חשבון' ||
+        text === 'monetization' ||
+        text === 'creator subscriptions'
       ) {
-        return el.closest('a, div[role="link"], div[role="button"], [tabindex="0"]') || el
+        return el.closest('a, div[role="link"], div[role="button"], button, [tabindex="0"]') || el
       }
     }
     return null
@@ -751,15 +792,15 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? `אותר נתיב ביטול עבור ${serviceName || host}` : `Cancellation Path Located: ${serviceName || host}`}</span>
-          <span style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">Google ⚡</span>
+          <span>${isHebrew ? `בטל את מנוי ${serviceName || host} בקליק אחד` : `Cancel ${serviceName || host} in 1-Click`}</span>
+          <span style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">Direct ⚡</span>
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
-          ${isHebrew ? `סייר SubSnap זיהה את עמוד הביטול והתמיכה (${host}). לחץ למעבר ישיר והפעלת הטייס האוטומטי!` : `SubSnap extracted the cancellation portal (${host}). Click to leap straight to Auto-Pilot!`}
+          ${isHebrew ? `סייר SubSnap פותח ישירות את אתר השירות (${host}) ומפעיל את הטייס האוטומטי לביטול!` : `SubSnap will open the service site (${host}) directly and engage Auto-Pilot!`}
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
-          <button id="subsnap-search-proceed-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: 800; cursor: pointer;">
-            ${isHebrew ? 'עבור ישירות לעמוד הביטול ➔' : 'Proceed to Cancellation ➔'}
+          <button id="subsnap-search-proceed-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 11px; font-weight: 800; cursor: pointer;">
+            ${isHebrew ? `פתח את ${host} ובטל עכשיו ➔` : `Open ${host} & Cancel Now ➔`}
           </button>
         </div>
       </div>
@@ -834,18 +875,25 @@
     }
 
     if (bestLink) {
-      const targetUrl = bestLink.href
+      const rawTargetUrl = bestLink.href
       let displayHost = ''
       try {
-        displayHost = new URL(targetUrl).hostname.replace(/^www\./, '')
+        displayHost = new URL(rawTargetUrl).hostname.replace(/^www\./, '')
       } catch (e) {
-        displayHost = targetUrl
+        displayHost = rawTargetUrl
+      }
+
+      // DIRECT ACTION: Automatically bypass informational help subdomains to launch the actual application directly!
+      const rootAppHost = displayHost.replace(/^(help|support|faq|kb)\./, '')
+      let operationalUrl = rawTargetUrl
+      if (displayHost.startsWith('help.') || displayHost.startsWith('support.') || displayHost.includes('zendesk') || displayHost.includes('intercom')) {
+        operationalUrl = `https://${rootAppHost}`
       }
 
       injectSearchResultActionHUD(
-        cleanedQuery || displayHost,
-        displayHost,
-        targetUrl
+        cleanedQuery || rootAppHost,
+        rootAppHost,
+        operationalUrl
       )
       return true
     }
@@ -893,16 +941,16 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? 'אותר מדריך הביטול הרשמי' : 'Official Cancellation Guide'}</span>
-          <span style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${serviceName} ⚡</span>
+          <span>${isHebrew ? `מדלג על המאמר ועובר ל-${serviceName || 'האתר'}` : `Jumping to ${serviceName || 'App'}`}</span>
+          <span id="subsnap-help-timer" style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">3s ⚡</span>
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
-          ${isHebrew ? 'המדריך מציין דרכי ביטול שונות. בחר את הדרך שבה נרשמת למעבר ישיר:' : 'Choose how you subscribed to leap straight to cancellation:'}
+          ${isHebrew ? 'סייר SubSnap מאתר את האפליקציה ומדלג ישירות לביצוע הביטול בפועל:' : 'SubSnap is bypassing this article to execute cancellation directly on the app:'}
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
           ${directUrl ? `
             <button id="subsnap-help-web-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
-              ${isHebrew ? 'ביטול באתר / Stripe ➔' : 'Cancel on Website ➔'}
+              ${isHebrew ? 'פתח את האתר ובטל עכשיו ➔' : 'Open Website & Cancel ➔'}
             </button>
           ` : ''}
           ${googlePlayUrl ? `
@@ -925,7 +973,26 @@
     document.body.appendChild(hud)
 
     if (directUrl) {
+      let secondsLeft = 3
+      const autoHopTimer = setInterval(() => {
+        if (document.hidden) return
+        secondsLeft -= 1
+        const badge = hud.querySelector('#subsnap-help-timer')
+        if (badge) badge.textContent = `${secondsLeft}s`
+        if (secondsLeft <= 0) {
+          clearInterval(autoHopTimer)
+          if (hud.isConnected) {
+            hud.querySelector('#subsnap-help-web-btn')?.click()
+          }
+        }
+      }, 1000)
+
+      hud.querySelector('#subsnap-help-close-btn')?.addEventListener('click', () => {
+        clearInterval(autoHopTimer)
+      })
+
       hud.querySelector('#subsnap-help-web-btn')?.addEventListener('click', () => {
+        clearInterval(autoHopTimer)
         let host = serviceName
         try { host = new URL(directUrl).hostname.replace(/^www\./, '') } catch(e) {}
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -1734,6 +1801,26 @@
         injectDeadLinkRecoveryHUD(targetName || cleanHost)
         return true
       }
+    }
+
+    // Tier 1.5: In-App Settings & Billing Drilldown (Homepage / Dashboard navigation)
+    // When on the target service domain but no direct cancel button is yet visible on screen:
+    const drilldownNav = findNavigationRecoveryElement()
+    if (drilldownNav && !hudInjected) {
+      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+      drilldownNav.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      drilldownNav.style.outline = '3px solid #10b981'
+      drilldownNav.style.outlineOffset = '3px'
+
+      injectSelfHealingHUD(
+        isHebrew ? 'מנווט להגדרות המנוי ⚡' : 'Navigating to Subscription Settings ⚡',
+        isHebrew ? 'נתיב החשבון אותר. פותח את הגדרות המנוי להמשך ביטול...' : 'Account settings located. Opening to proceed with cancellation...',
+        () => {
+          forceClick(drilldownNav)
+          setTimeout(startScanningEngine, 1200)
+        }
+      )
+      return true
     }
 
     return false
