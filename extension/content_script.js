@@ -362,7 +362,13 @@
     }
 
     const hasXSignUpLink = !!document.querySelector('a[href*="premium_sign_up"], [data-testid*="premium_sign_up"]')
-    const hasXIneligible = bodyText.includes('subscriptions\nineligible') || bodyText.includes('subscriptions ineligible')
+    const hasXIneligible = (
+      /subscriptions[\s\S]{0,60}ineligible/i.test(bodyText) ||
+      /creator studio[\s\S]{0,100}subscriptions[\s\S]{0,60}ineligible/i.test(bodyText) ||
+      window.location.pathname.includes('/creators/studio') ||
+      bodyText.includes('subscriptions\nineligible') ||
+      bodyText.includes('subscriptions ineligible')
+    )
     if (hasXSignUpLink || hasXIneligible) {
       return true
     }
@@ -1559,8 +1565,8 @@
           ${isHebrew ? 'סייר ה-AI סרק את האתר אך לא זיהה נתיב ביטול פעיל. מומלץ לבדוק במרכז העזרה או לעבור לדף הבית.' : 'AI Scout completed scanning. No active cancellation button found. Check help center or homepage.'}
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
-          <button id="subsnap-ai-home-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-            ${isHebrew ? 'דף הבית ➔' : 'Homepage ➔'}
+          <button id="subsnap-ai-settings-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+            ${isHebrew ? 'הגדרות חשבון ➔' : 'Account Settings ➔'}
           </button>
           <button id="subsnap-ai-search-btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
             ${isHebrew ? 'חפש מדריך בגוגל 🔍' : 'Search Guide 🔍'}
@@ -1571,8 +1577,8 @@
         ✕
       </button>
     `
-    hud.querySelector('#subsnap-ai-home-btn').addEventListener('click', () => {
-      window.location.href = window.location.origin
+    hud.querySelector('#subsnap-ai-settings-btn').addEventListener('click', () => {
+      window.location.href = `https://${window.location.hostname}/settings`
     })
     hud.querySelector('#subsnap-ai-search-btn').addEventListener('click', () => {
       window.location.href = `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + (serviceName || host) + ' subscription')}`
