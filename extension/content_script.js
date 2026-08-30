@@ -194,12 +194,26 @@
       }
     }
 
+    // 3. Check contextual "Manage" buttons (e.g. Google Play subscription cards)
     const pathname = window.location.pathname.toLowerCase()
-    if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
-      for (const el of candidates) {
-        if (!isVisible(el) || isDisallowedElement(el)) continue
-        const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
-        if (text === 'ניהול' || text === 'manage' || text === 'ניהול המינוי' || text === 'manage subscription') {
+    for (const el of candidates) {
+      if (!isVisible(el) || isDisallowedElement(el)) continue
+      const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+
+      // Full specific phrase is always safe
+      if (text === 'ניהול המינוי' || text === 'manage subscription' || text === 'manage plan' || text === 'ניהול מנוי') {
+        return el
+      }
+
+      // Bare "Manage" / "ניהול" is ONLY safe if surrounded by explicit subscription/renewal context
+      if (text === 'ניהול' || text === 'manage') {
+        const card = el.closest('tr, li, article, div[role="listitem"], [class*="subscription"], [class*="plan"], [class*="membership"]') || el.parentElement?.parentElement
+        const contextText = card ? (card.innerText || card.textContent || '').toLowerCase() : ''
+
+        const hasSubContext = /(מינוי|מנוי|subscription|membership|plan|renewal|מתחדש|recurring)/i.test(contextText)
+        const hasIrrelevantContext = /(notification|privacy|password|address|profile|email|security|התראות|אבטחה|פרטיות|סיסמה|פרופיל)/i.test(contextText)
+
+        if ((pathname.includes('/subscriptions') || hasSubContext) && !hasIrrelevantContext) {
           return el
         }
       }
