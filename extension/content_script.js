@@ -139,6 +139,7 @@
     }
 
     const freeTierSignals = [
+      // English Free Tier Indicators
       'no active subscription',
       'no active subscriptions',
       'no subscriptions',
@@ -147,9 +148,19 @@
       'no active memberships',
       'current plan: free',
       'plan: free',
+      'free plan',
+      'free account',
+      'spotify free',
+      'youtube free',
+      'canva free',
+      'join premium',
+      'get premium',
+      'try premium',
       'upgrade to pro',
       'upgrade to premium',
       'upgrade plan',
+      'switch to premium',
+      // Hebrew Free Tier Indicators
       'אין לך מינויים',
       'אין מינויים',
       'אין לך מינויים פעילים',
@@ -162,7 +173,26 @@
       'מינויים שתירשם אליהם יופיעו כאן',
       'מינויים יופיעו כאן',
       'תוכנית חינמית',
-      'תוכנית: חינם'
+      'תוכנית: חינם',
+      'חשבון חינם',
+      'חשבון בחינם',
+      'חשבון אחד בחינם',
+      'הצטרפו אל premium',
+      'הצטרפו ל-premium',
+      'הצטרפות ל-premium',
+      'הצטרף אל premium',
+      'הצטרף ל-premium',
+      'הצטרף לפרימיום',
+      'הצטרפו לפרימיום',
+      'הצטרפו אל פרימיום',
+      'נסו את premium',
+      'נסה את premium',
+      'שדרוג ל-premium',
+      'שדרג ל-premium',
+      'שדרוג לפרימיום',
+      'שדרג לפרימיום',
+      'הצטרפו ל-pro',
+      'שדרוג ל-pro'
     ]
 
     return freeTierSignals.some(k => bodyText.includes(k))
