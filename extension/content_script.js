@@ -780,42 +780,31 @@
   }
 
   function findNavigationRecoveryElement() {
-    // 1. Direct billing/subscription links
+    const currentHref = window.location.href.toLowerCase()
+    const currentPath = window.location.pathname.toLowerCase()
+
+    // Helper to check if a link points to the CURRENT broken/404 URL
+    const isCurrentBrokenLink = (el) => {
+      const href = (el.getAttribute('href') || '').toLowerCase()
+      if (!href) return false
+      return currentHref.endsWith(href) || currentPath === href || href === window.location.pathname
+    }
+
+    // 1. Direct billing/subscription/premium links (Prioritize over generic settings!)
     const billingCandidates = Array.from(document.querySelectorAll(
-      'a[href*="billing"], a[href*="subscription"], a[href*="plan"], a[href*="upgrade"], ' +
-      '[data-testid*="billing"], [data-testid*="subscription"], [data-testid*="plan"]'
-    )).filter(el => isVisible(el) && !isNavigationDisallowed(el))
+      'a[href*="subscription"], a[href*="manage_subscription"], a[href*="billing"], a[href*="premium"], ' +
+      'a[href*="monetization"], a[href*="plan"], a[href*="upgrade"], ' +
+      '[data-testid*="subscription"], [data-testid*="billing"], [data-testid*="premium"], [data-testid*="plan"]'
+    )).filter(el => isVisible(el) && !isNavigationDisallowed(el) && !isCurrentBrokenLink(el))
 
     if (billingCandidates.length > 0) {
       return billingCandidates[0]
     }
 
-    // 2. Account & Settings navigation
-    const settingsCandidates = Array.from(document.querySelectorAll(
-      'a[href*="settings"], a[href*="account"], [data-testid*="settings"], [data-testid*="account"], ' +
-      '[aria-label*="Settings" i], [aria-label*="Account" i], [aria-label*="הגדרות"], [aria-label*="חשבון"]'
-    )).filter(el => isVisible(el) && !isNavigationDisallowed(el))
-
-    if (settingsCandidates.length > 0) {
-      return settingsCandidates[0]
-    }
-
-    // 3. User Avatar / Profile Menu triggers (modern SaaS like Manus, OpenAI, Canva)
-    const avatarCandidates = Array.from(document.querySelectorAll(
-      '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
-      'button[aria-label*="Profile" i], button[aria-label*="User" i], button[aria-label*="Account" i], ' +
-      'div[aria-label*="Profile" i], div[aria-label*="Account" i], ' +
-      '[class*="avatar"], [class*="user-profile"], [class*="profile-button"]'
-    )).filter(el => isVisible(el) && !isNavigationDisallowed(el))
-
-    if (avatarCandidates.length > 0) {
-      return avatarCandidates[0]
-    }
-
-    // 4. Fallback text scanning for navigation anchors
+    // 2. High-priority text scanning for navigation anchors (Premium, Subscriptions, Billing, Monetization)
     const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], button, [tabindex="0"], span'))
     for (const el of elements) {
-      if (!isVisible(el) || isNavigationDisallowed(el)) continue
+      if (!isVisible(el) || isNavigationDisallowed(el) || isCurrentBrokenLink(el)) continue
       const text = (el.innerText || el.textContent || '').toLowerCase().trim()
 
       if (
@@ -825,24 +814,42 @@
         text === 'חיוב' ||
         text === 'subscription' ||
         text === 'subscriptions' ||
-        text === 'מינויים' ||
-        text === 'manage subscription' ||
         text === 'manage subscriptions' ||
+        text === 'manage subscription' ||
         text === 'manage plan' ||
+        text === 'monetization' ||
+        text === 'creator subscriptions' ||
         text === 'admin console' ||
         text === 'admin' ||
         text === 'ניהול מערכת' ||
-        text === 'לוח בקרה' ||
-        text === 'settings' ||
-        text === 'הגדרות' ||
-        text === 'account' ||
-        text === 'חשבון' ||
-        text === 'monetization' ||
-        text === 'creator subscriptions'
+        text === 'לוח בקרה'
       ) {
         return el.closest('a, div[role="link"], div[role="button"], button, [tabindex="0"]') || el
       }
     }
+
+    // 3. User Avatar / Profile Menu triggers
+    const avatarCandidates = Array.from(document.querySelectorAll(
+      '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
+      'button[aria-label*="Profile" i], button[aria-label*="User" i], button[aria-label*="Account" i], ' +
+      'div[aria-label*="Profile" i], div[aria-label*="Account" i], ' +
+      '[class*="avatar"], [class*="user-profile"], [class*="profile-button"]'
+    )).filter(el => isVisible(el) && !isNavigationDisallowed(el) && !isCurrentBrokenLink(el))
+
+    if (avatarCandidates.length > 0) {
+      return avatarCandidates[0]
+    }
+
+    // 4. Account & Settings navigation fallback
+    const settingsCandidates = Array.from(document.querySelectorAll(
+      'a[href*="settings"], a[href*="account"], [data-testid*="settings"], [data-testid*="account"], ' +
+      '[aria-label*="Settings" i], [aria-label*="Account" i], [aria-label*="הגדרות"], [aria-label*="חשבון"]'
+    )).filter(el => isVisible(el) && !isNavigationDisallowed(el) && !isCurrentBrokenLink(el))
+
+    if (settingsCandidates.length > 0) {
+      return settingsCandidates[0]
+    }
+
     return null
   }
 
@@ -993,11 +1000,11 @@
           ${isHebrew ? 'העמוד הוסר או שכתובתו שונתה. SubSnap מחק את הקישור השגוי מהזיכרון.' : 'This page was moved or no longer exists. SubSnap purged the stale link from memory.'}
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
-          <button id="subsnap-goto-home-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
-            ${isHebrew ? 'עבור לדף הבית ➔' : 'Go to Homepage ➔'}
+          <button id="subsnap-goto-settings-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+            ${isHebrew ? 'פתח הגדרות חשבון ➔' : 'Open Account Settings ➔'}
           </button>
           <button id="subsnap-google-search-btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-            ${isHebrew ? 'חפש ביטול בגוגל 🔍' : 'Search on Google 🔍'}
+            ${isHebrew ? 'סרוק נתיב ביטול 🔍' : 'Probe Cancel Path 🔍'}
           </button>
         </div>
       </div>
@@ -1008,8 +1015,8 @@
 
     document.body.appendChild(hud)
 
-    hud.querySelector('#subsnap-goto-home-btn').addEventListener('click', () => {
-      window.location.href = window.location.origin
+    hud.querySelector('#subsnap-goto-settings-btn').addEventListener('click', () => {
+      window.location.href = `https://${window.location.hostname}/settings`
     })
 
     hud.querySelector('#subsnap-google-search-btn').addEventListener('click', () => {

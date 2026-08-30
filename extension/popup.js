@@ -49,7 +49,7 @@ const TOP_SERVICES = [
   {
     name: 'Grok / X Premium (Twitter)',
     keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'x'],
-    cancelUrl: 'https://x.com/settings/premium',
+    cancelUrl: 'https://x.com/settings/manage_subscriptions',
     notes: 'Direct X/Grok subscription management'
   },
   {
