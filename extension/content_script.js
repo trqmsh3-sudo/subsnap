@@ -22,11 +22,34 @@
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
     const style = window.getComputedStyle(el)
-    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.pointerEvents === 'none' ||
+      parseFloat(style.opacity || '1') < 0.1
+    ) {
       return false
     }
     const rect = el.getBoundingClientRect()
     return rect.width > 0 && rect.height > 0
+  }
+
+  // Shadow DOM traversal for modern SaaS (ChatGPT, Notion, Stripe Customer Portal)
+  function queryDeep(selector, root = document) {
+    const results = Array.from(root.querySelectorAll(selector))
+    try {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
+      let node = walker.nextNode()
+      while (node) {
+        if (node.shadowRoot) {
+          try {
+            results.push(...queryDeep(selector, node.shadowRoot))
+          } catch (e) {}
+        }
+        node = walker.nextNode()
+      }
+    } catch (e) {}
+    return results
   }
 
   function forceClick(el) {
@@ -39,11 +62,13 @@
     } catch (e) {}
   }
 
+  let staleEvicted = false
+
   function isDeadOr404Page() {
     const pageTitle = (document.title || '').toLowerCase()
     const bodyText = (document.body.innerText || '').toLowerCase()
 
-    return (
+    const isDead = (
       pageTitle.includes('page not found') ||
       pageTitle.includes('404') ||
       pageTitle.includes('לא נמצא') ||
@@ -54,6 +79,16 @@
       bodyText.includes("העמוד אינו קיים") ||
       bodyText.includes("דף זה אינו קיים")
     )
+
+    if (isDead && !staleEvicted) {
+      staleEvicted = true
+      const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ action: 'evictStalePlaybook', hostname: cleanHost })
+      }
+    }
+
+    return isDead
   }
 
   function isAlreadyCancelled() {
@@ -183,8 +218,8 @@
       } catch (e) {}
     }
 
-    // 2. Check strict keywords
-    const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]'))
+    // 2. Check strict keywords (including Shadow DOM)
+    const candidates = queryDeep('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]')
 
     for (const el of candidates) {
       if (!isVisible(el) || isDisallowedElement(el)) continue
@@ -340,6 +375,8 @@
     function startHealingCountdown() {
       let seconds = 2
       countdownTimer = setInterval(() => {
+        if (document.hidden) return // Pause countdown while tab is in background!
+
         seconds--
         if (seconds > 0) {
           if (timerBadge) timerBadge.textContent = `${seconds}s`
@@ -499,6 +536,8 @@
     function startCountdown() {
       let secondsLeft = 5
       countdownTimer = setInterval(() => {
+        if (document.hidden) return // Pause countdown while tab is in background!
+
         secondsLeft -= 1
         if (secondsLeft > 0) {
           timerBadge.textContent = `${secondsLeft}s`
@@ -547,10 +586,9 @@
       `לא אותר כפתור ביטול מוכר. סייר Gemini סורק את אלמנטי העמוד של ${serviceName}...`
     )
 
-    // Fix #3: Intelligent Prioritization instead of crude slice(0, 35)
-    const allInteractive = Array.from(
-      document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]')
-    ).filter(el => isVisible(el) && !isDisallowedElement(el))
+    // Fix #3: Intelligent Prioritization with Shadow DOM support
+    const allInteractive = queryDeep('button, a, div[role="button"], span[role="button"], input[type="submit"]')
+      .filter(el => isVisible(el) && !isDisallowedElement(el))
 
     const scoredElements = allInteractive.map(el => {
       let score = 0

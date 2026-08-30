@@ -37,4 +37,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch(err => sendResponse({ success: false, error: String(err) }))
     return true
   }
+
+  if (request.action === 'evictStalePlaybook' && request.hostname) {
+    fetch(`https://www.subsnap.net/api/playbooks?host=${encodeURIComponent(request.hostname)}`, {
+      method: 'DELETE'
+    })
+      .then(res => res.json())
+      .then(data => sendResponse({ success: true, data }))
+      .catch(err => sendResponse({ success: false, error: String(err) }))
+    return true
+  }
 })

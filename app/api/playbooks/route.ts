@@ -91,3 +91,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to record healed playbook' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const host = (searchParams.get('host') || '').toLowerCase().replace(/^www\./, '')
+    if (!host) {
+      return NextResponse.json({ error: 'host is required' }, { status: 400 })
+    }
+
+    if (redis) {
+      await Promise.all([
+        redis.del(`healed_url:${host}`),
+        redis.del(`selector:${host}`)
+      ])
+    }
+
+    return NextResponse.json({ success: true, message: `Evicted stale playbook for ${host}` })
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to evict playbook' }, { status: 500 })
+  }
+}
