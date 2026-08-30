@@ -168,7 +168,18 @@
     '[data-testid*="cancel-subscription"]',
     '[data-testid*="cancel-plan"]',
     '[data-action*="cancel-subscription"]',
-    'a[href*="/store/account/subscriptions/subscription?sku="]'
+    'a[href*="/store/account/subscriptions/subscription?sku="]',
+    // Connected Apps (Google / Apple / X)
+    'button[aria-label*="מחק את כל הקשרים"]',
+    'button[aria-label*="Delete all connections"]',
+    'button[aria-label*="Remove access"]',
+    'button[data-idom-class*="delete"]',
+    'button[data-testid="revoke-app-permissions"]',
+    // Newsletters / Webmail Unsubscribe
+    'span[role="button"][data-tooltip*="ביטול הרשמה"]',
+    'span[role="button"][data-tooltip*="Unsubscribe"]',
+    'span[role="button"][aria-label*="ביטול הרשמה"]',
+    'span[role="button"][aria-label*="Unsubscribe"]'
   ]
 
   // Tier 2: Check Remote Redis Cache on page start
@@ -204,7 +215,19 @@
     'סיום מנוי',
     'ביטול מנוי',
     'ניהול מנוי',
-    'הפסקת מנוי'
+    'הפסקת מנוי',
+    'הסר מרשימת תפוצה',
+    'ביטול הרשמה',
+    'unsubscribe',
+    'הסרה מרשימת הדיוור',
+    'stop using apple id',
+    'revoke app permissions',
+    'מחק את כל הקשרים',
+    'נתק אפליקציה',
+    'הסר גישה',
+    'remove access',
+    'remove these permissions',
+    'disconnect account'
   ]
 
   function findCancelButton() {
