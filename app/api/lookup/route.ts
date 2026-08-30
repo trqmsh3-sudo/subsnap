@@ -34,6 +34,22 @@ async function verifyCandidateUrl(url: string, brandQuery: string = ''): Promise
 
     const text = (await res.text()).slice(0, 5000).toLowerCase()
 
+    // 1.1 Soft 404 check (Modern SPA witty 404 pages)
+    if (
+      text.includes("even ai can't find this page") ||
+      text.includes("even ai can’t find this page") ||
+      text.includes("took a wrong turn") ||
+      text.includes("lost in space") ||
+      text.includes("looks like you're lost") ||
+      text.includes("page not found") ||
+      text.includes("404 not found") ||
+      text.includes("this page doesn't exist") ||
+      text.includes("this page doesn’t exist")
+    ) {
+      console.warn(`[URL Validator] REJECTED soft 404 / missing route: ${url}`)
+      return false
+    }
+
     // 2. Anti-Directory / Anti-Apache / Anti-Server Default check (Prevents index of / Apache listings)
     if (
       text.includes('index of /') ||
@@ -128,24 +144,23 @@ export async function GET(req: NextRequest) {
       const prompt = `You are SubSnap Autonomous Subscription Cancellation AI Scout.
 Analyze this user query / website / service name: "${query}".
 
-Extract the exact direct subscription cancellation URL, login URL, and step-by-step cancellation instructions.
+First, determine whether this website/service actually operates a recurring paid subscription model (e.g. Netflix, Spotify, ChatGPT Plus, SaaS tools) OR if it is a free service/community/hackathon/informational site WITHOUT paid subscriptions (e.g. Lablab.ai, Wikipedia, Ynet, free open-source tools).
 
 Return ONLY a valid JSON object matching this schema (no markdown, no backticks, no other text):
 {
   "name": "Exact Service Name in English",
   "nameHe": "שם השירות בעברית",
+  "isSubscriptionService": true or false,
+  "serviceType": "subscription" or "free_community_or_content",
   "loginUrl": "https://service.com/login",
-  "cancelUrl": "https://service.com/settings/billing or direct cancellation endpoint",
-  "notes": "Direct cancellation pathway instructions",
+  "cancelUrl": "https://service.com/settings/billing or direct cancellation endpoint, or root URL if no subscriptions",
+  "notes": "Direct cancellation pathway instructions, or clear notice if this platform has no subscriptions",
   "difficulty": "easy" or "hard",
   "steps": [
     "Step 1",
-    "Step 2",
-    "Step 3"
+    "Step 2"
   ]
 }
-
-If it is an unknown arbitrary domain like "example.io", deduce the standard settings/billing route (e.g. https://example.io/settings/billing or https://example.io/account).
 `
 
       const aiResponse = await model.generateContent([prompt])
@@ -155,14 +170,17 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
       const parsed = JSON.parse(cleanJson)
 
       if (parsed && parsed.cancelUrl) {
-        const verifiedCancelUrl = parsed.cancelUrl
-        const isCancelAlive = await verifyCandidateUrl(verifiedCancelUrl, query)
-        if (!isCancelAlive) {
-          console.warn(`[AI Scout Pre-flight Guard]: Candidate URL failed sanity check: ${verifiedCancelUrl}`)
-          throw new Error(`Candidate URL ${verifiedCancelUrl} is invalid, parked, or failed brand verification.`)
+        let verifiedCancelUrl = parsed.cancelUrl
+        if (parsed.isSubscriptionService !== false) {
+          const isCancelAlive = await verifyCandidateUrl(verifiedCancelUrl, query)
+          if (!isCancelAlive) {
+            console.warn(`[AI Scout Pre-flight Guard]: Candidate URL failed sanity check: ${verifiedCancelUrl}`)
+            // Fallback to domain root if candidate was dead
+            verifiedCancelUrl = `https://${qLower.replace(/^https?:\/\//, '').replace(/\/.*$/, '')}`
+          }
         }
 
-        const entry: CancellationEntry = {
+        const entry: CancellationEntry & { isSubscriptionService?: boolean } = {
           name: parsed.name || query,
           nameHe: parsed.nameHe || parsed.name || query,
           keywords: [qLower, (parsed.name || '').toLowerCase(), (parsed.nameHe || '').toLowerCase()],
@@ -173,6 +191,9 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
           difficulty: parsed.difficulty === 'hard' ? 'hard' : 'easy',
           tier: 'auto',
           steps: Array.isArray(parsed.steps) ? parsed.steps : ['Go to account settings', 'Click cancel subscription', 'Confirm']
+        }
+        if (parsed.isSubscriptionService === false) {
+          entry.isSubscriptionService = false
         }
 
         if (redis) {
@@ -192,25 +213,29 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
     }
   }
 
-  // 6. Smart Heuristic Fallback
+  // 6. Smart Heuristic Fallback (Avoid blind /settings/billing without verification)
   const isDomain = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(query) || query.includes('http')
   const cleanDomain = query.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim()
 
   if (isDomain) {
+    const candidateBilling = `https://${cleanDomain}/settings/billing`
+    const isBillingAlive = await verifyCandidateUrl(candidateBilling, cleanDomain)
+    const targetUrl = isBillingAlive ? candidateBilling : `https://${cleanDomain}`
+
     const heuristicEntry: CancellationEntry = {
       name: cleanDomain,
       nameHe: cleanDomain,
       keywords: [qLower, cleanDomain],
       loginUrl: `https://${cleanDomain}/login`,
-      cancelUrl: `https://${cleanDomain}/settings/billing`,
+      cancelUrl: targetUrl,
       method: 'url',
-      notes: `Direct navigation to ${cleanDomain} billing settings`,
+      notes: isBillingAlive ? `Direct verified navigation to ${cleanDomain} billing settings` : `Official site for ${cleanDomain}`,
       difficulty: 'easy',
       tier: 'auto',
       steps: [
-        `Navigate to billing settings on ${cleanDomain}`,
-        'Click Cancel Subscription or End Plan',
-        'Confirm cancellation'
+        `Navigate to account settings on ${cleanDomain}`,
+        'Check subscription or billing status',
+        'Confirm cancellation if subscribed'
       ]
     }
 

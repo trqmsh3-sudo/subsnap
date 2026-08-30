@@ -359,6 +359,19 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
   serviceNameEl.textContent = service.nameHe ? `${service.name} (${service.nameHe})` : service.name
   serviceNotesEl.textContent = service.notes || 'Direct cancellation pathway identified'
   if (modeTagEl) modeTagEl.textContent = sourceTag
+
+  if (btnCancel) {
+    if (service.isNonSubscription) {
+      btnCancel.textContent = 'שירות חינמי ✓'
+      btnCancel.style.background = '#10b981'
+      btnCancel.style.cursor = 'default'
+    } else {
+      btnCancel.textContent = 'בטל עכשיו ➔'
+      btnCancel.style.background = '#0f172a'
+      btnCancel.style.cursor = 'pointer'
+    }
+  }
+
   resultCard.style.display = 'block'
 }
 
@@ -366,18 +379,32 @@ async function queryAIScout(query) {
   try {
     const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
     const data = await res.json()
-    if (data && data.entry && data.entry.cancelUrl) {
-      const entry = {
-        name: data.entry.name || query,
-        nameHe: data.entry.nameHe,
-        cancelUrl: data.entry.cancelUrl,
-        notes: data.entry.notes || 'AI Scout identified direct billing pathway',
-        keywords: [query.toLowerCase()],
-        isLearned: true
+    if (data && data.entry) {
+      if (data.entry.isSubscriptionService === false) {
+        return {
+          name: data.entry.name || query,
+          nameHe: data.entry.nameHe,
+          cancelUrl: data.entry.cancelUrl || `https://${query}`,
+          notes: 'פלטפורמה חינמית ללא מנויים פעילים (קהילה / האקתונים / תוכן). אין חיוב ואין צורך בביטול.',
+          keywords: [query.toLowerCase()],
+          isNonSubscription: true
+        }
       }
-      saveLearnedService(entry)
-      return entry
+
+      if (data.entry.cancelUrl) {
+        const entry = {
+          name: data.entry.name || query,
+          nameHe: data.entry.nameHe,
+          cancelUrl: data.entry.cancelUrl,
+          notes: data.entry.notes || 'AI Scout identified direct billing pathway',
+          keywords: [query.toLowerCase()],
+          isLearned: true
+        }
+        saveLearnedService(entry)
+        return entry
+      }
     }
+  } catch (err) {}
   } catch (err) {}
   
   return {
@@ -478,17 +505,30 @@ searchInput.addEventListener('input', (e) => {
       const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(val.trim())}`)
       const data = await res.json()
       // Only apply if user hasn't changed the input in the meantime
-      if (searchInput.value.trim().toLowerCase() === val.trim().toLowerCase() && data && data.entry && data.entry.cancelUrl) {
-        const learned = {
-          name: data.entry.name || val.trim(),
-          nameHe: data.entry.nameHe,
-          cancelUrl: data.entry.cancelUrl,
-          notes: data.entry.notes || 'AI Scout verified direct cancellation pathway',
-          keywords: [val.trim().toLowerCase()],
-          isLearned: true
+      if (searchInput.value.trim().toLowerCase() === val.trim().toLowerCase() && data && data.entry) {
+        if (data.entry.isSubscriptionService === false) {
+          showResult({
+            name: data.entry.name || val.trim(),
+            nameHe: data.entry.nameHe,
+            cancelUrl: data.entry.cancelUrl || `https://${val.trim()}`,
+            notes: 'פלטפורמה חינמית ללא מנויים פעילים (קהילה / האקתונים / תוכן). אין חיוב ואין צורך בביטול.',
+            isNonSubscription: true
+          }, '🛡️ פלטפורמה חינמית')
+          return
         }
-        saveLearnedService(learned)
-        showResult(learned, data.source === 'cache' || data.source === 'global_redis_cache' ? '⚡ Cloud Synced' : '🤖 AI Scout Discovered')
+
+        if (data.entry.cancelUrl) {
+          const learned = {
+            name: data.entry.name || val.trim(),
+            nameHe: data.entry.nameHe,
+            cancelUrl: data.entry.cancelUrl,
+            notes: data.entry.notes || 'AI Scout verified direct cancellation pathway',
+            keywords: [val.trim().toLowerCase()],
+            isLearned: true
+          }
+          saveLearnedService(learned)
+          showResult(learned, data.source === 'cache' || data.source === 'global_redis_cache' ? '⚡ Cloud Synced' : '🤖 AI Scout Discovered')
+        }
       }
     } catch (err) {}
   }, 250)

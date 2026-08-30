@@ -167,6 +167,14 @@
       bodyText.includes("this page does not exist") ||
       bodyText.includes("page not found") ||
       bodyText.includes("404 not found") ||
+      bodyText.includes("even ai can't find this page") ||
+      bodyText.includes("even ai can’t find this page") ||
+      bodyText.includes("took a wrong turn") ||
+      bodyText.includes("lost in space") ||
+      bodyText.includes("looks like you're lost") ||
+      bodyText.includes("looks like you’re lost") ||
+      bodyText.includes("whoops, looks like") ||
+      bodyText.includes("nothing to see here") ||
       bodyText.includes("העמוד אינו קיים") ||
       bodyText.includes("דף זה אינו קיים")
     )
@@ -587,6 +595,33 @@
       .filter(el => isVisible(el) && (el.innerText || '').trim().length > 10)
     if (dialogs.length === 0) return document
     return dialogs[dialogs.length - 1]
+  }
+
+  function dismissPromotionalPopups() {
+    const modals = Array.from(document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"], div[class*="modal"], div[class*="popup"], div[class*="banner"]'))
+      .filter(el => isVisible(el) && (el.innerText || '').trim().length > 10)
+
+    for (const modal of modals) {
+      const text = (modal.innerText || modal.textContent || '').toLowerCase()
+      const isPromo = (
+        /hackathon|register now|webinar|newsletter|join our community|subscribe to our|cookie consent|accept all cookies|סגור פרסומת|הירשם לניוזלטר/i.test(text) &&
+        !/cancel|subscription|billing|מנוי|ביטול|חיוב|keep plan|sure you want to/i.test(text)
+      )
+
+      if (isPromo) {
+        const closeBtn = modal.querySelector(
+          'button[aria-label*="close" i], button[aria-label*="dismiss" i], button[title*="close" i], ' +
+          '[class*="close-button" i], [class*="modal-close" i], [data-testid*="close" i], ' +
+          'button svg, div[role="button"]:has(svg), button'
+        )
+        if (closeBtn && isVisible(closeBtn)) {
+          console.log('[SubSnap] Auto-dismissing promotional pop-up to clear screen...')
+          forceClick(closeBtn)
+          return true
+        }
+      }
+    }
+    return false
   }
 
   function resolveSurveyStep(scopeRoot) {
@@ -2057,6 +2092,9 @@
     }
 
     if (hudInjected) return false
+
+    // Auto-dismiss marketing / promotional overlays (like hackathon / newsletter popups)
+    dismissPromotionalPopups()
 
     // Check if user initiated active intent
     const activeIntent = await checkActiveIntent(cleanHost)
