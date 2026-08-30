@@ -606,6 +606,11 @@
         }
       }
 
+      // Consume active intent so it never lingers or leaks
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_active_intent'])
+      }
+
       // If valid target was resolved:
       if (targetEl) {
         targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -775,11 +780,26 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
-        // TIER 3 ESCALATION: Only if Tier 1 & Tier 2 failed and user came with active intent
+        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain!
         if (!found && !hudInjected && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
-            if (intent && (Date.now() - intent.timestamp < 180000)) {
+            const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+
+            function isHostMatch(targetHost, currentHost) {
+              if (!targetHost || !currentHost) return false
+              const t = targetHost.toLowerCase().replace(/^www\./, '')
+              const c = currentHost.toLowerCase().replace(/^www\./, '')
+              return (
+                c === t ||
+                c.endsWith('.' + t) ||
+                t.endsWith('.' + c) ||
+                (t.includes('x.com') && c.includes('twitter.com')) ||
+                (t.includes('twitter.com') && c.includes('x.com'))
+              )
+            }
+
+            if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
               triggerAIEscalation(intent)
             }
           })
