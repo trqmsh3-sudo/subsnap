@@ -135,9 +135,21 @@
     try {
       unlockDisabledAction(el)
       el.focus()
-      el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
-      el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
+      const opts = { bubbles: true, cancelable: true, view: window }
+      if (typeof PointerEvent !== 'undefined') {
+        el.dispatchEvent(new PointerEvent('pointerdown', opts))
+        el.dispatchEvent(new PointerEvent('pointerup', opts))
+      }
+      el.dispatchEvent(new MouseEvent('mousedown', opts))
+      el.dispatchEvent(new MouseEvent('mouseup', opts))
       el.click()
+
+      const parentForm = el.closest('form')
+      if (parentForm && (el.type === 'submit' || el.getAttribute('type') === 'submit')) {
+        try {
+          if (typeof parentForm.requestSubmit === 'function') parentForm.requestSubmit(el)
+        } catch (e) {}
+      }
     } catch (e) {}
   }
 
@@ -361,7 +373,19 @@
     'הקפאת מינוי',
     'הקפאת מנוי',
     'השהה מינוי',
-    'השהיית מנוי'
+    'השהיית מנוי',
+    // Keep subscription traps (e.g. "השאירו את Canva Pro", "Keep Canva Pro")
+    'השאירו את',
+    'השאירו',
+    'הישאר במנוי',
+    'להישאר במנוי',
+    'הישאר בתוכנית',
+    'שמור על המנוי',
+    'keep my subscription',
+    'keep subscription',
+    'keep plan',
+    'keep pro',
+    'keep my plan'
   ]
 
   function isDisallowedElement(el) {
@@ -425,6 +449,9 @@
     'deactivate subscription',
     'stop renewal',
     'continue to cancel',
+    'להמשיך בביטול',
+    'המשך בביטול',
+    'המשך לביטול',
     'confirm cancellation',
     'manage subscription',
     'manage plan',
@@ -460,28 +487,43 @@
   function resolveSurveyStep(scopeRoot) {
     if (!scopeRoot || scopeRoot === document) return null
     const text = (scopeRoot.innerText || scopeRoot.textContent || '').toLowerCase()
-    const isSurvey = /(סיבת הביטול|למה לבטל|reason.*cancel|why.*leaving|why.*cancel|help us improve)/i.test(text)
+    const isSurvey = /(סיבת הביטול|למה.*לבטל|מדוע.*לבטל|ספר לנו למה|reason.*cancel|why.*leaving|why.*cancel|tell us why|help us improve)/i.test(text)
     if (!isSurvey) return null
 
-    // Find and select neutral radio option to unblock Next/Continue button
+    // 1. Find and select neutral radio option to unblock Next/Continue button
     const radios = Array.from(scopeRoot.querySelectorAll('input[type="radio"], [role="radio"], label, [data-value]'))
       .filter(r => isVisible(r))
 
     if (radios.length > 0) {
       const isAlreadyChecked = radios.some(r => r.checked || r.getAttribute('aria-checked') === 'true')
       if (!isAlreadyChecked) {
-        let preferred = radios.find(r => /(לא רוצה להשיב|אחר|decline|other|not.*use|מספיק)/i.test(r.innerText || r.textContent || ''))
+        let preferred = radios.find(r => /(לא רוצה להשיב|אחר|יקר|decline|other|expensive|not.*use|מספיק)/i.test(r.innerText || r.textContent || ''))
         if (!preferred) preferred = radios[0]
         if (preferred) forceClick(preferred)
       }
     }
 
-    // Locate forward progress button (Continue / Next)
+    // 2. Open feedback textarea / text input - autofill neutral reason to unblock form validation
+    const inputs = Array.from(scopeRoot.querySelectorAll('textarea, input[type="text"]')).filter(i => isVisible(i))
+    for (const input of inputs) {
+      if (!input.value || input.value.trim().length === 0) {
+        const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500))
+        const val = isHebrew ? 'יקר מדי / סיבות תקציב' : 'Too expensive / Budget reasons'
+        input.focus()
+        input.value = val
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+    }
+
+    // 3. Locate forward progress button (Continue / Next OR direct Cancel / בטל מינוי!)
     const actionCandidates = queryDeep('button, a, div[role="button"], span[role="button"], [tabindex="0"]', scopeRoot)
     for (const btn of actionCandidates) {
       if (!isVisible(btn) || isDisallowedElement(btn)) continue
       const btnText = (btn.innerText || btn.textContent || btn.value || '').toLowerCase().trim()
-      if (/(המשך|continue|next|proceed|advance)/i.test(btnText) && !/(הקודם|back|cancel)/i.test(btnText)) {
+      if (/(השאירו|הישאר|keep|stay)/i.test(btnText)) continue
+
+      if (/(המשך|continue|next|proceed|advance|להמשיך בביטול|המשך בביטול|בטל מינוי|בטל מנוי|cancel subscription|cancel plan)/i.test(btnText)) {
         unlockDisabledAction(btn)
         return btn
       }
@@ -1435,15 +1477,24 @@
           return
         }
 
-        if (autoPilotStepCount >= 6) {
+        // Smart loop guard: only halt if the EXACT same button was clicked 3 times without DOM advancement
+        const isStuckOnSameElement = (window.__subsnap_last_clicked_btn === btn)
+        if (isStuckOnSameElement) {
+          window.__subsnap_same_btn_clicks = (window.__subsnap_same_btn_clicks || 0) + 1
+        } else {
+          window.__subsnap_last_clicked_btn = btn
+          window.__subsnap_same_btn_clicks = 1
+        }
+
+        if (window.__subsnap_same_btn_clicks >= 3) {
           descEl.textContent = isHebrew
-            ? 'הטייס האוטומטי הגיע לשלב הסופי. אנא אשר את הביטול ידנית.'
-            : 'Auto-Pilot reached step limit. Please confirm final step manually.'
+            ? 'הטייס האוטומטי זיהה את הכפתור. אנא אשר את הלחיצה ידנית.'
+            : 'Auto-Pilot located target. Please click to confirm manually.'
           timerBadge.textContent = isHebrew ? 'ידני 🎯' : 'Manual 🎯'
           return
         }
 
-        // Cleanly unblock for next step
+        // Cleanly unblock for next step in the cancellation funnel
         hud.remove()
         hudInjected = false
         startScanningEngine()
