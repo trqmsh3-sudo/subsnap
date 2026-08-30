@@ -568,18 +568,19 @@
 
             injectSelfHealingHUD(
               'נתיב הביטול אותר ע&quot;י AI 🤖⚡',
-              `ה-AI פיצח את הנתיב. ממשיך בעוד 2 שניות ומעדכן את מאגר הזיכרון בענן להבא...`,
+              `ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...`,
               () => {
-                forceClick(targetEl)
-                // Write-back loop: Save to Tier 2 (Redis) so next time it's 0ms and $0!
-                chrome.runtime.sendMessage({
-                  action: 'reportHealedUrl',
-                  payload: {
+                // Two-Phase Verification: Save candidate in session, DO NOT commit to Redis yet!
+                try {
+                  sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
                     host: cleanHost,
-                    healedUrl: window.location.href,
-                    selector: res.data.targetSelector
-                  }
-                })
+                    urlBefore: window.location.href,
+                    selector: res.data.targetSelector,
+                    timestamp: Date.now()
+                  }))
+                } catch (e) {}
+
+                forceClick(targetEl)
                 setTimeout(startScanningEngine, 1000)
               }
             )
@@ -596,9 +597,47 @@
     })
   }
 
+  // --- Two-Phase Outcome Verification Engine ---
+  function verifyAndCommitPendingHeal() {
+    try {
+      const pendingRaw = sessionStorage.getItem('subsnap_pending_verification')
+      if (!pendingRaw) return
+      const pending = JSON.parse(pendingRaw)
+
+      // Expire candidates after 60 seconds
+      if (Date.now() - pending.timestamp > 60000) {
+        sessionStorage.removeItem('subsnap_pending_verification')
+        return
+      }
+
+      // VERIFICATION CONDITIONS (Must be 100% verified real outcome):
+      // 1. Account officially transitioned to cancelled state ("בוטל")
+      // 2. Or genuine cancel button was found on the landing page
+      const isCancelled = isAlreadyCancelled()
+      const hasVerifiedCancelBtn = findCancelButton() !== null
+
+      if (isCancelled || hasVerifiedCancelBtn) {
+        if (chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({
+            action: 'reportHealedUrl',
+            payload: {
+              host: pending.host,
+              healedUrl: window.location.href,
+              selector: pending.selector
+            }
+          })
+        }
+        sessionStorage.removeItem('subsnap_pending_verification')
+      }
+    } catch (e) {}
+  }
+
   // --- Main Tiered Scan Engine ---
 
   async function performScan() {
+    // Check if a previous candidate click achieved verified success
+    verifyAndCommitPendingHeal()
+
     if (hudInjected) return false
 
     // Tier 1.1: Check if already cancelled
@@ -640,15 +679,17 @@
           'ריפוי עצמי של סייר SubSnap 🤖',
           'הקישור הישן השתנה. מתקן מסלול ופותח את הגדרות הפרימיום שנמצאו בעמוד...',
           () => {
-            forceClick(recoveryNav)
-            chrome.runtime.sendMessage({
-              action: 'reportHealedUrl',
-              payload: {
+            // Stage candidate for post-navigation verification
+            try {
+              sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
                 host: cleanHost,
-                healedUrl: window.location.href,
-                selector: 'div[data-testid="cancelSubscription"]'
-              }
-            })
+                urlBefore: window.location.href,
+                selector: 'div[data-testid="cancelSubscription"]',
+                timestamp: Date.now()
+              }))
+            } catch (e) {}
+
+            forceClick(recoveryNav)
             setTimeout(startScanningEngine, 1000)
           }
         )
