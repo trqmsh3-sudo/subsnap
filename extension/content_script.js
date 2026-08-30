@@ -725,6 +725,134 @@
     })
   }
 
+  function injectSearchResultActionHUD(serviceName, host, targetUrl) {
+    if (document.getElementById('subsnap-search-hud')) return
+    hudInjected = true
+
+    const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-search-hud'
+    hud.style.cssText = `
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #10b981;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(16, 185, 129, 0.2);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ${isHebrew ? 'rtl' : 'ltr'};
+      min-width: 360px; max-width: 520px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      </style>
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; color: #059669;">
+        🎯
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
+          <span>${isHebrew ? `אותר נתיב ביטול עבור ${serviceName || host}` : `Cancellation Path Located: ${serviceName || host}`}</span>
+          <span style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">Google ⚡</span>
+        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
+          ${isHebrew ? `סייר SubSnap זיהה את עמוד הביטול והתמיכה (${host}). לחץ למעבר ישיר והפעלת הטייס האוטומטי!` : `SubSnap extracted the cancellation portal (${host}). Click to leap straight to Auto-Pilot!`}
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button id="subsnap-search-proceed-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-size: 11px; font-weight: 800; cursor: pointer;">
+            ${isHebrew ? 'עבור ישירות לעמוד הביטול ➔' : 'Proceed to Cancellation ➔'}
+          </button>
+        </div>
+      </div>
+      <button id="subsnap-search-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px; align-self: flex-start;">
+        ✕
+      </button>
+    `
+
+    document.body.appendChild(hud)
+
+    hud.querySelector('#subsnap-search-proceed-btn').addEventListener('click', () => {
+      // Save active intent for this target so Auto-Pilot immediately takes over upon landing
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set({
+          subsnap_active_intent: {
+            name: serviceName || host,
+            targetHost: host,
+            cancelUrl: targetUrl,
+            timestamp: Date.now()
+          }
+        }, () => {
+          window.location.href = targetUrl
+        })
+      } else {
+        window.location.href = targetUrl
+      }
+    })
+
+    hud.querySelector('#subsnap-search-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
+  function handleGoogleSearchCancellationExtractor() {
+    const isGoogleSearch = window.location.hostname.includes('google.') && window.location.pathname.includes('/search')
+    if (!isGoogleSearch) return false
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const q = (urlParams.get('q') || '').toLowerCase()
+    const isCancelQuery = /(cancel|ביטול|unsubscribe|how to cancel|איך לבטל|להפסיק מנוי)/i.test(q)
+    if (!isCancelQuery) return false
+
+    const cleanedQuery = q
+      .replace(/how to cancel|how do i cancel|how can i cancel|cancel subscription|cancel|subscription|איך לבטל מנוי|איך לבטל|ביטול מנוי|ביטול|מנוי/gi, '')
+      .trim()
+
+    // Scan Google search results for authoritative cancellation / help / account links
+    const resultLinks = Array.from(document.querySelectorAll('#search a[href^="http"], #rso a[href^="http"], div.g a[href^="http"]'))
+      .filter(a => {
+        const href = a.href || ''
+        if (href.includes('google.com') || href.includes('youtube.com') || href.includes('webcache')) return false
+        return true
+      })
+
+    let bestLink = null
+    for (const a of resultLinks) {
+      const href = (a.href || '').toLowerCase()
+      const text = ((a.innerText || '') + ' ' + (a.title || '')).toLowerCase()
+
+      if (
+        (href.includes('help.') || href.includes('support.') || href.includes('/help') || href.includes('/support') || href.includes('account.') || href.includes('/billing') || href.includes('/subscription')) &&
+        (text.includes('cancel') || text.includes('subscription') || text.includes('ביטול') || text.includes('מנוי') || href.includes('cancel'))
+      ) {
+        bestLink = a
+        break
+      }
+    }
+
+    if (!bestLink && resultLinks.length > 0) {
+      bestLink = resultLinks[0]
+    }
+
+    if (bestLink) {
+      const targetUrl = bestLink.href
+      let displayHost = ''
+      try {
+        displayHost = new URL(targetUrl).hostname.replace(/^www\./, '')
+      } catch (e) {
+        displayHost = targetUrl
+      }
+
+      injectSearchResultActionHUD(
+        cleanedQuery || displayHost,
+        displayHost,
+        targetUrl
+      )
+      return true
+    }
+
+    return false
+  }
+
   function injectSelfHealingHUD(title, desc, onTriggerAction) {
     if (document.getElementById('subsnap-assistant-hud')) {
       document.getElementById('subsnap-assistant-hud').remove()
@@ -858,6 +986,48 @@
 
     document.body.appendChild(hud)
     hud.querySelector('#subsnap-ai-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
+  function updateAIHUDUnresolved(hud, serviceName, host) {
+    if (!hud) hud = document.getElementById('subsnap-ai-hud')
+    if (!hud) return
+    const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
+    hud.style.borderColor = '#f59e0b'
+    hud.innerHTML = `
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #fef3c7; border: 1.5px solid #fde68a; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        💡
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px;">
+          <span>${isHebrew ? 'לא אותר כפתור ביטול ישיר בעמוד זה' : 'No Direct Cancel Button On This Page'}</span>
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.35;">
+          ${isHebrew ? 'סייר ה-AI סרק את האתר אך לא זיהה נתיב ביטול פעיל. מומלץ לבדוק במרכז העזרה או לעבור לדף הבית.' : 'AI Scout completed scanning. No active cancellation button found. Check help center or homepage.'}
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button id="subsnap-ai-home-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+            ${isHebrew ? 'דף הבית ➔' : 'Homepage ➔'}
+          </button>
+          <button id="subsnap-ai-search-btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+            ${isHebrew ? 'חפש מדריך בגוגל 🔍' : 'Search Guide 🔍'}
+          </button>
+        </div>
+      </div>
+      <button id="subsnap-ai-unresolved-close" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px; align-self: flex-start;">
+        ✕
+      </button>
+    `
+    hud.querySelector('#subsnap-ai-home-btn').addEventListener('click', () => {
+      window.location.href = window.location.origin
+    })
+    hud.querySelector('#subsnap-ai-search-btn').addEventListener('click', () => {
+      window.location.href = `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + (serviceName || host) + ' subscription')}`
+    })
+    hud.querySelector('#subsnap-ai-unresolved-close').addEventListener('click', () => {
       hud.remove()
       hudInjected = false
     })
@@ -1070,8 +1240,12 @@
       .slice(0, 45)
 
     if (prioritized.length === 0) {
-      if (document.getElementById('subsnap-ai-hud')) document.getElementById('subsnap-ai-hud').remove()
-      hudInjected = false
+      const existingHud = document.getElementById('subsnap-ai-hud')
+      if (existingHud) {
+        updateAIHUDUnresolved(existingHud, serviceName, cleanHost)
+      } else {
+        hudInjected = false
+      }
       return
     }
 
@@ -1093,9 +1267,7 @@
         elements: payloadElements
       }
     }, (res) => {
-      if (document.getElementById('subsnap-ai-hud')) document.getElementById('subsnap-ai-hud').remove()
-      hudInjected = false
-
+      const existingHud = document.getElementById('subsnap-ai-hud')
       let targetEl = null
 
       // Fix #1: Wrap querySelector in isolated try/catch so invalid CSS syntax does NOT kill execution!
@@ -1125,6 +1297,9 @@
 
       // If valid target was resolved:
       if (targetEl) {
+        if (existingHud) existingHud.remove()
+        hudInjected = false
+
         targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
         targetEl.style.outline = '3px solid #10b981'
         targetEl.style.outlineOffset = '3px'
@@ -1153,13 +1328,17 @@
       // Fix #1 (Part 2): Only show Peace of Mind if AI EXPLICITLY returned confidence 0 & bestMatchIndex -1.
       // NEVER show Peace of Mind on selector resolution failure or parse errors!
       if (res && res.success && res.data && res.data.bestMatchIndex === -1 && res.data.confidence === 0) {
+        if (existingHud) existingHud.remove()
+        hudInjected = false
         injectPeaceOfMindHUD(
           'בשורות טובות: לא נמצא מנוי פעיל ✨',
           `סייר ה-AI סרק את אפשרויות העמוד עבור ${serviceName} ואימת שלא קיים מנוי בתשלום או כפתור ביטול פעיל.`
         )
-      } else {
-        console.log('[SubSnap] AI DOM Scout completed without resolving a reliable action target.')
+        return
       }
+
+      // Fallback: Never disappear into silence! Update HUD to unresolved guidance.
+      updateAIHUDUnresolved(existingHud, serviceName, cleanHost)
     })
   }
 
@@ -1264,6 +1443,11 @@
 
   async function performScan() {
     const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+
+    // 0. Search Engine Extraction: Automatically sniff cancellation guide links from Google Search
+    if (handleGoogleSearchCancellationExtractor()) {
+      return true
+    }
 
     // Check if a previous candidate click achieved verified success
     verifyAndCommitPendingHeal()
@@ -1407,8 +1591,9 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
-        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login or 404 pages!)
-        if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && chrome.storage && chrome.storage.local) {
+        const isSearchEngine = (cleanHost === 'google.com' || cleanHost.endsWith('.google.com') || cleanHost.includes('bing.com') || cleanHost.includes('duckduckgo.com'))
+        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login, 404, or search engines!)
+        if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && !isSearchEngine && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
             const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
