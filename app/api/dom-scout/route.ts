@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, reason: 'no_elements' })
     }
 
-    // 1. Check if we have an AI-healed selector in Redis
+    // 1. Quick check against Redis distributed cache
     if (redis && hostname) {
       try {
-        const cachedSelector = await redis.get<string>(`selector:${hostname.toLowerCase()}`)
-        if (cachedSelector) {
-          return NextResponse.json({ targetSelector: cachedSelector, bestMatchIndex: -1, source: 'cached_playbook' })
+        const cached = await redis.get<string>(`selector:${hostname.toLowerCase()}`)
+        if (cached) {
+          return NextResponse.json({ targetSelector: cached, source: 'redis_cache', confidence: 1.0 })
         }
       } catch {}
     }
@@ -40,20 +40,22 @@ export async function POST(req: NextRequest) {
 
     const prompt = `You are SubSnap Self-Healing DOM Scout.
 Analyze this list of interactive elements from the subscription/billing page of "${serviceName || hostname}".
-Find the single element that best corresponds to initiating subscription cancellation, managing plan, or ending membership.
+Your mission is to find the single element that initiates subscription cancellation, stopping auto-renewal, or ending membership.
 
 Elements Snapshot:
 ${JSON.stringify(elements.slice(0, 40), null, 2)}
 
-SAFETY RULE:
-- NEVER pick "Delete account", "Close account", "Cancel order", or payment removal.
-- Pick ONLY subscription cancellation or plan modification buttons.
+STRICT SAFETY & ACCURACY RULES:
+1. NEVER pick "Delete account", "Close account", "Cancel order", or payment removal.
+2. NEVER pick "Upgrade", "Buy", "Purchase", "Get Pro", "Start Free Trial", or new subscription signups. Those are for BUYING, NOT CANCELLING!
+3. If the page only has upgrade, purchase, marketing, or general navigation buttons and NO option to cancel an existing subscription, you MUST return: bestMatchIndex: -1, targetSelector: null, confidence: 0.
+4. Pick ONLY genuine cancellation, ending plan renewal, or ending membership buttons.
 
 Return ONLY a JSON object:
 {
-  "bestMatchIndex": number (0-based index in the elements array, or -1 if none found),
+  "bestMatchIndex": number (0-based index in the elements array, or -1 if no genuine cancel button is found),
   "targetSelector": "CSS selector if uniquely identifiable, or null",
-  "confidence": number (0.0 to 1.0),
+  "confidence": number (0.0 to 1.0, must be 0 if bestMatchIndex is -1),
   "explanation": "Short reason"
 }
 `
