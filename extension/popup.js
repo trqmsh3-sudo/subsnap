@@ -5,28 +5,46 @@
 
 const TOP_SERVICES = [
   {
+    name: 'Gemini Advanced / AI (Google One)',
+    keywords: ['gemini', 'gemini ai', 'gemini advanced', 'google gemini', 'ג\'מיני', 'גמיני', 'גמיני ai'],
+    cancelUrl: 'https://one.google.com/settings',
+    notes: 'Direct Google One & Gemini Advanced subscription settings'
+  },
+  {
     name: 'Reddit Premium',
     keywords: ['reddit', 'reddit premium', 'רדיט', 'רדיט פרימיום'],
     cancelUrl: 'https://www.reddit.com/settings/premium',
     notes: 'Direct Reddit Premium account settings'
   },
   {
-    name: 'Proton (ProtonVPN / Proton Mail)',
-    keywords: ['proton', 'protonvpn', 'proton mail', 'פרוטון'],
-    cancelUrl: 'https://account.proton.me/u/0/mail/dashboard',
-    notes: 'Direct Proton account & subscription dashboard'
-  },
-  {
-    name: 'Readwise / Reader',
-    keywords: ['readwise', 'readwise.io', 'reader', 'רידווייז'],
-    cancelUrl: 'https://readwise.io/preferences/account/',
-    notes: 'Direct account & subscription management'
+    name: 'ChatGPT Plus (OpenAI)',
+    keywords: ['chatgpt', 'openai', 'chat gpt', 'צ\'אט ג\'יפיטי'],
+    cancelUrl: 'https://chatgpt.com/#settings/Subscription',
+    notes: 'Direct ChatGPT subscription settings'
   },
   {
     name: 'Claude Pro / Max (Anthropic)',
     keywords: ['claude', 'anthropic', 'claude.ai', 'קלוד', 'קלאוד'],
     cancelUrl: 'https://claude.ai/settings/billing',
     notes: 'Direct Anthropic billing & subscription cancellation'
+  },
+  {
+    name: 'Perplexity Pro',
+    keywords: ['perplexity', 'perplexity pro', 'perplexity ai', 'פרפלקסיטי'],
+    cancelUrl: 'https://www.perplexity.ai/settings/account',
+    notes: 'Direct Perplexity Pro subscription settings'
+  },
+  {
+    name: 'Cursor (Anysphere)',
+    keywords: ['cursor', 'cursor ai', 'cursor pro', 'קורסור'],
+    cancelUrl: 'https://www.cursor.com/settings',
+    notes: 'Direct Cursor subscription settings'
+  },
+  {
+    name: 'GitHub Copilot',
+    keywords: ['copilot', 'github copilot', 'קופיילוט', 'גיטהאב קופיילוט'],
+    cancelUrl: 'https://github.com/settings/billing/summary',
+    notes: 'Direct GitHub Copilot subscription settings'
   },
   {
     name: 'Grok / X Premium (Twitter)',
@@ -47,22 +65,22 @@ const TOP_SERVICES = [
     notes: 'Direct Spotify change & cancel plan page'
   },
   {
-    name: 'Adobe Creative Cloud',
-    keywords: ['adobe', 'creative cloud', 'photoshop', 'illustrator', 'אדובי'],
-    cancelUrl: 'https://account.adobe.com/plans',
-    notes: 'Direct Adobe plans & retention bypass'
-  },
-  {
-    name: 'ChatGPT Plus (OpenAI)',
-    keywords: ['chatgpt', 'openai', 'chat gpt', 'צ\'אט ג\'יפיטי'],
-    cancelUrl: 'https://chatgpt.com/#settings/Subscription',
-    notes: 'Direct ChatGPT subscription settings'
+    name: 'YouTube Premium',
+    keywords: ['youtube', 'yt premium', 'יוטיוב'],
+    cancelUrl: 'https://www.youtube.com/paid_memberships',
+    notes: 'Direct YouTube paid memberships'
   },
   {
     name: 'Canva Pro',
     keywords: ['canva', 'קנבה', 'קנווה'],
     cancelUrl: 'https://www.canva.com/settings/billing-and-teams',
     notes: 'Direct Canva billing & team subscription'
+  },
+  {
+    name: 'Adobe Creative Cloud',
+    keywords: ['adobe', 'creative cloud', 'photoshop', 'illustrator', 'אדובי'],
+    cancelUrl: 'https://account.adobe.com/plans',
+    notes: 'Direct Adobe plans & retention bypass'
   },
   {
     name: 'Midjourney',
@@ -83,10 +101,76 @@ const TOP_SERVICES = [
     notes: 'Direct Apple ID active subscriptions'
   },
   {
-    name: 'YouTube Premium',
-    keywords: ['youtube', 'yt premium', 'יוטיוב'],
-    cancelUrl: 'https://www.youtube.com/paid_memberships',
-    notes: 'Direct YouTube paid memberships'
+    name: 'Google One / Play Subscriptions',
+    keywords: ['google', 'google one', 'google play', 'גוגל פליי', 'גוגל'],
+    cancelUrl: 'https://play.google.com/store/account/subscriptions',
+    notes: 'Direct Google Play active subscriptions'
+  },
+  {
+    name: 'Asana',
+    keywords: ['asana', 'אסאנה'],
+    cancelUrl: 'https://app.asana.com/-/admin',
+    notes: 'Direct Asana workspace admin billing'
+  },
+  {
+    name: 'Notion',
+    keywords: ['notion', 'נושן', 'נוטיון'],
+    cancelUrl: 'https://www.notion.so/settings',
+    notes: 'Direct Notion workspace settings & billing'
+  },
+  {
+    name: 'Figma',
+    keywords: ['figma', 'פיגמה'],
+    cancelUrl: 'https://www.figma.com/settings',
+    notes: 'Direct Figma account billing'
+  },
+  {
+    name: 'Slack',
+    keywords: ['slack', 'סלאק'],
+    cancelUrl: 'https://my.slack.com/admin/billing',
+    notes: 'Direct Slack billing & plan management'
+  },
+  {
+    name: 'Monday.com',
+    keywords: ['monday', 'monday.com', 'מאנדיי'],
+    cancelUrl: 'https://auth.monday.com',
+    notes: 'Direct Monday.com account billing'
+  },
+  {
+    name: 'Dropbox',
+    keywords: ['dropbox', 'דרופבוקס'],
+    cancelUrl: 'https://www.dropbox.com/account/plan',
+    notes: 'Direct Dropbox plan cancellation'
+  },
+  {
+    name: 'Zoom',
+    keywords: ['zoom', 'זום'],
+    cancelUrl: 'https://zoom.us/billing',
+    notes: 'Direct Zoom billing management'
+  },
+  {
+    name: 'Grammarly',
+    keywords: ['grammarly', 'גרמרלי'],
+    cancelUrl: 'https://account.grammarly.com/subscription',
+    notes: 'Direct Grammarly subscription settings'
+  },
+  {
+    name: 'Duolingo Super',
+    keywords: ['duolingo', 'duolingo super', 'duolingo plus', 'דואולינגו'],
+    cancelUrl: 'https://www.duolingo.com/settings/super',
+    notes: 'Direct Duolingo Super subscription'
+  },
+  {
+    name: 'LinkedIn Premium',
+    keywords: ['linkedin', 'linkedin premium', 'לינקדאין'],
+    cancelUrl: 'https://www.linkedin.com/premium/manage/',
+    notes: 'Direct LinkedIn Premium management'
+  },
+  {
+    name: 'Microsoft 365 / Office',
+    keywords: ['microsoft', 'microsoft 365', 'office 365', 'מיקרוסופט'],
+    cancelUrl: 'https://account.microsoft.com/services/',
+    notes: 'Direct Microsoft active services & subscriptions'
   },
   {
     name: 'Disney+',
@@ -95,16 +179,22 @@ const TOP_SERVICES = [
     notes: 'Direct Disney+ account cancellation'
   },
   {
+    name: 'Proton (ProtonVPN / Proton Mail)',
+    keywords: ['proton', 'protonvpn', 'proton mail', 'פרוטון'],
+    cancelUrl: 'https://account.proton.me/u/0/mail/dashboard',
+    notes: 'Direct Proton account & subscription dashboard'
+  },
+  {
+    name: 'Readwise / Reader',
+    keywords: ['readwise', 'readwise.io', 'reader', 'רידווייז'],
+    cancelUrl: 'https://readwise.io/preferences/account/',
+    notes: 'Direct account & subscription management'
+  },
+  {
     name: 'Medium Membership',
     keywords: ['medium', 'medium membership', 'מדיום'],
     cancelUrl: 'https://medium.com/me/settings/membership',
     notes: 'Direct Medium membership settings'
-  },
-  {
-    name: 'Google One / Play Subscriptions',
-    keywords: ['google', 'google one', 'google play', 'גוגל פליי'],
-    cancelUrl: 'https://play.google.com/store/account/subscriptions',
-    notes: 'Direct Google Play active subscriptions'
   },
   {
     name: 'Vercel',

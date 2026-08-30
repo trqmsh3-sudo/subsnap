@@ -1105,11 +1105,35 @@
       .replace(/how to cancel|how do i cancel|how can i cancel|cancel subscription|cancel|subscription|איך לבטל מנוי|איך לבטל|ביטול מנוי|ביטול|מנוי/gi, '')
       .trim()
 
+    // BANNED DOMAINS: Forums, social networks, news aggregators and blogs are NOT services to cancel!
+    const BANNED_RESULT_DOMAINS = [
+      'reddit.com', 'quora.com', 'twitter.com', 'x.com', 'facebook.com',
+      'instagram.com', 'tiktok.com', 'pinterest.com', 'youtube.com',
+      'medium.com', 'substack.com', 'wikipedia.org', 'theverge.com',
+      'tomsguide.com', 'wikihow.com', 'businessinsider.com', 'cnet.com'
+    ]
+
     // Scan Google search results for authoritative cancellation / help / account links
     const resultLinks = Array.from(document.querySelectorAll('#search a[href^="http"], #rso a[href^="http"], div.g a[href^="http"]'))
       .filter(a => {
-        const href = a.href || ''
-        if (href.includes('google.com') || href.includes('youtube.com') || href.includes('webcache')) return false
+        const href = (a.href || '').toLowerCase()
+        if (
+          href.includes('google.com/search') ||
+          href.includes('google.com/preferences') ||
+          href.includes('google.com/policies') ||
+          href.includes('google.com/url') ||
+          href.includes('webcache')
+        ) {
+          return false
+        }
+        try {
+          const uHost = new URL(href).hostname.replace(/^www\./, '')
+          if (BANNED_RESULT_DOMAINS.some(b => uHost === b || uHost.endsWith('.' + b))) {
+            return false
+          }
+        } catch (e) {
+          return false
+        }
         return true
       })
 
@@ -1119,8 +1143,8 @@
       const text = ((a.innerText || '') + ' ' + (a.title || '')).toLowerCase()
 
       if (
-        (href.includes('help.') || href.includes('support.') || href.includes('/help') || href.includes('/support') || href.includes('account.') || href.includes('/billing') || href.includes('/subscription')) &&
-        (text.includes('cancel') || text.includes('subscription') || text.includes('ביטול') || text.includes('מנוי') || href.includes('cancel'))
+        (href.includes('help.') || href.includes('support.') || href.includes('/help') || href.includes('/support') || href.includes('account.') || href.includes('/billing') || href.includes('/subscription') || href.includes('settings')) &&
+        (text.includes('cancel') || text.includes('subscription') || text.includes('ביטול') || text.includes('מנוי') || href.includes('cancel') || text.includes('manage') || text.includes('membership'))
       ) {
         bestLink = a
         break
@@ -1141,9 +1165,22 @@
       }
 
       // DIRECT ACTION: Automatically bypass informational help subdomains to launch the actual application directly!
-      const rootAppHost = displayHost.replace(/^(help|support|faq|kb)\./, '')
+      let rootAppHost = displayHost.replace(/^(help|support|faq|kb)\./, '')
       let operationalUrl = rawTargetUrl
-      if (displayHost.startsWith('help.') || displayHost.startsWith('support.') || displayHost.includes('zendesk') || displayHost.includes('intercom')) {
+
+      // Special resolution for Google services (Gemini, Google One, Google Workspace)
+      if (displayHost.includes('google.com')) {
+        if (cleanedQuery.includes('gemini') || q.includes('gemini')) {
+          rootAppHost = 'one.google.com'
+          operationalUrl = 'https://one.google.com/settings'
+        } else if (cleanedQuery.includes('workspace') || q.includes('workspace')) {
+          rootAppHost = 'admin.google.com'
+          operationalUrl = 'https://admin.google.com'
+        } else {
+          rootAppHost = 'myaccount.google.com'
+          operationalUrl = 'https://myaccount.google.com/subscriptions'
+        }
+      } else if (displayHost.startsWith('help.') || displayHost.startsWith('support.') || displayHost.includes('zendesk') || displayHost.includes('intercom')) {
         operationalUrl = `https://${rootAppHost}`
       }
 
