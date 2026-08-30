@@ -1,8 +1,9 @@
 /**
- * SubSnap 3-Tier Escalation & Self-Learning Architecture (v1.0.0)
+ * SubSnap 3-Tier Escalation & Self-Learning Architecture (v1.1.0)
  * Tier 1: Local Deterministic (0ms, $0)
  * Tier 2: Global Distributed Cache (Redis)
- * Tier 3: AI Emergency Escalation & Write-Back Learning Loop
+ * Tier 3: AI Emergency Escalation with Prioritized Scanning, Pinned DOM References,
+ *         Syntax-Safe Selector Resolution, and Two-Phase Outcome Verification.
  */
 
 (function () {
@@ -13,6 +14,9 @@
   let countdownTimer = null
   let activeObserver = null
   let activeScanInterval = null
+
+  // URL state tracking for SPA resets (Fix #4)
+  let lastEscalatedUrl = ''
   let aiEscalationAttempted = false
 
   function isVisible(el) {
@@ -332,7 +336,10 @@
       }, 1000)
     }
 
+    const timerBadge = hud.querySelector('#subsnap-heal-timer')
     const storageApi = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null
+
+    // Fix #5: Honor manual_highlight in Self-Healing HUD
     if (storageApi) {
       storageApi.get(['autopilot_mode'], (res) => {
         const mode = res ? res.autopilot_mode : 'countdown_5s'
@@ -343,6 +350,7 @@
             timerBadge.style.background = '#eef2ff'
             timerBadge.style.borderColor = '#c7d2fe'
           }
+          // Do not start countdown
         } else {
           startHealingCountdown()
         }
@@ -488,13 +496,12 @@
       }, 1000)
     }
 
-    // Respect user's Execution Mode preference
+    // Fix #5: Explicitly honor autopilot_mode (manual_highlight vs countdown_5s)
     const storageApi = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null
     if (storageApi) {
       storageApi.get(['autopilot_mode'], (res) => {
         const mode = res ? res.autopilot_mode : 'countdown_5s'
         if (mode === 'manual_highlight') {
-          // Manual Mode: NO automatic countdown!
           timerBadge.textContent = 'Manual 🎯'
           timerBadge.style.color = '#4338ca'
           timerBadge.style.background = '#eef2ff'
@@ -511,11 +518,12 @@
     }
   }
 
-  // --- Tier 3: Emergency AI Escalation (Called ONLY when genuinely stuck) ---
+  // --- Tier 3: Emergency AI Escalation with Prioritization and Pinned Element References ---
 
   async function triggerAIEscalation(intent) {
     if (aiEscalationAttempted || hudInjected) return
     aiEscalationAttempted = true
+    lastEscalatedUrl = window.location.href
 
     const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
     const serviceName = intent ? intent.name : cleanHost
@@ -525,75 +533,116 @@
       `לא אותר כפתור ביטול מוכר. סייר Gemini סורק את אלמנטי העמוד של ${serviceName}...`
     )
 
-    // Gather visible interactive elements
-    const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
-      .filter(el => isVisible(el) && !isDisallowedElement(el))
-      .slice(0, 35)
-      .map((el, index) => ({
-        index,
-        tag: el.tagName.toLowerCase(),
-        text: (el.innerText || el.textContent || el.value || '').trim().slice(0, 100),
-        className: (el.className || '').toString().slice(0, 100),
-        id: el.id || '',
-        href: el.getAttribute('href') || ''
-      }))
+    // Fix #3: Intelligent Prioritization instead of crude slice(0, 35)
+    const allInteractive = Array.from(
+      document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]')
+    ).filter(el => isVisible(el) && !isDisallowedElement(el))
 
-    if (candidates.length === 0) {
+    const scoredElements = allInteractive.map(el => {
+      let score = 0
+      const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
+      const inMain = !!el.closest('main, [role="main"], #main, .main, [class*="settings"], [class*="billing"], [class*="account"]')
+      const inNav = !!el.closest('nav, header, [role="navigation"]')
+
+      if (inMain) score += 6
+      if (inNav) score -= 8
+      if (/subscri|member|plan|bill|renew|cancel|end|deactiv/i.test(text)) score += 12
+      if (/pref|manage|opt|setting/i.test(text)) score += 4
+
+      return { el, score, text }
+    })
+
+    // Sort by priority and take top 45 relevant elements
+    const prioritized = scoredElements
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 45)
+
+    if (prioritized.length === 0) {
       if (document.getElementById('subsnap-ai-hud')) document.getElementById('subsnap-ai-hud').remove()
       hudInjected = false
       return
     }
+
+    // Prepare serializable snapshot for Gemini
+    const payloadElements = prioritized.map((item, index) => ({
+      index,
+      tag: item.el.tagName.toLowerCase(),
+      text: item.text.slice(0, 100),
+      className: (item.el.className || '').toString().slice(0, 100),
+      id: item.el.id || '',
+      href: item.el.getAttribute('href') || ''
+    }))
 
     chrome.runtime.sendMessage({
       action: 'domScout',
       payload: {
         serviceName,
         hostname: cleanHost,
-        elements: candidates
+        elements: payloadElements
       }
     }, (res) => {
       if (document.getElementById('subsnap-ai-hud')) document.getElementById('subsnap-ai-hud').remove()
       hudInjected = false
 
+      let targetEl = null
+
+      // Fix #1: Wrap querySelector in isolated try/catch so invalid CSS syntax does NOT kill execution!
       if (res && res.success && res.data && res.data.targetSelector) {
         try {
-          const targetEl = document.querySelector(res.data.targetSelector) ||
-            (res.data.bestMatchIndex != null ? Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
-              .filter(el => isVisible(el) && !isDisallowedElement(el))[res.data.bestMatchIndex] : null)
-
-          if (targetEl) {
-            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            targetEl.style.outline = '3px solid #10b981'
-            targetEl.style.outlineOffset = '3px'
-
-            injectSelfHealingHUD(
-              'נתיב הביטול אותר ע&quot;י AI 🤖⚡',
-              `ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...`,
-              () => {
-                // Two-Phase Verification: Save candidate in session, DO NOT commit to Redis yet!
-                try {
-                  sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
-                    host: cleanHost,
-                    urlBefore: window.location.href,
-                    selector: res.data.targetSelector,
-                    timestamp: Date.now()
-                  }))
-                } catch (e) {}
-
-                forceClick(targetEl)
-                setTimeout(startScanningEngine, 1000)
-              }
-            )
-            return
+          const found = document.querySelector(res.data.targetSelector)
+          if (found && isVisible(found) && !isDisallowedElement(found)) {
+            targetEl = found
           }
-        } catch (err) {}
+        } catch (syntaxErr) {
+          console.warn('[SubSnap] AI generated invalid CSS selector syntax:', res.data.targetSelector)
+        }
       }
 
-      // If AI also found nothing -> Verified no active subscription
-      injectPeaceOfMindHUD(
-        'בשורות טובות: לא נמצא מנוי פעיל ✨',
-        `סייר ה-AI סרק את אפשרויות העמוד עבור ${serviceName} ואימת שלא קיים מנוי בתשלום או כפתור ביטול פעיל.`
-      )
+      // Fix #2: Fallback to PINNED DOM Reference (using closure reference, NOT re-querying shifted DOM!)
+      if (!targetEl && res && res.success && res.data && typeof res.data.bestMatchIndex === 'number' && res.data.bestMatchIndex >= 0) {
+        const candidate = prioritized[res.data.bestMatchIndex]
+        if (candidate && candidate.el && candidate.el.isConnected && isVisible(candidate.el) && !isDisallowedElement(candidate.el)) {
+          targetEl = candidate.el
+        }
+      }
+
+      // If valid target was resolved:
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        targetEl.style.outline = '3px solid #10b981'
+        targetEl.style.outlineOffset = '3px'
+
+        injectSelfHealingHUD(
+          'נתיב הביטול אותר ע&quot;י AI 🤖⚡',
+          `ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...`,
+          () => {
+            // Two-Phase Verification: Staged in sessionStorage, NOT committed blindly!
+            try {
+              sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
+                host: cleanHost,
+                urlBefore: window.location.href,
+                selector: res.data ? res.data.targetSelector : null,
+                timestamp: Date.now()
+              }))
+            } catch (e) {}
+
+            forceClick(targetEl)
+            setTimeout(startScanningEngine, 1000)
+          }
+        )
+        return
+      }
+
+      // Fix #1 (Part 2): Only show Peace of Mind if AI EXPLICITLY returned confidence 0 & bestMatchIndex -1.
+      // NEVER show Peace of Mind on selector resolution failure or parse errors!
+      if (res && res.success && res.data && res.data.bestMatchIndex === -1 && res.data.confidence === 0) {
+        injectPeaceOfMindHUD(
+          'בשורות טובות: לא נמצא מנוי פעיל ✨',
+          `סייר ה-AI סרק את אפשרויות העמוד עבור ${serviceName} ואימת שלא קיים מנוי בתשלום או כפתור ביטול פעיל.`
+        )
+      } else {
+        console.warn('[SubSnap] AI DOM Scout completed without resolving a reliable action target.')
+      }
     })
   }
 
@@ -610,14 +659,12 @@
         return
       }
 
-      // VERIFICATION CONDITIONS (Must be 100% verified real outcome):
-      // 1. Account officially transitioned to cancelled state ("בוטל")
-      // 2. Or genuine cancel button was found on the landing page
+      // VERIFICATION CONDITIONS: Must be 100% verified real outcome
       const isCancelled = isAlreadyCancelled()
       const hasVerifiedCancelBtn = findCancelButton() !== null
 
       if (isCancelled || hasVerifiedCancelBtn) {
-        if (chrome.runtime && chrome.runtime.sendMessage) {
+        if (chrome.runtime && chrome.runtime.sendMessage && pending.selector) {
           chrome.runtime.sendMessage({
             action: 'reportHealedUrl',
             payload: {
@@ -679,7 +726,6 @@
           'ריפוי עצמי של סייר SubSnap 🤖',
           'הקישור הישן השתנה. מתקן מסלול ופותח את הגדרות הפרימיום שנמצאו בעמוד...',
           () => {
-            // Stage candidate for post-navigation verification
             try {
               sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
                 host: cleanHost,
@@ -701,6 +747,11 @@
   }
 
   function startScanningEngine() {
+    // Fix #4: Reset aiEscalationAttempted if URL changed (SPA Navigation)
+    if (window.location.href !== lastEscalatedUrl) {
+      aiEscalationAttempted = false
+    }
+
     if (activeObserver) activeObserver.disconnect()
     if (activeScanInterval) clearInterval(activeScanInterval)
 
@@ -739,6 +790,12 @@
 
   startScanningEngine()
 
-  window.addEventListener('popstate', () => setTimeout(startScanningEngine, 300))
-  window.addEventListener('hashchange', () => setTimeout(startScanningEngine, 300))
+  window.addEventListener('popstate', () => {
+    aiEscalationAttempted = false // Reset for SPA navigation
+    setTimeout(startScanningEngine, 300)
+  })
+  window.addEventListener('hashchange', () => {
+    aiEscalationAttempted = false // Reset for SPA navigation
+    setTimeout(startScanningEngine, 300)
+  })
 })()
