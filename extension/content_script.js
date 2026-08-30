@@ -210,7 +210,19 @@
     'log out',
     'התנתק',
     'מחק חשבון',
-    'סגירת חשבון'
+    'סגירת חשבון',
+    // Pause subscription traps (retention ploys)
+    'pause subscription',
+    'pause plan',
+    'pause membership',
+    'pause my subscription',
+    'keep and pause',
+    'הקפא מינוי',
+    'הקפא מנוי',
+    'הקפאת מינוי',
+    'הקפאת מנוי',
+    'השהה מינוי',
+    'השהיית מנוי'
   ]
 
   function isDisallowedElement(el) {
@@ -337,7 +349,7 @@
     return null
   }
 
-  function findCancelButton() {
+  function findCancelButton(targetName = '') {
     if (isAlreadyCancelled() || isDeadOr404Page()) return null
 
     // 0. DIALOG HIERARCHY: Try active modal first
@@ -385,6 +397,29 @@
     if (scopeRoot !== document) {
       const inModal = searchIn(scopeRoot)
       if (inModal) return inModal
+    }
+
+    // TARGET SCOPING: If user specified a specific service name (e.g. "Tinder", "Google One", "Duolingo")
+    // and there are multiple subscription cards/rows on the page:
+    if (targetName && targetName.length >= 3) {
+      const tLower = targetName.toLowerCase()
+      const candidateCards = Array.from(document.querySelectorAll('tr, li, article, div[role="listitem"], div[class*="item"], div[class*="card"], div[class*="subscription"], div[class*="container"]'))
+        .filter(card => isVisible(card) && (card.innerText || '').toLowerCase().includes(tLower))
+
+      for (const card of candidateCards) {
+        const inCard = searchIn(card)
+        if (inCard) return inCard
+
+        // Manage button inside the target card
+        const manageBtns = queryDeep('button, a, div[role="button"], span[role="button"], [jsaction*="click"], [tabindex="0"]', card)
+        for (const el of manageBtns) {
+          if (!isVisible(el) || isDisallowedElement(el)) continue
+          const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+          if (text === 'ניהול' || text === 'manage' || text.includes('ניהול') || text.includes('manage')) {
+            return el
+          }
+        }
+      }
     }
 
     // Search on main page
@@ -625,6 +660,8 @@
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
 
+    const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
     btn.scrollIntoView({ behavior: 'smooth', block: 'center' })
     btn.style.outline = '3px solid #10b981'
     btn.style.outlineOffset = '3px'
@@ -636,7 +673,7 @@
       background: #ffffff; border: 1.5px solid #10b981;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(16, 185, 129, 0.15);
       border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ltr;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ${isHebrew ? 'rtl' : 'ltr'};
       animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `
 
@@ -649,17 +686,19 @@
       </div>
       <div>
         <div style="font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-          <span>SubSnap Auto-Pilot</span>
-          <span id="subsnap-timer-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 6px;">5s</span>
+          <span>${isHebrew ? 'טייס אוטומטי של SubSnap' : 'SubSnap Auto-Pilot'}</span>
+          <span id="subsnap-timer-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 6px;">${isHebrew ? '5 שנ\'' : '5s'}</span>
         </div>
-        <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">Subscription pathway located. Proceeding in 5s...</div>
+        <div id="subsnap-desc" style="font-size: 11px; color: #64748b; margin-top: 1px;">
+          ${isHebrew ? 'נתיב הביטול אותר. מבטל בעוד 5 שניות...' : 'Subscription pathway located. Proceeding in 5s...'}
+        </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
+      <div style="display: flex; align-items: center; gap: 6px; ${isHebrew ? 'margin-right: 8px;' : 'margin-left: 8px;'}">
         <button id="subsnap-action-btn" style="background: #0f172a; color: #ffffff; font-weight: 800; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; cursor: pointer;">
-          Proceed ➔
+          ${isHebrew ? 'בטל עכשיו ➔' : 'Proceed ➔'}
         </button>
         <button id="subsnap-stop-btn" style="background: #f1f5f9; color: #475569; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11px; cursor: pointer;">
-          Stop
+          ${isHebrew ? 'עצור 🛑' : 'Stop'}
         </button>
         <button id="subsnap-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px;">
           ✕
@@ -678,8 +717,8 @@
     function triggerCancel() {
       if (countdownTimer) clearInterval(countdownTimer)
       autoPilotStepCount++
-      descEl.textContent = `Executing Step ${autoPilotStepCount}...`
-      timerBadge.textContent = 'Active ⚡'
+      descEl.textContent = isHebrew ? `מבצע שלב ${autoPilotStepCount}...` : `Executing Step ${autoPilotStepCount}...`
+      timerBadge.textContent = isHebrew ? 'פעיל ⚡' : 'Active ⚡'
       forceClick(btn)
 
       // Multi-Step Funnel Continuity:
@@ -696,8 +735,10 @@
         }
 
         if (autoPilotStepCount >= 6) {
-          descEl.textContent = 'Auto-Pilot reached step limit. Please confirm final step manually.'
-          timerBadge.textContent = 'Manual 🎯'
+          descEl.textContent = isHebrew
+            ? 'הטייס האוטומטי הגיע לשלב הסופי. אנא אשר את הביטול ידנית.'
+            : 'Auto-Pilot reached step limit. Please confirm final step manually.'
+          timerBadge.textContent = isHebrew ? 'ידני 🎯' : 'Manual 🎯'
           return
         }
 
@@ -711,8 +752,8 @@
     actionBtn.addEventListener('click', triggerCancel)
     stopBtn.addEventListener('click', () => {
       if (countdownTimer) clearInterval(countdownTimer)
-      descEl.textContent = 'Auto-Pilot stopped.'
-      timerBadge.textContent = 'Halted 🛑'
+      descEl.textContent = isHebrew ? 'הטייס האוטומטי נעצר.' : 'Auto-Pilot stopped.'
+      timerBadge.textContent = isHebrew ? 'הופסק 🛑' : 'Halted 🛑'
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
       sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
       sessionStorage.removeItem('subsnap_halted_' + cleanHost)
@@ -739,17 +780,19 @@
     function startCountdown() {
       let secondsLeft = autoPilotStepCount > 0 ? 3 : 5
       if (autoPilotStepCount > 0) {
-        descEl.textContent = `Step ${autoPilotStepCount + 1} located. Proceeding in ${secondsLeft}s...`
+        descEl.textContent = isHebrew
+          ? `שלב ${autoPilotStepCount + 1} אותר. ממשיך בעוד ${secondsLeft} שניות...`
+          : `Step ${autoPilotStepCount + 1} located. Proceeding in ${secondsLeft}s...`
       }
       countdownTimer = setInterval(() => {
         if (document.hidden) return // Pause countdown while tab is in background!
 
         secondsLeft -= 1
         if (secondsLeft > 0) {
-          timerBadge.textContent = `${secondsLeft}s`
+          timerBadge.textContent = isHebrew ? `${secondsLeft} שנ'` : `${secondsLeft}s`
           descEl.textContent = autoPilotStepCount > 0
-            ? `Step ${autoPilotStepCount + 1} located. Proceeding in ${secondsLeft}s...`
-            : `Subscription pathway located. Proceeding in ${secondsLeft}s...`
+            ? (isHebrew ? `שלב ${autoPilotStepCount + 1} אותר. ממשיך בעוד ${secondsLeft} שניות...` : `Step ${autoPilotStepCount + 1} located. Proceeding in ${secondsLeft}s...`)
+            : (isHebrew ? `נתיב הביטול אותר. מבטל בעוד ${secondsLeft} שניות...` : `Subscription pathway located. Proceeding in ${secondsLeft}s...`)
         } else {
           clearInterval(countdownTimer)
           triggerCancel()
@@ -954,27 +997,27 @@
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['subsnap_active_intent'], (res) => {
           const intent = res ? res.subsnap_active_intent : null
-          if (!intent) return resolve(false)
+          if (!intent) return resolve(null)
 
           // 10 minutes session window
           if (Date.now() - intent.timestamp >= 600000) {
-            return resolve(false)
+            return resolve(null)
           }
 
           if (!isHostMatch(intent.targetHost, cleanHost)) {
-            return resolve(false)
+            return resolve(null)
           }
 
           // Check if this tab was explicitly stopped/halted AFTER this intent was launched
           const haltedAt = parseInt(sessionStorage.getItem('subsnap_halted_at_' + cleanHost) || '0', 10)
           if (haltedAt > intent.timestamp) {
-            return resolve(false)
+            return resolve(null)
           }
 
-          resolve(true)
+          resolve(intent)
         })
       } else {
-        resolve(false)
+        resolve(null)
       }
     })
   }
@@ -988,10 +1031,12 @@
     if (hudInjected) return false
 
     // Check if user initiated active intent
-    const hasIntent = await checkActiveIntent(cleanHost)
-    if (!hasIntent) {
+    const activeIntent = await checkActiveIntent(cleanHost)
+    if (!activeIntent) {
       return false
     }
+
+    const targetName = activeIntent.name || ''
 
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
@@ -1011,7 +1056,7 @@
     }
 
     // Tier 1.2: Check if cancel button is present on screen (Local or Redis Playbook)
-    const btn = findCancelButton()
+    const btn = findCancelButton(targetName)
     if (btn && !hudInjected) {
       injectAutoPilotHUD(btn)
       return true
