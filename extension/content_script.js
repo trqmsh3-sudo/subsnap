@@ -196,8 +196,9 @@
   function isLoginPage() {
     const pathname = window.location.pathname.toLowerCase()
     const hostname = window.location.hostname.toLowerCase()
+    const search = window.location.search.toLowerCase()
 
-    // 1. URL Path & Subdomain check
+    // 1. Direct URL Path or Subdomain check (Universal Gateway)
     const isLoginPath = (
       pathname.includes('/login') ||
       pathname.includes('/signin') ||
@@ -210,20 +211,60 @@
       hostname.startsWith('login.') ||
       hostname.startsWith('accounts.')
     )
+    if (isLoginPath) return true
 
-    // 2. DOM Password / Credential / SSO check
+    // 1.1 Auth redirect query parameter (e.g. ?redirect=/settings, ?next=, ?return_to=)
+    const hasAuthRedirectParam = (
+      search.includes('redirect=') ||
+      search.includes('return_to=') ||
+      search.includes('next=') ||
+      search.includes('callbackurl=')
+    )
+    const pageText = (document.body.innerText || '').slice(0, 1500).toLowerCase()
+    const hasAccountChooserText = /jump back in|welcome back|choose an account|בחר חשבון|התחבר|כניסה|continue with another account|sign in to|log in to/i.test(pageText)
+    if (hasAuthRedirectParam && hasAccountChooserText) return true
+
+    // 2. DOM Password / Credential / SSO / Login Form check
     const hasPasswordField = !!document.querySelector('input[type="password"]')
-    const hasLoginForm = !!document.querySelector('form[action*="login"], form[action*="signin"], form[data-testid*="login"]')
-    const hasSignInHeading = /התחברות|התחבר לחשבון|כניסה לחשבון|sign in|log in|welcome back/i.test(document.title || '')
-    const hasSSOButton = !!document.querySelector('button[data-provider="google"], button[data-testid*="google"], a[href*="accounts.google.com"], [aria-label*="Google" i][role="button"]')
+    if (hasPasswordField && !pathname.includes('/account') && !pathname.includes('/security')) {
+      return true
+    }
 
-    return (isLoginPath && (hasPasswordField || hasLoginForm || hasSignInHeading || hasSSOButton)) || (hasPasswordField && !pathname.includes('/account'))
+    const hasLoginForm = !!document.querySelector('form[action*="login"], form[action*="signin"], form[data-testid*="login"]')
+    if (hasLoginForm) return true
+
+    const hasSignInHeading = /התחברות|התחבר לחשבון|כניסה לחשבון|sign in|log in|login|welcome back|jump back in/i.test(document.title + ' ' + (document.querySelector('h1, h2')?.innerText || ''))
+    const hasSSOButton = !!document.querySelector('button[data-provider="google"], button[data-testid*="google"], a[href*="accounts.google.com"], [aria-label*="Google" i][role="button"]')
+    if (hasSignInHeading && (hasSSOButton || hasAccountChooserText)) {
+      return true
+    }
+
+    return false
+  }
+
+  function findPrimaryLoginButton() {
+    const candidates = queryDeep('button, a, input[type="submit"], div[role="button"]')
+      .filter(el => isVisible(el) && !isDisallowedElement(el))
+
+    for (const el of candidates) {
+      const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+      if (/^(continue|sign in|log in|login|next|המשך|התחבר|כניסה|הבא)$/i.test(text)) {
+        return el
+      }
+      if (/(continue as|sign in with|log in with|התחבר באמצעות|המשך כ)/i.test(text)) {
+        return el
+      }
+    }
+    return null
   }
 
   function isLoggedOutState() {
     const pathname = window.location.pathname.toLowerCase()
 
-    // 1. Active application URLs are DEFINITELY logged in!
+    // 1. Direct login page check takes absolute precedence!
+    if (isLoginPage()) return true
+
+    // 2. Active application URLs are DEFINITELY logged in!
     if (
       pathname.startsWith('/app') ||
       pathname.startsWith('/dashboard') ||
@@ -238,14 +279,12 @@
       return false
     }
 
-    // 2. If page displays free plan or cancelled state, user is authenticated
+    // 3. If page displays free plan or cancelled state, user is authenticated
     if (isNoActiveSubscriptionState() || isAlreadyCancelled()) {
       return false
     }
 
-    if (isLoginPage()) return true
-
-    // 3. Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
+    // 4. Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
     const hasUserProfile = !!document.querySelector(
       '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
       'button[aria-label*="Profile" i], button[aria-label*="Account" i], ' +
@@ -799,15 +838,17 @@
 
     const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
 
-    // Highlight 1-Click Social / Google Login if present
+    // Universal Login Target Recognition: Account chooser / Continue / Google SSO button
+    let loginBtn = null
     try {
-      const socialLoginBtn = document.querySelector('button[data-provider="google"], div[data-provider="google"], a[href*="google"], [aria-label*="Google"], [data-testid*="google"], button[data-provider="apple"], [aria-label*="Apple"]')
-      if (socialLoginBtn && isVisible(socialLoginBtn)) {
-        socialLoginBtn.style.outline = '2.5px solid #3b82f6'
-        socialLoginBtn.style.outlineOffset = '2px'
+      loginBtn = findPrimaryLoginButton() || document.querySelector('button[data-provider="google"], div[data-provider="google"], a[href*="google"], [aria-label*="Google"], [data-testid*="google"], button[data-provider="apple"], [aria-label*="Apple"]')
+      if (loginBtn && isVisible(loginBtn)) {
+        loginBtn.style.outline = '3px solid #3b82f6'
+        loginBtn.style.outlineOffset = '3px'
       }
     } catch (e) {}
 
+    const sName = serviceName || window.location.hostname.replace(/^www\./, '')
     const hud = document.createElement('div')
     hud.id = 'subsnap-login-hud'
     hud.style.cssText = `
@@ -816,31 +857,46 @@
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(59, 130, 246, 0.2);
       border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ${isHebrew ? 'rtl' : 'ltr'};
-      min-width: 340px; max-width: 460px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      min-width: 340px; max-width: 480px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `
 
     hud.innerHTML = `
       <style>
         @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
       </style>
-      <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; border: 1.5px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; border: 1.5px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 18px;">
         🔑
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? 'התחברות מהירה לחשבון' : 'Quick Account Login'}</span>
+          <span>${isHebrew ? `התחברות לחשבון (${sName})` : `Sign in to ${sName}`}</span>
           <span style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ממתין ⏳' : 'Waiting ⏳'}</span>
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
-          ${isHebrew ? 'התחבר בקליק (Google / סיסמה שמורה). SubSnap ימשיך אוטומטית לעמוד הביטול מיד בסיום!' : 'Sign in with Google or saved password. SubSnap will automatically leap to cancellation once connected!'}
+          ${isHebrew ? 'התחבר בלחיצה על הכפתור המודגש. SubSnap יקפיץ אותך מיד לעמוד הביטול בסיום!' : 'Click the highlighted button to sign in. SubSnap will leap directly to cancellation upon login!'}
         </div>
       </div>
-      <button id="subsnap-login-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px;">
-        ✕
-      </button>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        ${loginBtn ? `
+          <button id="subsnap-login-action-btn" style="background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap;">
+            ${isHebrew ? 'התחבר ➔' : 'Sign In ➔'}
+          </button>
+        ` : ''}
+        <button id="subsnap-login-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px;">
+          ✕
+        </button>
+      </div>
     `
 
     document.body.appendChild(hud)
+
+    const actionBtn = hud.querySelector('#subsnap-login-action-btn')
+    if (actionBtn && loginBtn) {
+      actionBtn.addEventListener('click', () => {
+        forceClick(loginBtn)
+      })
+    }
+
     hud.querySelector('#subsnap-login-close-btn').addEventListener('click', () => {
       hud.remove()
       hudInjected = false
@@ -1606,6 +1662,7 @@
   // --- Tier 3: Emergency AI Escalation with Prioritization and Pinned Element References ---
 
   async function triggerAIEscalation(intent) {
+    if (isLoginPage() || isLoggedOutState()) return
     if (aiEscalationAttempted || hudInjected) return
     aiEscalationAttempted = true
     lastEscalatedUrl = window.location.href
