@@ -164,6 +164,17 @@
       if (chrome.runtime && chrome.runtime.sendMessage) {
         chrome.runtime.sendMessage({ action: 'evictStalePlaybook', hostname: cleanHost })
       }
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(['subsnap_learned_services'], (res) => {
+          if (res && Array.isArray(res.subsnap_learned_services)) {
+            const filtered = res.subsnap_learned_services.filter(s => {
+              if (!s.cancelUrl) return true
+              return !s.cancelUrl.toLowerCase().includes(cleanHost)
+            })
+            chrome.storage.local.set({ subsnap_learned_services: filtered })
+          }
+        })
+      }
     }
 
     return isDead
@@ -646,6 +657,69 @@
 
     document.body.appendChild(hud)
     hud.querySelector('#subsnap-login-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
+  function injectDeadLinkRecoveryHUD(serviceName = '') {
+    if (document.getElementById('subsnap-deadlink-hud')) return
+    hudInjected = true
+
+    const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-deadlink-hud'
+    hud.style.cssText = `
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #f59e0b;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(245, 158, 11, 0.25);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ${isHebrew ? 'rtl' : 'ltr'};
+      min-width: 360px; max-width: 500px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      </style>
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #fef3c7; border: 1.5px solid #fde68a; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+        ⚠️
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px;">
+          <span>${isHebrew ? 'נתיב הביטול אינו זמין (שגיאת 404)' : 'Cancellation Link Unavailable (404)'}</span>
+          <span style="font-size: 10px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ריפוי עצמי 🔄' : 'Self-Heal 🔄'}</span>
+        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
+          ${isHebrew ? 'העמוד הוסר או שכתובתו שונתה. SubSnap מחק את הקישור השגוי מהזיכרון.' : 'This page was moved or no longer exists. SubSnap purged the stale link from memory.'}
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button id="subsnap-goto-home-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+            ${isHebrew ? 'עבור לדף הבית ➔' : 'Go to Homepage ➔'}
+          </button>
+          <button id="subsnap-google-search-btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+            ${isHebrew ? 'חפש ביטול בגוגל 🔍' : 'Search on Google 🔍'}
+          </button>
+        </div>
+      </div>
+      <button id="subsnap-deadlink-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px; align-self: flex-start;">
+        ✕
+      </button>
+    `
+
+    document.body.appendChild(hud)
+
+    hud.querySelector('#subsnap-goto-home-btn').addEventListener('click', () => {
+      window.location.href = window.location.origin
+    })
+
+    hud.querySelector('#subsnap-google-search-btn').addEventListener('click', () => {
+      const q = encodeURIComponent(`how to cancel ${serviceName || window.location.hostname} subscription`)
+      window.location.href = `https://www.google.com/search?q=${q}`
+    })
+
+    hud.querySelector('#subsnap-deadlink-close-btn').addEventListener('click', () => {
       hud.remove()
       hudInjected = false
     })
@@ -1293,6 +1367,11 @@
           }
         )
         return true
+      } else {
+        // ALWAYS inject Dead Link Recovery HUD when no recovery element exists!
+        // Never stay silent on a 404 page!
+        injectDeadLinkRecoveryHUD(targetName || cleanHost)
+        return true
       }
     }
 
@@ -1328,8 +1407,8 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
-        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login pages!)
-        if (!found && !hudInjected && !isLoginPage() && chrome.storage && chrome.storage.local) {
+        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login or 404 pages!)
+        if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
             const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')

@@ -13,6 +13,43 @@ const redis = hasRedis
 
 const DYNAMIC_CACHE = new Map<string, CancellationEntry>()
 
+async function verifyUrlAlive(url: string): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 2500)
+    const res = await fetch(url, {
+      method: 'HEAD',
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+      }
+    })
+    clearTimeout(timeout)
+    if (res.status === 404 || res.status === 410) {
+      return false
+    }
+    return true
+  } catch {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 2500)
+      const res = await fetch(url, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Range': 'bytes=0-200',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        }
+      })
+      clearTimeout(timeout)
+      if (res.status === 404 || res.status === 410) return false
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const query = searchParams.get('q') || ''
@@ -89,12 +126,29 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
       const parsed = JSON.parse(cleanJson)
 
       if (parsed && parsed.cancelUrl) {
+        let verifiedCancelUrl = parsed.cancelUrl
+        const isCancelAlive = await verifyUrlAlive(verifiedCancelUrl)
+        if (!isCancelAlive) {
+          console.warn(`[AI Scout Pre-flight Guard]: Gemini generated dead cancelUrl: ${verifiedCancelUrl}`)
+          try {
+            const urlObj = new URL(verifiedCancelUrl)
+            const originAlive = await verifyUrlAlive(urlObj.origin)
+            if (originAlive) {
+              verifiedCancelUrl = urlObj.origin
+            } else {
+              throw new Error(`Domain ${urlObj.hostname} is dead or unreachable.`)
+            }
+          } catch {
+            throw new Error(`Invalid or dead cancelUrl: ${verifiedCancelUrl}`)
+          }
+        }
+
         const entry: CancellationEntry = {
           name: parsed.name || query,
           nameHe: parsed.nameHe || parsed.name || query,
           keywords: [qLower, (parsed.name || '').toLowerCase(), (parsed.nameHe || '').toLowerCase()],
           loginUrl: parsed.loginUrl || `https://${qLower.replace(/^https?:\/\//, '')}/login`,
-          cancelUrl: parsed.cancelUrl,
+          cancelUrl: verifiedCancelUrl,
           method: 'url',
           notes: parsed.notes || 'Official billing and cancellation pathway',
           difficulty: parsed.difficulty === 'hard' ? 'hard' : 'easy',
