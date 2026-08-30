@@ -1775,6 +1775,14 @@
     // Check if a previous candidate click achieved verified success
     verifyAndCommitPendingHeal()
 
+    // Clean up stale Login HUD if user has transitioned into active app or authenticated session!
+    const staleLoginHud = document.getElementById('subsnap-login-hud')
+    if (staleLoginHud && (!isLoginPage() && !isLoggedOutState())) {
+      console.log('[SubSnap] Removing stale login bridge HUD after successful login')
+      staleLoginHud.remove()
+      hudInjected = false
+    }
+
     if (hudInjected) return false
 
     // Check if user initiated active intent
@@ -1785,24 +1793,39 @@
 
     const targetName = activeIntent.name || ''
 
+    // Tier 1.0: Proactive Check: No Active Subscription / Free Account (e.g. Free plan | Upgrade on Manus!)
+    if (isNoActiveSubscriptionState()) {
+      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+      injectPeaceOfMindHUD(
+        isHebrew ? 'בשורות טובות: אין מנוי פעיל לתשלום! ✨' : 'Good News: No Active Paid Subscription! ✨',
+        isHebrew 
+          ? `החשבון שלך ב-${targetName || 'שירות'} נמצא בתוכנית חינמית (Free plan). לא קיים חיוב פעיל ואין צורך בביטול.` 
+          : `Your account on ${targetName || 'service'} is on the Free plan. No active recurring billing found.`
+      )
+      return true
+    }
+
     // 0. THE INVISIBLE LOGIN BRIDGE: Check if returning from a successful login
     const wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
     if (wasWaitingLogin && !isLoginPage() && activeIntent && activeIntent.cancelUrl) {
       sessionStorage.removeItem('subsnap_waiting_login')
-      const currentNorm = window.location.href.split('?')[0].split('#')[0].replace(/\/$/, '')
-      const cancelNorm = activeIntent.cancelUrl.split('?')[0].split('#')[0].replace(/\/$/, '')
+      try {
+        const cancelUrlObj = new URL(activeIntent.cancelUrl)
+        const currentUrlObj = new URL(window.location.href)
+        const hasSpecificPath = cancelUrlObj.pathname && cancelUrlObj.pathname !== '/' && !cancelUrlObj.pathname.startsWith('/login')
 
-      if (currentNorm !== cancelNorm && !window.location.pathname.includes('/subscriptions') && !window.location.pathname.includes('/account')) {
-        const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
-        injectPeaceOfMindHUD(
-          isHebrew ? 'התחברת בהצלחה! ⚡' : 'Logged In Successfully! ⚡',
-          isHebrew ? 'טייס SubSnap מקפיץ אותך מיד לעמוד ביטול המנוי...' : 'SubSnap Auto-Pilot is leaping directly to the cancellation pathway...'
-        )
-        setTimeout(() => {
-          window.location.href = activeIntent.cancelUrl
-        }, 800)
-        return true
-      }
+        if (hasSpecificPath && cancelUrlObj.pathname !== currentUrlObj.pathname && !currentUrlObj.pathname.includes('/subscriptions') && !currentUrlObj.pathname.includes('/account')) {
+          const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+          injectPeaceOfMindHUD(
+            isHebrew ? 'התחברת בהצלחה! ⚡' : 'Logged In Successfully! ⚡',
+            isHebrew ? 'טייס SubSnap מקפיץ אותך מיד לעמוד ביטול המנוי...' : 'SubSnap Auto-Pilot is leaping directly to the cancellation pathway...'
+          )
+          setTimeout(() => {
+            window.location.href = activeIntent.cancelUrl
+          }, 800)
+          return true
+        }
+      } catch (e) {}
     }
 
     // Tier 1.1: Check if already cancelled
@@ -1827,18 +1850,6 @@
     const btn = findCancelButton(targetName)
     if (btn && !hudInjected) {
       injectAutoPilotHUD(btn)
-      return true
-    }
-
-    // Tier 1.3: Proactive Check: No Active Subscription / Free Account (e.g. Free plan | Upgrade on Manus!)
-    if (isNoActiveSubscriptionState()) {
-      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
-      injectPeaceOfMindHUD(
-        isHebrew ? 'בשורות טובות: אין מנוי פעיל לתשלום! ✨' : 'Good News: No Active Paid Subscription! ✨',
-        isHebrew 
-          ? `החשבון שלך ב-${targetName || 'שירות'} נמצא בתוכנית חינמית (Free plan). לא קיים חיוב פעיל ואין צורך בביטול.` 
-          : `Your account on ${targetName || 'service'} is on the Free plan. No active recurring billing found.`
-      )
       return true
     }
 
@@ -1958,12 +1969,47 @@
 
   startScanningEngine()
 
-  window.addEventListener('popstate', () => {
-    aiEscalationAttempted = false // Reset for SPA navigation
-    setTimeout(startScanningEngine, 300)
-  })
-  window.addEventListener('hashchange', () => {
-    aiEscalationAttempted = false // Reset for SPA navigation
-    setTimeout(startScanningEngine, 300)
-  })
+  // --- UNIVERSAL SPA ROUTER WATCHER (Next.js, React, Vue, Angular) ---
+  // When an app transitions from /login to /app via client-side routing, popstate does not fire.
+  // We monitor URL mutations directly via history hooks and reactive polling.
+  let lastMonitoredUrl = window.location.href
+
+  function onUniversalUrlChange() {
+    if (window.location.href === lastMonitoredUrl) return
+    lastMonitoredUrl = window.location.href
+    console.log('[SubSnap] Universal SPA route changed to:', window.location.href)
+
+    // Remove any lingering login HUD when navigating inside the app
+    const staleLoginHud = document.getElementById('subsnap-login-hud')
+    if (staleLoginHud) {
+      staleLoginHud.remove()
+      hudInjected = false
+    }
+
+    aiEscalationAttempted = false
+    setTimeout(startScanningEngine, 250)
+  }
+
+  // Intercept history pushState & replaceState
+  try {
+    const origPushState = history.pushState
+    history.pushState = function () {
+      const res = origPushState.apply(this, arguments)
+      setTimeout(onUniversalUrlChange, 50)
+      return res
+    }
+
+    const origReplaceState = history.replaceState
+    history.replaceState = function () {
+      const res = origReplaceState.apply(this, arguments)
+      setTimeout(onUniversalUrlChange, 50)
+      return res
+    }
+  } catch (e) {}
+
+  window.addEventListener('popstate', onUniversalUrlChange)
+  window.addEventListener('hashchange', onUniversalUrlChange)
+
+  // Reactive URL Poller (catches client-side framework transitions even in sandboxes)
+  setInterval(onUniversalUrlChange, 350)
 })()
