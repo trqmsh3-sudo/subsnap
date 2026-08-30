@@ -8,6 +8,25 @@
 
 (function () {
   if (window.__subsnap_loaded) return
+
+  const curHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+  const isOAuthPopup = curHost.startsWith('accounts.google.') || curHost.startsWith('appleid.apple.') || curHost.includes('login.microsoftonline.')
+  if (isOAuthPopup) {
+    // Surgical Tweezers Guard: Never interfere with third-party OAuth popup windows (Google/Apple/Microsoft Sign-In)
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(['subsnap_active_intent'], (res) => {
+          const intent = res ? res.subsnap_active_intent : null
+          const target = (intent && intent.targetHost) ? intent.targetHost.toLowerCase() : ''
+          if (target && (target.includes('google') || target.includes('apple') || target.includes('microsoft'))) {
+            startScanningEngine()
+          }
+        })
+      }
+    } catch (e) {}
+    return
+  }
+
   window.__subsnap_loaded = true
   console.log('[SubSnap] Content script initialized on:', window.location.href)
 
@@ -37,16 +56,6 @@
       const cRoot = cParts.slice(-2).join('.')
       if (tRoot === cRoot && tRoot.length > 4) return true
     }
-
-    // SSO identity providers (Google, Apple, Microsoft, Auth0, Clerk) during login transitions
-    const isSSODomain = (h) => (
-      h.includes('accounts.google.') ||
-      h.includes('appleid.apple.') ||
-      h.includes('login.microsoftonline.') ||
-      h.includes('auth0.com') ||
-      h.includes('clerk.')
-    )
-    if (isSSODomain(c)) return true
 
     const isXOrTwitter = (h) => h === 'x.com' || h.endsWith('.x.com') || h === 'twitter.com' || h.endsWith('.twitter.com')
     if (isXOrTwitter(t) && isXOrTwitter(c)) return true
