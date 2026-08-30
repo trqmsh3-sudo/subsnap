@@ -20,6 +20,29 @@
   let lastEscalatedUrl = ''
   let aiEscalationAttempted = false
 
+  function isHostMatch(targetHost, currentHost) {
+    if (!targetHost || !currentHost) return false
+    const t = targetHost.toLowerCase().replace(/^www\./, '')
+    const c = currentHost.toLowerCase().replace(/^www\./, '')
+
+    if (c === t) return true
+    if (c.endsWith('.' + t) || t.endsWith('.' + c)) return true
+
+    // Sibling subdomains on same root domain (e.g. play.google.com and myaccount.google.com)
+    const tParts = t.split('.')
+    const cParts = c.split('.')
+    if (tParts.length >= 2 && cParts.length >= 2) {
+      const tRoot = tParts.slice(-2).join('.')
+      const cRoot = cParts.slice(-2).join('.')
+      if (tRoot === cRoot && tRoot.length > 4) return true
+    }
+
+    const isXOrTwitter = (h) => h === 'x.com' || h.endsWith('.x.com') || h === 'twitter.com' || h.endsWith('.twitter.com')
+    if (isXOrTwitter(t) && isXOrTwitter(c)) return true
+
+    return false
+  }
+
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
     const style = window.getComputedStyle(el)
@@ -1027,22 +1050,6 @@
         if (!found && !hudInjected && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
-            const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-
-            function isHostMatch(targetHost, currentHost) {
-              if (!targetHost || !currentHost) return false
-              const t = targetHost.toLowerCase().replace(/^www\./, '')
-              const c = currentHost.toLowerCase().replace(/^www\./, '')
-
-              if (c === t) return true
-              if (c.endsWith('.' + t) || t.endsWith('.' + c)) return true
-
-              const isXOrTwitter = (h) => h === 'x.com' || h.endsWith('.x.com') || h === 'twitter.com' || h.endsWith('.twitter.com')
-              if (isXOrTwitter(t) && isXOrTwitter(c)) return true
-
-              return false
-            }
-
             if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
               triggerAIEscalation(intent)
             }
