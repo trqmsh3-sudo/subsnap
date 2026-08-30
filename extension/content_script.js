@@ -122,8 +122,8 @@
       return false
     }
 
-    const bodyText = document.body.innerText || ''
-    const hasCancelledHeader = /\bבוטל\b|להרשמה מחדש|המינוי שלך יסתיים בתאריך|subscription cancelled|subscription canceled/i.test(bodyText)
+    const bodyText = (document.body.innerText || '').toLowerCase()
+    const hasCancelledHeader = /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|פג תוקף|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled/i.test(bodyText)
     const isAskingConfirmation = /האם לבטל|המינוי יבוטל בסיום|are you sure you want to cancel|מה סיבת הביטול|reason.*cancel/i.test(bodyText)
 
     return hasCancelledHeader && !isAskingConfirmation
@@ -141,13 +141,26 @@
     const freeTierSignals = [
       'no active subscription',
       'no active subscriptions',
+      'no subscriptions',
+      'you don\'t have any subscriptions',
+      'you have no subscriptions',
+      'no active memberships',
       'current plan: free',
       'plan: free',
       'upgrade to pro',
       'upgrade to premium',
       'upgrade plan',
+      'אין לך מינויים',
+      'אין מינויים',
       'אין לך מינויים פעילים',
       'אין מנוי פעיל',
+      'אין מינויים פעילים',
+      'לא נמצאו מינויים',
+      'לא נמצאו מינויים פעילים',
+      'לא נמצא מנוי פעיל',
+      'המינויים שלך יופיעו כאן',
+      'מינויים שתירשם אליהם יופיעו כאן',
+      'מינויים יופיעו כאן',
       'תוכנית חינמית',
       'תוכנית: חינם'
     ]
