@@ -281,7 +281,20 @@
   }
 
   function isNoActiveSubscriptionState() {
+    // 0. If an active modal, dialog, or survey is open, NEVER declare no active subscription!
+    if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"], .modal, [class*="modal"]')) {
+      return false
+    }
+    if (getActiveDialogScope() !== document) {
+      return false
+    }
+
     const bodyText = (document.body.innerText || '').toLowerCase()
+
+    // 0.1 If the page is in an active cancellation flow or survey, abort free-plan check
+    if (/למה.*לבטל|בטוח שברצונך לבטל|תקופת הניסיון|להמשיך בביטול|בטל מינוי|בטל מנוי/i.test(bodyText)) {
+      return false
+    }
 
     const hasXSignUpLink = !!document.querySelector('a[href*="premium_sign_up"], [data-testid*="premium_sign_up"]')
     const hasXIneligible = bodyText.includes('subscriptions\nineligible') || bodyText.includes('subscriptions ineligible')
@@ -303,7 +316,6 @@
       'free account',
       'spotify free',
       'youtube free',
-      'canva free',
       'join premium',
       'get premium',
       'try premium',
@@ -490,6 +502,12 @@
     const isSurvey = /(סיבת הביטול|למה.*לבטל|מדוע.*לבטל|ספר לנו למה|reason.*cancel|why.*leaving|why.*cancel|tell us why|help us improve)/i.test(text)
     if (!isSurvey) return null
 
+    // Helper to get text associated with a radio button (including parent or associated label)
+    const getRadioText = (el) => {
+      const label = el.closest('label') || el.parentElement || (el.id ? document.querySelector(`label[for="${el.id}"]`) : null)
+      return ((label ? label.innerText : '') + ' ' + (el.innerText || el.textContent || '')).toLowerCase()
+    }
+
     // 1. Find and select neutral radio option to unblock Next/Continue button
     const radios = Array.from(scopeRoot.querySelectorAll('input[type="radio"], [role="radio"], label, [data-value]'))
       .filter(r => isVisible(r))
@@ -497,9 +515,20 @@
     if (radios.length > 0) {
       const isAlreadyChecked = radios.some(r => r.checked || r.getAttribute('aria-checked') === 'true')
       if (!isAlreadyChecked) {
-        let preferred = radios.find(r => /(לא רוצה להשיב|אחר|יקר|decline|other|expensive|not.*use|מספיק)/i.test(r.innerText || r.textContent || ''))
-        if (!preferred) preferred = radios[0]
-        if (preferred) forceClick(preferred)
+        let preferred = radios.find(r => {
+          const rText = getRadioText(r)
+          return /(אחר|other|לא רוצה להשיב|המחיר גבוה|יקר|decline|expensive|not.*use|מספיק)/i.test(rText)
+        })
+        if (!preferred) preferred = radios[radios.length - 1] // Often "Other" is at the bottom
+        if (preferred) {
+          if (preferred.tagName === 'INPUT' && preferred.type === 'radio') {
+            preferred.checked = true
+            preferred.dispatchEvent(new Event('change', { bubbles: true }))
+            preferred.dispatchEvent(new Event('input', { bubbles: true }))
+          }
+          const clickTarget = preferred.closest('label') || preferred
+          forceClick(clickTarget)
+        }
       }
     }
 
@@ -1844,18 +1873,6 @@
 
     const targetName = activeIntent.name || ''
 
-    // Tier 1.0: Proactive Check: No Active Subscription / Free Account (e.g. Free plan | Upgrade on Manus!)
-    if (isNoActiveSubscriptionState()) {
-      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
-      injectPeaceOfMindHUD(
-        isHebrew ? 'בשורות טובות: אין מנוי פעיל לתשלום! ✨' : 'Good News: No Active Paid Subscription! ✨',
-        isHebrew 
-          ? `החשבון שלך ב-${targetName || 'שירות'} נמצא בתוכנית חינמית (Free plan). לא קיים חיוב פעיל ואין צורך בביטול.` 
-          : `Your account on ${targetName || 'service'} is on the Free plan. No active recurring billing found.`
-      )
-      return true
-    }
-
     // 0. THE INVISIBLE LOGIN BRIDGE: Check if returning from a successful login
     const wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
     if (wasWaitingLogin && !isLoginPage() && activeIntent && activeIntent.cancelUrl) {
@@ -1901,6 +1918,18 @@
     const btn = findCancelButton(targetName)
     if (btn && !hudInjected) {
       injectAutoPilotHUD(btn)
+      return true
+    }
+
+    // Tier 1.3: Check if Free Account / No Active Subscription (ONLY if no cancel button or modal is active!)
+    if (isNoActiveSubscriptionState()) {
+      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+      injectPeaceOfMindHUD(
+        isHebrew ? 'בשורות טובות: אין מנוי פעיל לתשלום! ✨' : 'Good News: No Active Paid Subscription! ✨',
+        isHebrew 
+          ? `החשבון שלך ב-${targetName || 'שירות'} נמצא בתוכנית חינמית (Free plan). לא קיים חיוב פעיל ואין צורך בביטול.` 
+          : `Your account on ${targetName || 'service'} is on the Free plan. No active recurring billing found.`
+      )
       return true
     }
 
