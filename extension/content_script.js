@@ -2104,14 +2104,23 @@
 
     const targetName = activeIntent.name || ''
 
-    // Tier 0.2: Identified Non-Subscription or Free Community Platform
-    if (activeIntent.isNonSubscription || /lablab|wikipedia/i.test(cleanHost) || (activeIntent.notes && (activeIntent.notes.includes('ללא מנויים') || activeIntent.notes.includes('אין חיוב')))) {
+    // Tier 0.2: Universal Non-Subscription Platform Shield (100% Universal, Zero Hardcoded Domains)
+    const isExplicitlyFree = !!activeIntent.isNonSubscription ||
+      (activeIntent.notes && (
+        activeIntent.notes.includes('ללא מנויים') ||
+        activeIntent.notes.includes('אין חיוב') ||
+        activeIntent.notes.includes('no recurring paid subscriptions') ||
+        activeIntent.notes.includes('free community') ||
+        activeIntent.notes.includes('free service')
+      ))
+
+    if (isExplicitlyFree) {
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
       injectPeaceOfMindHUD(
         'פלטפורמה חינמית ללא מנויים! 🛡️',
-        `סייר SubSnap זיהה כי ${targetName || cleanHost} הינה פלטפורמה חינמית. אין חיובים פעילים ואין צורך בביטול.`
+        `סייר SubSnap זיהה כי ${targetName || cleanHost} הינה פלטפורמה חינמית ללא מנוי פעיל. אין חיוב ואין צורך בביטול.`
       )
       return true
     }
