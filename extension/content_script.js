@@ -88,9 +88,51 @@
     return results
   }
 
+  function unlockDisabledAction(btn) {
+    if (!btn) return false
+    const isDisabled = btn.disabled || btn.getAttribute('aria-disabled') === 'true' || btn.classList.contains('disabled')
+    if (!isDisabled) return true
+
+    // Find closest container/form/dialog enclosing this button
+    const container = btn.closest('form, dialog, [role="dialog"], [aria-modal="true"], div[class*="modal"], div[class*="step"], div[class*="content"], div[class*="container"]') || document
+
+    // Search for unchecked checkboxes or toggle switches that unblock the cancel button
+    const checkboxes = Array.from(container.querySelectorAll('input[type="checkbox"]:not(:checked), [role="checkbox"][aria-checked="false"]'))
+      .filter(cb => isVisible(cb))
+
+    for (const cb of checkboxes) {
+      const parentLabel = cb.closest('label') || cb.parentElement
+      const text = ((parentLabel ? parentLabel.innerText : '') + ' ' + (cb.innerText || '')).toLowerCase()
+
+      // Confirm this checkbox relates to acknowledging cancellation terms / loss of discounts
+      const isCancellationAcknowledgement = /(understand|lose|agree|terms|confirm|cancel|acknowledge|אני מבין|אאבד|מאשר|תנאי|בכל זאת|ביטול)/i.test(text)
+      if (isCancellationAcknowledgement || checkboxes.length === 1) {
+        try {
+          cb.focus()
+          cb.click()
+          if (cb.type === 'checkbox') {
+            cb.checked = true
+            cb.dispatchEvent(new Event('change', { bubbles: true }))
+            cb.dispatchEvent(new Event('input', { bubbles: true }))
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Force remove disabled attributes so button can be clicked
+    try {
+      btn.disabled = false
+      btn.removeAttribute('aria-disabled')
+      btn.classList.remove('disabled')
+    } catch (e) {}
+
+    return true
+  }
+
   function forceClick(el) {
     if (!el) return
     try {
+      unlockDisabledAction(el)
       el.focus()
       el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
       el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
@@ -379,6 +421,7 @@
       if (!isVisible(btn) || isDisallowedElement(btn)) continue
       const btnText = (btn.innerText || btn.textContent || btn.value || '').toLowerCase().trim()
       if (/(המשך|continue|next|proceed|advance)/i.test(btnText) && !/(הקודם|back|cancel)/i.test(btnText)) {
+        unlockDisabledAction(btn)
         return btn
       }
     }
@@ -755,6 +798,7 @@
     btn.scrollIntoView({ behavior: 'smooth', block: 'center' })
     btn.style.outline = '3px solid #10b981'
     btn.style.outlineOffset = '3px'
+    unlockDisabledAction(btn)
 
     const hud = document.createElement('div')
     hud.id = 'subsnap-hud'
