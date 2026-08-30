@@ -452,6 +452,25 @@ async function queryAIScout(query) {
 function executeCancel(service) {
   if (!service || !service.cancelUrl) return
 
+  // Universal TLD Sanity Check: Ensure URL has a valid hostname with a dot (prevents NXDOMAIN like "https://formspr")
+  let targetHost = ''
+  try {
+    const raw = service.cancelUrl.startsWith('http') ? service.cancelUrl : `https://${service.cancelUrl}`
+    const u = new URL(raw)
+    if (u.hostname && u.hostname.includes('.') && !u.hostname.endsWith('.') && u.hostname.length >= 4) {
+      targetHost = u.hostname.replace(/^www\./, '')
+      service.cancelUrl = u.toString()
+    }
+  } catch (e) {}
+
+  if (!targetHost) {
+    // Malformed / incomplete domain - safely fall back to Google cancellation search
+    service.cancelUrl = `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + (service.name || 'subscription'))}`
+    try {
+      targetHost = new URL(service.cancelUrl).hostname.replace(/^www\./, '')
+    } catch (e) {}
+  }
+
   const isFreePlatform = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
   if (isFreePlatform) {
     // Free platform: Open directly WITHOUT active intent, preventing unnecessary DOM cancel scans
@@ -465,11 +484,6 @@ function executeCancel(service) {
   loadingState.style.display = 'block'
   document.getElementById('loadingText').textContent = `Opening ${service.name}...`
   document.getElementById('loadingSub').textContent = 'Launching direct cancellation pathway'
-
-  let targetHost = ''
-  try {
-    targetHost = new URL(service.cancelUrl).hostname.replace(/^www\./, '')
-  } catch (e) {}
 
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     chrome.storage.local.set({

@@ -27,8 +27,8 @@ async function verifyCandidateUrl(url: string, brandQuery: string = ''): Promise
     })
     clearTimeout(timeout)
 
-    // 1. Status check: 404, 410, 500, 502, 503 are dead
-    if (!res.ok || res.status === 404 || res.status === 410 || res.status >= 500) {
+    // 1. Status check: 404, 410, 502, 503 are dead (401, 403, 302 indicate protected auth endpoints that exist!)
+    if (res.status === 404 || res.status === 410 || res.status === 502 || res.status === 503) {
       return false
     }
 
@@ -95,6 +95,40 @@ async function verifyCandidateUrl(url: string, brandQuery: string = ''): Promise
   }
 }
 
+function ensureValidWebUrl(urlStr: string, fallbackName: string, secondaryCandidate?: string): string {
+  try {
+    const candidate = (urlStr || '').trim()
+    if (candidate) {
+      const u = new URL(candidate.startsWith('http') ? candidate : `https://${candidate}`)
+      if (u.hostname && u.hostname.includes('.') && !u.hostname.endsWith('.') && u.hostname.length >= 4) {
+        return u.toString()
+      }
+    }
+  } catch {}
+
+  if (secondaryCandidate) {
+    try {
+      const s = secondaryCandidate.trim()
+      const u2 = new URL(s.startsWith('http') ? s : `https://${s}`)
+      if (u2.hostname && u2.hostname.includes('.') && !u2.hostname.endsWith('.') && u2.hostname.length >= 4) {
+        return u2.origin
+      }
+    } catch {}
+  }
+
+  return `https://www.google.com/search?q=${encodeURIComponent('how to cancel ' + fallbackName + ' subscription')}`
+}
+
+function isCachedEntryValid(entry: any): boolean {
+  if (!entry || !entry.cancelUrl) return false
+  try {
+    const u = new URL(entry.cancelUrl.startsWith('http') ? entry.cancelUrl : `https://${entry.cancelUrl}`)
+    return !!(u.hostname && u.hostname.includes('.') && !u.hostname.endsWith('.') && u.hostname.length >= 4)
+  } catch {
+    return false
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const query = searchParams.get('q') || ''
@@ -111,14 +145,24 @@ export async function GET(req: NextRequest) {
     try {
       const cached = await redis.get<CancellationEntry>(`scout:${qLower}`)
       if (cached) {
-        return NextResponse.json({ entry: cached, source: 'global_redis_cache' })
+        if (isCachedEntryValid(cached)) {
+          return NextResponse.json({ entry: cached, source: 'global_redis_cache' })
+        } else {
+          // Corrupted entry (e.g. https://formspr) - auto-purge from Redis!
+          try { await redis.del(`scout:${qLower}`) } catch {}
+        }
       }
     } catch {}
   }
 
   // 2. Check local in-memory cache (unless force re-scan requested)
   if (!force && DYNAMIC_CACHE.has(qLower)) {
-    return NextResponse.json({ entry: DYNAMIC_CACHE.get(qLower), source: 'cache' })
+    const mem = DYNAMIC_CACHE.get(qLower)
+    if (isCachedEntryValid(mem)) {
+      return NextResponse.json({ entry: mem, source: 'cache' })
+    } else {
+      DYNAMIC_CACHE.delete(qLower)
+    }
   }
 
   // 3. Direct local matching from static DB
@@ -169,22 +213,24 @@ Return ONLY a valid JSON object matching this schema (no markdown, no backticks,
       const cleanJson = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
       const parsed = JSON.parse(cleanJson)
 
-      if (parsed && parsed.cancelUrl) {
-        let verifiedCancelUrl = parsed.cancelUrl
+      if (parsed && (parsed.cancelUrl || parsed.loginUrl)) {
+        let verifiedCancelUrl = ensureValidWebUrl(parsed.cancelUrl, parsed.name || query, parsed.loginUrl)
         if (parsed.isSubscriptionService !== false) {
           const isCancelAlive = await verifyCandidateUrl(verifiedCancelUrl, query)
           if (!isCancelAlive) {
             console.warn(`[AI Scout Pre-flight Guard]: Candidate URL failed sanity check: ${verifiedCancelUrl}`)
-            // Fallback to domain root if candidate was dead
-            verifiedCancelUrl = `https://${qLower.replace(/^https?:\/\//, '').replace(/\/.*$/, '')}`
+            // Fallback to domain root extracted safely from loginUrl or cancelUrl
+            verifiedCancelUrl = ensureValidWebUrl('', parsed.name || query, parsed.loginUrl || parsed.cancelUrl)
           }
         }
+
+        const safeLoginUrl = ensureValidWebUrl(parsed.loginUrl || '', parsed.name || query, verifiedCancelUrl)
 
         const entry: CancellationEntry & { isSubscriptionService?: boolean } = {
           name: parsed.name || query,
           nameHe: parsed.nameHe || parsed.name || query,
           keywords: [qLower, (parsed.name || '').toLowerCase(), (parsed.nameHe || '').toLowerCase()],
-          loginUrl: parsed.loginUrl || `https://${qLower.replace(/^https?:\/\//, '')}/login`,
+          loginUrl: safeLoginUrl,
           cancelUrl: verifiedCancelUrl,
           method: 'url',
           notes: parsed.notes || 'Official billing and cancellation pathway',
@@ -196,15 +242,17 @@ Return ONLY a valid JSON object matching this schema (no markdown, no backticks,
           entry.isSubscriptionService = false
         }
 
-        if (redis) {
+        if (redis && isCachedEntryValid(entry)) {
           try {
             await redis.set(`scout:${qLower}`, entry)
             if (parsed.name) await redis.set(`scout:${parsed.name.toLowerCase()}`, entry)
           } catch {}
         }
 
-        DYNAMIC_CACHE.set(qLower, entry)
-        if (parsed.name) DYNAMIC_CACHE.set(parsed.name.toLowerCase(), entry)
+        if (isCachedEntryValid(entry)) {
+          DYNAMIC_CACHE.set(qLower, entry)
+          if (parsed.name) DYNAMIC_CACHE.set(parsed.name.toLowerCase(), entry)
+        }
 
         return NextResponse.json({ entry, source: 'ai_scout_persisted' })
       }
@@ -213,9 +261,9 @@ Return ONLY a valid JSON object matching this schema (no markdown, no backticks,
     }
   }
 
-  // 6. Smart Heuristic Fallback (Avoid blind /settings/billing without verification)
-  const isDomain = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(query) || query.includes('http')
+  // 6. Smart Heuristic Fallback (Strictly for actual domains with dots & TLDs like domain.com)
   const cleanDomain = query.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim()
+  const isDomain = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/.test(cleanDomain)
 
   if (isDomain) {
     const candidateBilling = `https://${cleanDomain}/settings/billing`
