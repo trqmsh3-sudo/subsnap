@@ -1093,6 +1093,7 @@
         if (!found && !hudInjected && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
+            const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
             if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
               triggerAIEscalation(intent)
             }
