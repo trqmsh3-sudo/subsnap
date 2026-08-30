@@ -11,6 +11,7 @@
   window.__subsnap_loaded = true
 
   let hudInjected = false
+  let autoPilotStepCount = 0
   let countdownTimer = null
   let activeObserver = null
   let activeScanInterval = null
@@ -94,13 +95,13 @@
   }
 
   function isAlreadyCancelled() {
-    if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"]')) {
+    if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"], .modal, [class*="modal"]')) {
       return false
     }
 
     const bodyText = document.body.innerText || ''
     const hasCancelledHeader = /\bבוטל\b|להרשמה מחדש|המינוי שלך יסתיים בתאריך|subscription cancelled|subscription canceled/i.test(bodyText)
-    const isAskingConfirmation = /האם לבטל|המינוי יבוטל בסיום|are you sure you want to cancel/i.test(bodyText)
+    const isAskingConfirmation = /האם לבטל|המינוי יבוטל בסיום|are you sure you want to cancel|מה סיבת הביטול|reason.*cancel/i.test(bodyText)
 
     return hasCancelledHeader && !isAskingConfirmation
   }
@@ -232,19 +233,64 @@
     'disconnect account'
   ]
 
+  function getActiveDialogScope() {
+    const dialogs = Array.from(document.querySelectorAll('dialog, [role="dialog"], div[aria-modal="true"], .modal, [class*="modal"], [class*="dialog"]'))
+      .filter(el => isVisible(el))
+    if (dialogs.length === 0) return document
+    return dialogs[dialogs.length - 1]
+  }
+
+  function resolveSurveyStep(scopeRoot) {
+    if (!scopeRoot || scopeRoot === document) return null
+    const text = (scopeRoot.innerText || scopeRoot.textContent || '').toLowerCase()
+    const isSurvey = /(סיבת הביטול|למה לבטל|reason.*cancel|why.*leaving|why.*cancel|help us improve)/i.test(text)
+    if (!isSurvey) return null
+
+    // Find and select neutral radio option to unblock Next/Continue button
+    const radios = Array.from(scopeRoot.querySelectorAll('input[type="radio"], [role="radio"], label, [data-value]'))
+      .filter(r => isVisible(r))
+
+    if (radios.length > 0) {
+      const isAlreadyChecked = radios.some(r => r.checked || r.getAttribute('aria-checked') === 'true')
+      if (!isAlreadyChecked) {
+        let preferred = radios.find(r => /(לא רוצה להשיב|אחר|decline|other|not.*use|מספיק)/i.test(r.innerText || r.textContent || ''))
+        if (!preferred) preferred = radios[0]
+        if (preferred) forceClick(preferred)
+      }
+    }
+
+    // Locate forward progress button (Continue / Next)
+    const actionCandidates = queryDeep('button, a, div[role="button"], span[role="button"], [tabindex="0"]', scopeRoot)
+    for (const btn of actionCandidates) {
+      if (!isVisible(btn) || isDisallowedElement(btn)) continue
+      const btnText = (btn.innerText || btn.textContent || btn.value || '').toLowerCase().trim()
+      if (/(המשך|continue|next|proceed|advance)/i.test(btnText) && !/(הקודם|back|cancel)/i.test(btnText)) {
+        return btn
+      }
+    }
+    return null
+  }
+
   function findCancelButton() {
     if (isAlreadyCancelled() || isDeadOr404Page()) return null
 
-    // 1. Check known selectors (Tier 1 & Tier 2 Redis)
+    // 0. DIALOG HIERARCHY: Scope search to active modal if present!
+    const scopeRoot = getActiveDialogScope()
+
+    // 0.1 If in retention survey dialog, resolve it and target Continue
+    const surveyAction = resolveSurveyStep(scopeRoot)
+    if (surveyAction) return surveyAction
+
+    // 1. Check known selectors within scopeRoot (Tier 1 & Tier 2 Redis)
     for (const sel of ACTIVE_SELECTORS) {
       try {
-        const el = document.querySelector(sel)
+        const el = scopeRoot.querySelector(sel)
         if (el && !isDisallowedElement(el) && isVisible(el)) return el
       } catch (e) {}
     }
 
-    // 2. Check strict keywords (including Shadow DOM)
-    const candidates = queryDeep('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]')
+    // 2. Check strict keywords within scopeRoot (including Shadow DOM & Material Design action spans)
+    const candidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"], input[type="submit"], input[type="button"]', scopeRoot)
 
     for (const el of candidates) {
       if (!isVisible(el) || isDisallowedElement(el)) continue
@@ -254,27 +300,42 @@
       }
     }
 
-    // 3. Check contextual "Manage" buttons (e.g. Google Play subscription cards)
-    const pathname = window.location.pathname.toLowerCase()
-    for (const el of candidates) {
-      if (!isVisible(el) || isDisallowedElement(el)) continue
-      const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
-
-      // Full specific phrase is always safe
-      if (text === 'ניהול המינוי' || text === 'manage subscription' || text === 'manage plan' || text === 'ניהול מנוי') {
-        return el
+    // 2.1 Direct text match fallback inside active modal
+    if (scopeRoot !== document) {
+      const allModalEls = Array.from(scopeRoot.querySelectorAll('*'))
+      for (const el of allModalEls) {
+        if (!isVisible(el) || isDisallowedElement(el)) continue
+        const text = (el.innerText || el.textContent || '').trim().toLowerCase()
+        if (text === 'ביטול המינוי' || text === 'cancel subscription' || text === 'cancel plan') {
+          const clickable = el.closest('button, a, div[role="button"], [tabindex="0"], [jsaction*="click"]') || el
+          return clickable
+        }
       }
+    }
 
-      // Bare "Manage" / "ניהול" is ONLY safe if surrounded by explicit subscription/renewal context
-      if (text === 'ניהול' || text === 'manage') {
-        const card = el.closest('tr, li, article, div[role="listitem"], [class*="subscription"], [class*="plan"], [class*="membership"]') || el.parentElement?.parentElement
-        const contextText = card ? (card.innerText || card.textContent || '').toLowerCase() : ''
+    // 3. Check contextual "Manage" buttons ONLY when no modal is open
+    if (scopeRoot === document) {
+      const pathname = window.location.pathname.toLowerCase()
+      for (const el of candidates) {
+        if (!isVisible(el) || isDisallowedElement(el)) continue
+        const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
 
-        const hasSubContext = /(מינוי|מנוי|subscription|membership|plan|renewal|מתחדש|recurring)/i.test(contextText)
-        const hasIrrelevantContext = /(notification|privacy|password|address|profile|email|security|התראות|אבטחה|פרטיות|סיסמה|פרופיל)/i.test(contextText)
-
-        if ((pathname.includes('/subscriptions') || hasSubContext) && !hasIrrelevantContext) {
+        // Full specific phrase is always safe
+        if (text === 'ניהול המינוי' || text === 'manage subscription' || text === 'manage plan' || text === 'ניהול מנוי') {
           return el
+        }
+
+        // Bare "Manage" / "ניהול" is ONLY safe if surrounded by explicit subscription/renewal context
+        if (text === 'ניהול' || text === 'manage') {
+          const card = el.closest('tr, li, article, div[role="listitem"], [class*="subscription"], [class*="plan"], [class*="membership"]') || el.parentElement?.parentElement
+          const contextText = card ? (card.innerText || card.textContent || '').toLowerCase() : ''
+
+          const hasSubContext = /(מינוי|מנוי|subscription|membership|plan|renewal|מתחדש|recurring)/i.test(contextText)
+          const hasIrrelevantContext = /(notification|privacy|password|address|profile|email|security|התראות|אבטחה|פרטיות|סיסמה|פרופיל)/i.test(contextText)
+
+          if ((pathname.includes('/subscriptions') || hasSubContext) && !hasIrrelevantContext) {
+            return el
+          }
         }
       }
     }
@@ -541,9 +602,35 @@
 
     function triggerCancel() {
       if (countdownTimer) clearInterval(countdownTimer)
-      descEl.textContent = 'Executing cancellation pathway...'
+      autoPilotStepCount++
+      descEl.textContent = `Executing Step ${autoPilotStepCount}...`
       timerBadge.textContent = 'Active ⚡'
       forceClick(btn)
+
+      // Multi-Step Funnel Continuity:
+      // Allow DOM transitions and re-arm scan engine for subsequent steps (modals, surveys, confirmations)
+      setTimeout(() => {
+        if (isAlreadyCancelled()) {
+          hud.remove()
+          hudInjected = false
+          injectPeaceOfMindHUD(
+            'המנוי בוטל בהצלחה! 🎉',
+            'סייר SubSnap השלים את שלבי הביטול ואימת סיום חיוב פעיל.'
+          )
+          return
+        }
+
+        if (autoPilotStepCount >= 6) {
+          descEl.textContent = 'Auto-Pilot reached step limit. Please confirm final step manually.'
+          timerBadge.textContent = 'Manual 🎯'
+          return
+        }
+
+        // Cleanly unblock for next step
+        hud.remove()
+        hudInjected = false
+        startScanningEngine()
+      }, 1200)
     }
 
     actionBtn.addEventListener('click', triggerCancel)
@@ -559,14 +646,19 @@
     })
 
     function startCountdown() {
-      let secondsLeft = 5
+      let secondsLeft = autoPilotStepCount > 0 ? 3 : 5
+      if (autoPilotStepCount > 0) {
+        descEl.textContent = `Step ${autoPilotStepCount + 1} located. Proceeding in ${secondsLeft}s...`
+      }
       countdownTimer = setInterval(() => {
         if (document.hidden) return // Pause countdown while tab is in background!
 
         secondsLeft -= 1
         if (secondsLeft > 0) {
           timerBadge.textContent = `${secondsLeft}s`
-          descEl.textContent = `Subscription pathway located. Proceeding in ${secondsLeft}s...`
+          descEl.textContent = autoPilotStepCount > 0
+            ? `Step ${autoPilotStepCount + 1} located. Proceeding in ${secondsLeft}s...`
+            : `Subscription pathway located. Proceeding in ${secondsLeft}s...`
         } else {
           clearInterval(countdownTimer)
           triggerCancel()
