@@ -208,13 +208,35 @@
   }
 
   function isLoggedOutState() {
+    const pathname = window.location.pathname.toLowerCase()
+
+    // 1. Active application URLs are DEFINITELY logged in!
+    if (
+      pathname.startsWith('/app') ||
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/console') ||
+      pathname.startsWith('/workspace') ||
+      pathname.startsWith('/chat') ||
+      pathname.startsWith('/project') ||
+      pathname.startsWith('/settings') ||
+      pathname.startsWith('/account') ||
+      pathname.startsWith('/billing')
+    ) {
+      return false
+    }
+
+    // 2. If page displays free plan or cancelled state, user is authenticated
+    if (isNoActiveSubscriptionState() || isAlreadyCancelled()) {
+      return false
+    }
+
     if (isLoginPage()) return true
 
-    // Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
+    // 3. Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
     const hasUserProfile = !!document.querySelector(
       '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
       'button[aria-label*="Profile" i], button[aria-label*="Account" i], ' +
-      '[class*="avatar"], [class*="user-profile"]'
+      '[class*="avatar"], [class*="user-profile"], [class*="user-menu"]'
     )
     if (hasUserProfile) return false
 
@@ -1781,13 +1803,6 @@
       }
     }
 
-    // 1. LOGIN WALL DETECTED: Don't search for cancel buttons or waste AI on login forms!
-    if (isLoggedOutState()) {
-      sessionStorage.setItem('subsnap_waiting_login', 'true')
-      injectLoginBridgeHUD(targetName)
-      return true
-    }
-
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
       recordCancellationSuccess(targetName || window.location.hostname.replace(/^www\./, ''))
@@ -1813,12 +1828,22 @@
       return true
     }
 
-    // Tier 1.3: Proactive Check: No Active Subscription / Free Account
+    // Tier 1.3: Proactive Check: No Active Subscription / Free Account (e.g. Free plan | Upgrade on Manus!)
     if (isNoActiveSubscriptionState()) {
+      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
       injectPeaceOfMindHUD(
-        'בשורות טובות: לא נמצא מנוי פעיל ✨',
-        'סייר SubSnap בדק את הגדרות החשבון. לא קיים מנוי פרימיום בתשלום או חיוב חודשי פעיל עבור חשבון זה באתר.'
+        isHebrew ? 'בשורות טובות: אין מנוי פעיל לתשלום! ✨' : 'Good News: No Active Paid Subscription! ✨',
+        isHebrew 
+          ? `החשבון שלך ב-${targetName || 'שירות'} נמצא בתוכנית חינמית (Free plan). לא קיים חיוב פעיל ואין צורך בביטול.` 
+          : `Your account on ${targetName || 'service'} is on the Free plan. No active recurring billing found.`
       )
+      return true
+    }
+
+    // 1. LOGIN WALL DETECTED: Only if no active plan or app state was found!
+    if (isLoggedOutState()) {
+      sessionStorage.setItem('subsnap_waiting_login', 'true')
+      injectLoginBridgeHUD(targetName)
       return true
     }
 
