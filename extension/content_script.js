@@ -997,8 +997,8 @@
           <span>${isHebrew ? `התחברות לחשבון (${sName})` : `Sign in to ${sName}`}</span>
           <span style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ממתין ⏳' : 'Waiting ⏳'}</span>
         </div>
-        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
-          ${isHebrew ? 'התחבר בלחיצה על הכפתור המודגש. SubSnap יקפיץ אותך מיד לעמוד הביטול בסיום!' : 'Click the highlighted button to sign in. SubSnap will leap directly to cancellation upon login!'}
+        <div id="subsnap-login-subtext" style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
+          ${isHebrew ? 'התחבר לחשבונך. SubSnap יקפיץ אותך מיד לעמוד הביטול בסיום!' : 'Sign in to your account. SubSnap will leap directly to cancellation upon login!'}
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
@@ -1018,9 +1018,49 @@
     const actionBtn = hud.querySelector('#subsnap-login-action-btn')
     if (actionBtn && loginBtn) {
       actionBtn.addEventListener('click', () => {
+        // Surgical Tweezers: Check if credentials fields are present and empty
+        const emptyInput = Array.from(document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input:not([type])'))
+          .find(inp => isVisible(inp) && !inp.disabled && !inp.readOnly && !inp.value.trim())
+
+        if (emptyInput) {
+          emptyInput.focus()
+          emptyInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          emptyInput.style.transition = 'all 0.3s ease'
+          emptyInput.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.45)'
+          emptyInput.style.borderColor = '#2563eb'
+
+          const subtext = hud.querySelector('#subsnap-login-subtext')
+          if (subtext) {
+            subtext.textContent = isHebrew
+              ? 'הזן את פרטי הכניסה (או בחר Google/Facebook). מיד עם ההתחברות נקפיץ אותך לביטול!'
+              : 'Enter your credentials (or choose Google/Facebook). SubSnap will leap upon login!'
+            subtext.style.color = '#2563eb'
+            subtext.style.fontWeight = '700'
+          }
+          return
+        }
+
+        // When credentials exist, execute click!
+        sessionStorage.setItem('subsnap_waiting_login', 'true')
+        if (chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({ subsnap_waiting_login: cleanHost })
+        }
         forceClick(loginBtn)
       })
     }
+
+    // Attach listeners to any user login actions on page to ensure state persistence
+    try {
+      const loginTriggers = queryDeep('form, button[type="submit"], input[type="submit"], button[data-provider], a[href*="google"], a[href*="facebook"], [aria-label*="Google"], [aria-label*="Facebook"]')
+      loginTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+          sessionStorage.setItem('subsnap_waiting_login', 'true')
+          if (chrome.storage && chrome.storage.local) {
+            chrome.storage.local.set({ subsnap_waiting_login: cleanHost })
+          }
+        }, { capture: true })
+      })
+    } catch (e) {}
 
     hud.querySelector('#subsnap-login-close-btn').addEventListener('click', () => {
       hud.remove()
@@ -2148,9 +2188,19 @@
     }
 
     // 0. THE INVISIBLE LOGIN BRIDGE: Check if returning from a successful login
-    const wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
+    let wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
+    if (!wasWaitingLogin && chrome.storage && chrome.storage.local) {
+      const stored = await new Promise(r => chrome.storage.local.get(['subsnap_waiting_login'], r))
+      if (stored && stored.subsnap_waiting_login === cleanHost) {
+        wasWaitingLogin = true
+      }
+    }
+
     if (wasWaitingLogin && !isLoginPage() && activeIntent && activeIntent.cancelUrl) {
       sessionStorage.removeItem('subsnap_waiting_login')
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_waiting_login'])
+      }
       try {
         const cancelUrlObj = new URL(activeIntent.cancelUrl)
         const currentUrlObj = new URL(window.location.href)
