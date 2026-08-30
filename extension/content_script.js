@@ -35,15 +35,17 @@
   }
 
   // Shadow DOM traversal for modern SaaS (ChatGPT, Notion, Stripe Customer Portal)
-  function queryDeep(selector, root = document) {
+  function queryDeep(selector, root = document, depth = 0) {
     const results = Array.from(root.querySelectorAll(selector))
+    if (depth >= 3) return results
+
     try {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
       let node = walker.nextNode()
       while (node) {
         if (node.shadowRoot) {
           try {
-            results.push(...queryDeep(selector, node.shadowRoot))
+            results.push(...queryDeep(selector, node.shadowRoot, depth + 1))
           } catch (e) {}
         }
         node = walker.nextNode()
@@ -741,9 +743,9 @@
 
       // VERIFICATION CONDITIONS: Must be 100% verified real outcome
       const isCancelled = isAlreadyCancelled()
-      const hasVerifiedCancelBtn = findCancelButton() !== null
+      const isNavigatedToCancelPage = (window.location.href !== pending.urlBefore) && (findCancelButton() !== null)
 
-      if (isCancelled || hasVerifiedCancelBtn) {
+      if (isCancelled || isNavigatedToCancelPage) {
         if (chrome.runtime && chrome.runtime.sendMessage && pending.selector) {
           chrome.runtime.sendMessage({
             action: 'reportHealedUrl',
@@ -865,13 +867,14 @@
               if (!targetHost || !currentHost) return false
               const t = targetHost.toLowerCase().replace(/^www\./, '')
               const c = currentHost.toLowerCase().replace(/^www\./, '')
-              return (
-                c === t ||
-                c.endsWith('.' + t) ||
-                t.endsWith('.' + c) ||
-                (t.includes('x.com') && c.includes('twitter.com')) ||
-                (t.includes('twitter.com') && c.includes('x.com'))
-              )
+
+              if (c === t) return true
+              if (c.endsWith('.' + t) || t.endsWith('.' + c)) return true
+
+              const isXOrTwitter = (h) => h === 'x.com' || h.endsWith('.x.com') || h === 'twitter.com' || h.endsWith('.twitter.com')
+              if (isXOrTwitter(t) && isXOrTwitter(c)) return true
+
+              return false
             }
 
             if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
