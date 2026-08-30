@@ -308,15 +308,28 @@
   }
 
   function isAlreadyCancelled() {
-    if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"], .modal, [class*="modal"]')) {
+    const dialog = getActiveDialogScope()
+    const scopeText = (dialog !== document ? dialog.innerText : document.body.innerText || '').toLowerCase()
+    const fullText = (document.body.innerText || '').toLowerCase()
+
+    const hasCancelledHeader = (
+      /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלכם בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|פג תוקף|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled|your subscription has been cancelled|your plan has been cancelled/i.test(scopeText) ||
+      /\bהמינוי שלכם בוטל\b|\bהמינוי שלך בוטל\b|\bהמינוי בוטל\b|\byour subscription has been cancelled\b/i.test(fullText)
+    )
+
+    // Intermediate warning/confirmation phrases (if these are present, cancellation is not finished yet)
+    const isAskingConfirmation = /האם לבטל|בטוח שברצונך לבטל|are you sure you want to cancel|מה סיבת הביטול|למה אתה רוצה לבטל|למה לבטל|reason.*cancel/i.test(scopeText)
+
+    if (hasCancelledHeader && !isAskingConfirmation) {
+      return true
+    }
+
+    // If an intermediate dialog is open and it's NOT a completed cancellation modal, user is still in funnel
+    if (dialog !== document) {
       return false
     }
 
-    const bodyText = (document.body.innerText || '').toLowerCase()
-    const hasCancelledHeader = /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|פג תוקף|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled/i.test(bodyText)
-    const isAskingConfirmation = /האם לבטל|המינוי יבוטל בסיום|are you sure you want to cancel|מה סיבת הביטול|reason.*cancel/i.test(bodyText)
-
-    return hasCancelledHeader && !isAskingConfirmation
+    return false
   }
 
   function isNoActiveSubscriptionState() {
@@ -1796,18 +1809,46 @@
     })
   }
 
-  // --- Room 5: Trophy Room & Savings Engine ---
+  // --- Room 5: Trophy Room & Continuous Learning Engine ---
   function recordCancellationSuccess(serviceName = '') {
     try {
+      const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+      const sName = serviceName || cleanHost
+
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(['subsnap_savings_stats'], (res) => {
+        chrome.storage.local.get(['subsnap_savings_stats', 'subsnap_learned_services'], (res) => {
+          // 1. Commit to Learned Services (Local Persistent Memory)
+          let learned = (res && Array.isArray(res.subsnap_learned_services)) ? res.subsnap_learned_services : []
+          const exists = learned.some(s => s.name === sName || s.host === cleanHost)
+          if (!exists) {
+            learned.push({
+              name: sName,
+              host: cleanHost,
+              cancelUrl: window.location.href,
+              savedAt: Date.now()
+            })
+            chrome.storage.local.set({ subsnap_learned_services: learned })
+          }
+
+          // 2. Report to Global Redis (Collective Fleet Memory - AI as Pathfinder)
+          if (chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage({
+              action: 'reportHealedUrl',
+              payload: {
+                host: cleanHost,
+                healedUrl: window.location.href,
+                serviceName: sName
+              }
+            })
+          }
+
+          // 3. Trophy Room Stats
           const stats = res && res.subsnap_savings_stats ? res.subsnap_savings_stats : {
             cancelledCount: 0,
             totalSavedIls: 0,
             services: []
           }
 
-          const sName = serviceName || window.location.hostname.replace(/^www\./, '')
           const now = Date.now()
           const alreadyRecorded = stats.services && stats.services.some(s => s.name === sName && (now - s.timestamp < 86400000))
           if (!alreadyRecorded) {
