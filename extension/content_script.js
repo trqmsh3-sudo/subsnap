@@ -9,6 +9,7 @@
 (function () {
   if (window.__subsnap_loaded) return
   window.__subsnap_loaded = true
+  console.log('[SubSnap] Content script initialized on:', window.location.href)
 
   let hudInjected = false
   let autoPilotStepCount = 0
@@ -1732,6 +1733,7 @@
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['subsnap_active_intent'], (res) => {
           const intent = res ? res.subsnap_active_intent : null
+          console.log('[SubSnap checkActiveIntent]', { cleanHost, intentTarget: intent?.targetHost, match: intent ? isHostMatch(intent.targetHost, cleanHost) : false })
           if (!intent) return resolve(null)
 
           // 10 minutes session window
