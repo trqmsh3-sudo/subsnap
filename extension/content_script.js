@@ -37,6 +37,16 @@
       if (tRoot === cRoot && tRoot.length > 4) return true
     }
 
+    // SSO identity providers (Google, Apple, Microsoft, Auth0, Clerk) during login transitions
+    const isSSODomain = (h) => (
+      h.includes('accounts.google.') ||
+      h.includes('appleid.apple.') ||
+      h.includes('login.microsoftonline.') ||
+      h.includes('auth0.com') ||
+      h.includes('clerk.')
+    )
+    if (isSSODomain(c)) return true
+
     const isXOrTwitter = (h) => h === 'x.com' || h.endsWith('.x.com') || h === 'twitter.com' || h.endsWith('.twitter.com')
     if (isXOrTwitter(t) && isXOrTwitter(c)) return true
 
@@ -115,6 +125,32 @@
     }
 
     return isDead
+  }
+
+  function isLoginPage() {
+    const pathname = window.location.pathname.toLowerCase()
+    const hostname = window.location.hostname.toLowerCase()
+
+    // 1. URL Path & Subdomain check
+    const isLoginPath = (
+      pathname.includes('/login') ||
+      pathname.includes('/signin') ||
+      pathname.includes('/sign-in') ||
+      pathname.includes('/log-in') ||
+      pathname.includes('/auth') ||
+      pathname.includes('/identifier') ||
+      pathname.includes('/challenge') ||
+      hostname.startsWith('auth.') ||
+      hostname.startsWith('login.') ||
+      hostname.startsWith('accounts.')
+    )
+
+    // 2. DOM Password / Credential check
+    const hasPasswordField = !!document.querySelector('input[type="password"]')
+    const hasLoginForm = !!document.querySelector('form[action*="login"], form[action*="signin"], form[data-testid*="login"]')
+    const hasSignInHeading = /התחברות|התחבר לחשבון|כניסה לחשבון|sign in|log in|welcome back/i.test(document.title || '')
+
+    return (isLoginPath && (hasPasswordField || hasLoginForm || hasSignInHeading)) || (hasPasswordField && !pathname.includes('/account'))
   }
 
   function isAlreadyCancelled() {
@@ -513,6 +549,60 @@
 
     document.body.appendChild(hud)
     hud.querySelector('#subsnap-peace-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
+  function injectLoginBridgeHUD(serviceName = '') {
+    if (document.getElementById('subsnap-login-hud')) return
+    hudInjected = true
+
+    const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
+    // Highlight 1-Click Social / Google Login if present
+    try {
+      const socialLoginBtn = document.querySelector('button[data-provider="google"], div[data-provider="google"], a[href*="google"], [aria-label*="Google"], [data-testid*="google"], button[data-provider="apple"], [aria-label*="Apple"]')
+      if (socialLoginBtn && isVisible(socialLoginBtn)) {
+        socialLoginBtn.style.outline = '2.5px solid #3b82f6'
+        socialLoginBtn.style.outlineOffset = '2px'
+      }
+    } catch (e) {}
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-login-hud'
+    hud.style.cssText = `
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #3b82f6;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(59, 130, 246, 0.2);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ${isHebrew ? 'rtl' : 'ltr'};
+      min-width: 340px; max-width: 460px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      </style>
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; border: 1.5px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        🔑
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+          <span>${isHebrew ? 'התחברות מהירה לחשבון' : 'Quick Account Login'}</span>
+          <span style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ממתין ⏳' : 'Waiting ⏳'}</span>
+        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
+          ${isHebrew ? 'התחבר בקליק (Google / סיסמה שמורה). SubSnap ימשיך אוטומטית לעמוד הביטול מיד בסיום!' : 'Sign in with Google or saved password. SubSnap will automatically leap to cancellation once connected!'}
+        </div>
+      </div>
+      <button id="subsnap-login-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px;">
+        ✕
+      </button>
+    `
+
+    document.body.appendChild(hud)
+    hud.querySelector('#subsnap-login-close-btn').addEventListener('click', () => {
       hud.remove()
       hudInjected = false
     })
@@ -1038,6 +1128,33 @@
 
     const targetName = activeIntent.name || ''
 
+    // 0. THE INVISIBLE LOGIN BRIDGE: Check if returning from a successful login
+    const wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
+    if (wasWaitingLogin && !isLoginPage() && activeIntent && activeIntent.cancelUrl) {
+      sessionStorage.removeItem('subsnap_waiting_login')
+      const currentNorm = window.location.href.split('?')[0].split('#')[0].replace(/\/$/, '')
+      const cancelNorm = activeIntent.cancelUrl.split('?')[0].split('#')[0].replace(/\/$/, '')
+
+      if (currentNorm !== cancelNorm && !window.location.pathname.includes('/subscriptions') && !window.location.pathname.includes('/account')) {
+        const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+        injectPeaceOfMindHUD(
+          isHebrew ? 'התחברת בהצלחה! ⚡' : 'Logged In Successfully! ⚡',
+          isHebrew ? 'טייס SubSnap מקפיץ אותך מיד לעמוד ביטול המנוי...' : 'SubSnap Auto-Pilot is leaping directly to the cancellation pathway...'
+        )
+        setTimeout(() => {
+          window.location.href = activeIntent.cancelUrl
+        }, 800)
+        return true
+      }
+    }
+
+    // 1. LOGIN WALL DETECTED: Don't search for cancel buttons or waste AI on login forms!
+    if (isLoginPage()) {
+      sessionStorage.setItem('subsnap_waiting_login', 'true')
+      injectLoginBridgeHUD(targetName)
+      return true
+    }
+
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
       sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
@@ -1134,8 +1251,8 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
-        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain!
-        if (!found && !hudInjected && chrome.storage && chrome.storage.local) {
+        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login pages!)
+        if (!found && !hudInjected && !isLoginPage() && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
             const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
