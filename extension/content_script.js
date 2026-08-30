@@ -207,6 +207,32 @@
     return (isLoginPath && (hasPasswordField || hasLoginForm || hasSignInHeading || hasSSOButton)) || (hasPasswordField && !pathname.includes('/account'))
   }
 
+  function isLoggedOutState() {
+    if (isLoginPage()) return true
+
+    // Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
+    const hasUserProfile = !!document.querySelector(
+      '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
+      'button[aria-label*="Profile" i], button[aria-label*="Account" i], ' +
+      '[class*="avatar"], [class*="user-profile"]'
+    )
+    if (hasUserProfile) return false
+
+    const loginLinks = Array.from(document.querySelectorAll('a, button'))
+      .filter(el => {
+        if (!isVisible(el)) return false
+        const text = (el.innerText || el.textContent || '').toLowerCase().trim()
+        const href = (el.getAttribute('href') || '').toLowerCase()
+        return (
+          text === 'log in' || text === 'sign in' || text === 'signin' || text === 'login' ||
+          text === 'התחברות' || text === 'התחבר' || text === 'כניסה' ||
+          href.includes('/login') || href.includes('/signin')
+        )
+      })
+
+    return loginLinks.length > 0
+  }
+
   function isAlreadyCancelled() {
     if (document.querySelector('[role="dialog"], dialog, div[aria-modal="true"], .modal, [class*="modal"]')) {
       return false
@@ -1563,11 +1589,6 @@
         }
       }
 
-      // Consume active intent so it never lingers or leaks
-      if (chrome.storage && chrome.storage.local) {
-        chrome.storage.local.remove(['subsnap_active_intent'])
-      }
-
       // If valid target was resolved:
       if (targetEl) {
         if (existingHud) existingHud.remove()
@@ -1761,7 +1782,7 @@
     }
 
     // 1. LOGIN WALL DETECTED: Don't search for cancel buttons or waste AI on login forms!
-    if (isLoginPage()) {
+    if (isLoggedOutState()) {
       sessionStorage.setItem('subsnap_waiting_login', 'true')
       injectLoginBridgeHUD(targetName)
       return true
@@ -1893,12 +1914,12 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
+        const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
         const isSearchEngine = (cleanHost === 'google.com' || cleanHost.endsWith('.google.com') || cleanHost.includes('bing.com') || cleanHost.includes('duckduckgo.com'))
         // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login, 404, search engines, or help articles!)
         if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && !isSearchEngine && !isHelpArticlePage() && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
-            const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
             if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
               triggerAIEscalation(intent)
             }
