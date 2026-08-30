@@ -636,13 +636,27 @@
     actionBtn.addEventListener('click', triggerCancel)
     stopBtn.addEventListener('click', () => {
       if (countdownTimer) clearInterval(countdownTimer)
-      descEl.textContent = 'Auto-Pilot paused.'
-      timerBadge.textContent = 'Paused'
+      descEl.textContent = 'Auto-Pilot stopped.'
+      timerBadge.textContent = 'Halted 🛑'
+      const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+      sessionStorage.setItem('subsnap_halted_' + cleanHost, 'true')
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_active_intent'])
+      }
+      if (activeObserver) activeObserver.disconnect()
+      if (activeScanInterval) clearInterval(activeScanInterval)
     })
     closeBtn.addEventListener('click', () => {
       if (countdownTimer) clearInterval(countdownTimer)
       hud.remove()
       hudInjected = false
+      const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+      sessionStorage.setItem('subsnap_halted_' + cleanHost, 'true')
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_active_intent'])
+      }
+      if (activeObserver) activeObserver.disconnect()
+      if (activeScanInterval) clearInterval(activeScanInterval)
     })
 
     function startCountdown() {
@@ -855,7 +869,35 @@
 
   // --- Main Tiered Scan Engine ---
 
+  function checkActiveIntent(cleanHost) {
+    return new Promise((resolve) => {
+      if (sessionStorage.getItem('subsnap_halted_' + cleanHost) === 'true') {
+        return resolve(false)
+      }
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(['subsnap_active_intent'], (res) => {
+          const intent = res ? res.subsnap_active_intent : null
+          if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
+            return resolve(true)
+          }
+          return resolve(false)
+        })
+      } else {
+        return resolve(false)
+      }
+    })
+  }
+
   async function performScan() {
+    const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+
+    // 0. STRICT KILL-SWITCH: If user dismissed or cancelled this session, stay completely dormant!
+    if (sessionStorage.getItem('subsnap_halted_' + cleanHost) === 'true') {
+      if (activeObserver) activeObserver.disconnect()
+      if (activeScanInterval) clearInterval(activeScanInterval)
+      return false
+    }
+
     // Check if a previous candidate click achieved verified success
     verifyAndCommitPendingHeal()
 
@@ -863,6 +905,14 @@
 
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
+      // Disconnect and halt session permanently so resubscribing won't trigger re-cancellation!
+      sessionStorage.setItem('subsnap_halted_' + cleanHost, 'true')
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_active_intent'])
+      }
+      if (activeObserver) activeObserver.disconnect()
+      if (activeScanInterval) clearInterval(activeScanInterval)
+
       injectPeaceOfMindHUD(
         'המנוי כבר בוטל בהצלחה! 🎉',
         'סייר SubSnap זיהה שהמינוי כבר מבוטל. לא יבוצע חיוב נוסף.'
@@ -871,10 +921,15 @@
     }
 
     // Tier 1.2: Check if cancel button is present on screen (Local or Redis Playbook)
+    // CRITICAL: ONLY inject Auto-Pilot HUD if there is an ACTIVE USER INTENT for this host!
     const btn = findCancelButton()
     if (btn) {
-      injectAutoPilotHUD(btn)
-      return true
+      const hasIntent = await checkActiveIntent(cleanHost)
+      if (hasIntent && !hudInjected) {
+        injectAutoPilotHUD(btn)
+        return true
+      }
+      return false
     }
 
     // Tier 1.3: Proactive Check: No Active Subscription / Free Account
