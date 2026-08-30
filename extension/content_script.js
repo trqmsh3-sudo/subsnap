@@ -234,8 +234,8 @@
   ]
 
   function getActiveDialogScope() {
-    const dialogs = Array.from(document.querySelectorAll('dialog, [role="dialog"], div[aria-modal="true"], .modal, [class*="modal"], [class*="dialog"]'))
-      .filter(el => isVisible(el))
+    const dialogs = Array.from(document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"]'))
+      .filter(el => isVisible(el) && (el.innerText || '').trim().length > 10)
     if (dialogs.length === 0) return document
     return dialogs[dialogs.length - 1]
   }
@@ -274,68 +274,77 @@
   function findCancelButton() {
     if (isAlreadyCancelled() || isDeadOr404Page()) return null
 
-    // 0. DIALOG HIERARCHY: Scope search to active modal if present!
+    // 0. DIALOG HIERARCHY: Try active modal first
     const scopeRoot = getActiveDialogScope()
 
-    // 0.1 If in retention survey dialog, resolve it and target Continue
-    const surveyAction = resolveSurveyStep(scopeRoot)
-    if (surveyAction) return surveyAction
-
-    // 1. Check known selectors within scopeRoot (Tier 1 & Tier 2 Redis)
-    for (const sel of ACTIVE_SELECTORS) {
-      try {
-        const el = scopeRoot.querySelector(sel)
-        if (el && !isDisallowedElement(el) && isVisible(el)) return el
-      } catch (e) {}
-    }
-
-    // 2. Check strict keywords within scopeRoot (including Shadow DOM & Material Design action spans)
-    const candidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"], input[type="submit"], input[type="button"]', scopeRoot)
-
-    for (const el of candidates) {
-      if (!isVisible(el) || isDisallowedElement(el)) continue
-      const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
-      if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
-        return el
-      }
-    }
-
-    // 2.1 Direct text match fallback inside active modal
+    // 0.1 Check retention survey in dialog
     if (scopeRoot !== document) {
-      const allModalEls = Array.from(scopeRoot.querySelectorAll('*'))
-      for (const el of allModalEls) {
-        if (!isVisible(el) || isDisallowedElement(el)) continue
-        const text = (el.innerText || el.textContent || '').trim().toLowerCase()
-        if (text === 'ביטול המינוי' || text === 'cancel subscription' || text === 'cancel plan') {
-          const clickable = el.closest('button, a, div[role="button"], [tabindex="0"], [jsaction*="click"]') || el
-          return clickable
-        }
-      }
+      const surveyAction = resolveSurveyStep(scopeRoot)
+      if (surveyAction) return surveyAction
     }
 
-    // 3. Check contextual "Manage" buttons ONLY when no modal is open
-    if (scopeRoot === document) {
-      const pathname = window.location.pathname.toLowerCase()
+    function searchIn(root) {
+      // 1. Check known selectors
+      for (const sel of ACTIVE_SELECTORS) {
+        try {
+          const el = root.querySelector(sel)
+          if (el && !isDisallowedElement(el) && isVisible(el)) return el
+        } catch (e) {}
+      }
+
+      // 2. Check strict keywords
+      const candidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"], input[type="submit"], input[type="button"]', root)
       for (const el of candidates) {
         if (!isVisible(el) || isDisallowedElement(el)) continue
         const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
-
-        // Full specific phrase is always safe
-        if (text === 'ניהול המינוי' || text === 'manage subscription' || text === 'manage plan' || text === 'ניהול מנוי') {
+        if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
           return el
         }
+      }
 
-        // Bare "Manage" / "ניהול" is ONLY safe if surrounded by explicit subscription/renewal context
-        if (text === 'ניהול' || text === 'manage') {
-          const card = el.closest('tr, li, article, div[role="listitem"], [class*="subscription"], [class*="plan"], [class*="membership"]') || el.parentElement?.parentElement
-          const contextText = card ? (card.innerText || card.textContent || '').toLowerCase() : ''
+      // 2.1 Direct text match fallback (Material Design action spans)
+      const allEls = Array.from(root.querySelectorAll('button, a, span, div'))
+      for (const el of allEls) {
+        if (!isVisible(el) || isDisallowedElement(el)) continue
+        const text = (el.innerText || el.textContent || '').trim().toLowerCase()
+        if (text === 'ביטול המינוי' || text === 'cancel subscription' || text === 'cancel plan') {
+          return el.closest('button, a, div[role="button"], [tabindex="0"], [jsaction*="click"]') || el
+        }
+      }
 
-          const hasSubContext = /(מינוי|מנוי|subscription|membership|plan|renewal|מתחדש|recurring)/i.test(contextText)
-          const hasIrrelevantContext = /(notification|privacy|password|address|profile|email|security|התראות|אבטחה|פרטיות|סיסמה|פרופיל)/i.test(contextText)
+      return null
+    }
 
-          if ((pathname.includes('/subscriptions') || hasSubContext) && !hasIrrelevantContext) {
-            return el
-          }
+    // Try modal first if open
+    if (scopeRoot !== document) {
+      const inModal = searchIn(scopeRoot)
+      if (inModal) return inModal
+    }
+
+    // Search on main page
+    const onPage = searchIn(document)
+    if (onPage) return onPage
+
+    // 3. Check contextual "Manage" buttons ONLY on main page
+    const pathname = window.location.pathname.toLowerCase()
+    const pageCandidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"]', document)
+    for (const el of pageCandidates) {
+      if (!isVisible(el) || isDisallowedElement(el)) continue
+      const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+
+      if (text === 'ניהול המינוי' || text === 'manage subscription' || text === 'manage plan' || text === 'ניהול מנוי') {
+        return el
+      }
+
+      if (text === 'ניהול' || text === 'manage') {
+        const card = el.closest('tr, li, article, div[role="listitem"], [class*="subscription"], [class*="plan"], [class*="membership"]') || el.parentElement?.parentElement
+        const contextText = card ? (card.innerText || card.textContent || '').toLowerCase() : ''
+
+        const hasSubContext = /(מינוי|מנוי|subscription|membership|plan|renewal|מתחדש|recurring)/i.test(contextText)
+        const hasIrrelevantContext = /(notification|privacy|password|address|profile|email|security|התראות|אבטחה|פרטיות|סיסמה|פרופיל)/i.test(contextText)
+
+        if ((pathname.includes('/subscriptions') || hasSubContext) && !hasIrrelevantContext) {
+          return el
         }
       }
     }
@@ -639,7 +648,8 @@
       descEl.textContent = 'Auto-Pilot stopped.'
       timerBadge.textContent = 'Halted 🛑'
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-      sessionStorage.setItem('subsnap_halted_' + cleanHost, 'true')
+      sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
+      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
@@ -651,7 +661,8 @@
       hud.remove()
       hudInjected = false
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-      sessionStorage.setItem('subsnap_halted_' + cleanHost, 'true')
+      sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
+      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
@@ -829,7 +840,7 @@
           `סייר ה-AI סרק את אפשרויות העמוד עבור ${serviceName} ואימת שלא קיים מנוי בתשלום או כפתור ביטול פעיל.`
         )
       } else {
-        console.warn('[SubSnap] AI DOM Scout completed without resolving a reliable action target.')
+        console.log('[SubSnap] AI DOM Scout completed without resolving a reliable action target.')
       }
     })
   }
@@ -871,19 +882,33 @@
 
   function checkActiveIntent(cleanHost) {
     return new Promise((resolve) => {
-      if (sessionStorage.getItem('subsnap_halted_' + cleanHost) === 'true') {
-        return resolve(false)
-      }
+      // Clean legacy keys
+      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
+
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['subsnap_active_intent'], (res) => {
           const intent = res ? res.subsnap_active_intent : null
-          if (intent && isHostMatch(intent.targetHost, cleanHost) && (Date.now() - intent.timestamp < 180000)) {
-            return resolve(true)
+          if (!intent) return resolve(false)
+
+          // 10 minutes session window
+          if (Date.now() - intent.timestamp >= 600000) {
+            return resolve(false)
           }
-          return resolve(false)
+
+          if (!isHostMatch(intent.targetHost, cleanHost)) {
+            return resolve(false)
+          }
+
+          // Check if this tab was explicitly stopped/halted AFTER this intent was launched
+          const haltedAt = parseInt(sessionStorage.getItem('subsnap_halted_at_' + cleanHost) || '0', 10)
+          if (haltedAt > intent.timestamp) {
+            return resolve(false)
+          }
+
+          resolve(true)
         })
       } else {
-        return resolve(false)
+        resolve(false)
       }
     })
   }
@@ -891,22 +916,21 @@
   async function performScan() {
     const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
-    // 0. STRICT KILL-SWITCH: If user dismissed or cancelled this session, stay completely dormant!
-    if (sessionStorage.getItem('subsnap_halted_' + cleanHost) === 'true') {
-      if (activeObserver) activeObserver.disconnect()
-      if (activeScanInterval) clearInterval(activeScanInterval)
-      return false
-    }
-
     // Check if a previous candidate click achieved verified success
     verifyAndCommitPendingHeal()
 
     if (hudInjected) return false
 
+    // Check if user initiated active intent
+    const hasIntent = await checkActiveIntent(cleanHost)
+    if (!hasIntent) {
+      return false
+    }
+
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
-      // Disconnect and halt session permanently so resubscribing won't trigger re-cancellation!
-      sessionStorage.setItem('subsnap_halted_' + cleanHost, 'true')
+      sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
+      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
@@ -921,15 +945,10 @@
     }
 
     // Tier 1.2: Check if cancel button is present on screen (Local or Redis Playbook)
-    // CRITICAL: ONLY inject Auto-Pilot HUD if there is an ACTIVE USER INTENT for this host!
     const btn = findCancelButton()
-    if (btn) {
-      const hasIntent = await checkActiveIntent(cleanHost)
-      if (hasIntent && !hudInjected) {
-        injectAutoPilotHUD(btn)
-        return true
-      }
-      return false
+    if (btn && !hudInjected) {
+      injectAutoPilotHUD(btn)
+      return true
     }
 
     // Tier 1.3: Proactive Check: No Active Subscription / Free Account
