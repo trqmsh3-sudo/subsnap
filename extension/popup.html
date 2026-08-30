@@ -346,11 +346,18 @@
     </div>
   </div>
 
+  <style>
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+
   <!-- Dynamic Result Card -->
   <div class="result-capsule" id="resultCard">
     <div class="result-header">
       <div class="result-name" id="serviceName">Netflix</div>
-      <div class="result-tag" id="modeTag">⚡ Verified Pathway</div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button id="btnRescan" title="Force AI Re-scan / Clear cache" style="background: none; border: none; cursor: pointer; padding: 2px 4px; color: #64748b; font-size: 12px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.color='#059669'; this.style.background='#f1f5f9'" onmouseout="this.style.color='#64748b'; this.style.background='none'">🔄</button>
+        <div class="result-tag" id="modeTag">⚡ Verified Pathway</div>
+      </div>
     </div>
     <div class="result-desc" id="serviceNotes">
       Official billing pathway identified. Click below to launch Auto-Pilot HUD.

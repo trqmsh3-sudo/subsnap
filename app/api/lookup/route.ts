@@ -16,6 +16,7 @@ const DYNAMIC_CACHE = new Map<string, CancellationEntry>()
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const query = searchParams.get('q') || ''
+  const force = searchParams.get('force') === 'true'
 
   if (!query.trim()) {
     return NextResponse.json({ entry: null })
@@ -23,8 +24,8 @@ export async function GET(req: NextRequest) {
 
   const qLower = query.toLowerCase().trim()
 
-  // 1. Check Global Redis Distributed Cache
-  if (redis) {
+  // 1. Check Global Redis Distributed Cache (unless force re-scan requested)
+  if (!force && redis) {
     try {
       const cached = await redis.get<CancellationEntry>(`scout:${qLower}`)
       if (cached) {
@@ -33,8 +34,8 @@ export async function GET(req: NextRequest) {
     } catch {}
   }
 
-  // 2. Check local in-memory cache
-  if (DYNAMIC_CACHE.has(qLower)) {
+  // 2. Check local in-memory cache (unless force re-scan requested)
+  if (!force && DYNAMIC_CACHE.has(qLower)) {
     return NextResponse.json({ entry: DYNAMIC_CACHE.get(qLower), source: 'cache' })
   }
 

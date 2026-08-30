@@ -128,18 +128,21 @@ const serviceNameEl = document.getElementById('serviceName')
 const serviceNotesEl = document.getElementById('serviceNotes')
 const modeTagEl = document.getElementById('modeTag')
 const btnCancel = document.getElementById('btnCancel')
+const btnRescan = document.getElementById('btnRescan')
 const modeSelect = document.getElementById('modeSelect')
 const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
 let LEARNED_SERVICES = []
 let searchDebounceTimer = null
+const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000 // 14 Days Cache Expiration
 
-// Load locally learned services from storage
+// Load locally learned services from storage (with automatic TTL eviction)
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get(['subsnap_learned_services'], (res) => {
     if (res && Array.isArray(res.subsnap_learned_services)) {
-      LEARNED_SERVICES = res.subsnap_learned_services
+      const now = Date.now()
+      LEARNED_SERVICES = res.subsnap_learned_services.filter(s => !s.savedAt || (now - s.savedAt < CACHE_TTL_MS))
     }
   })
 }
@@ -155,7 +158,8 @@ function saveLearnedService(service) {
       cancelUrl: service.cancelUrl,
       notes: service.notes || 'AI Scout verified direct cancellation pathway',
       keywords: [sName, ...(service.keywords || [])],
-      isLearned: true
+      isLearned: true,
+      savedAt: Date.now()
     })
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       chrome.storage.local.set({ subsnap_learned_services: LEARNED_SERVICES.slice(0, 50) })
@@ -334,6 +338,62 @@ clearBtn.addEventListener('click', () => {
   showResult(null)
   searchInput.focus()
 })
+
+async function forceRescanService() {
+  const val = searchInput.value.trim()
+  if (!val || val.length < 2) return
+
+  if (btnRescan) {
+    btnRescan.style.animation = 'spin 0.6s linear infinite'
+  }
+
+  // 1. Evict from local memory
+  const q = val.toLowerCase()
+  LEARNED_SERVICES = LEARNED_SERVICES.filter(s => s.name.toLowerCase() !== q && (!s.keywords || !s.keywords.includes(q)))
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set({ subsnap_learned_services: LEARNED_SERVICES })
+  }
+
+  showResult({
+    name: val,
+    cancelUrl: '',
+    notes: 'Re-analyzing and fetching latest direct cancellation pathway with AI...'
+  }, '🔄 AI Re-scanning...')
+
+  try {
+    const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(val)}&force=true`)
+    const data = await res.json()
+    if (data && data.entry && data.entry.cancelUrl) {
+      const learned = {
+        name: data.entry.name || val,
+        nameHe: data.entry.nameHe,
+        cancelUrl: data.entry.cancelUrl,
+        notes: data.entry.notes || 'AI Scout refreshed direct billing pathway',
+        keywords: [val.toLowerCase()],
+        isLearned: true,
+        savedAt: Date.now()
+      }
+      saveLearnedService(learned)
+      showResult(learned, '🤖 AI Refreshed')
+    } else {
+      showResult(null)
+    }
+  } catch (err) {
+    showResult(null)
+  } finally {
+    if (btnRescan) {
+      btnRescan.style.animation = 'none'
+    }
+  }
+}
+
+if (btnRescan) {
+  btnRescan.addEventListener('click', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    forceRescanService()
+  })
+}
 
 btnCancel.addEventListener('click', (e) => {
   e.preventDefault()
