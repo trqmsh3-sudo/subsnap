@@ -853,6 +853,178 @@
     return false
   }
 
+  function isHelpArticlePage() {
+    const hostname = window.location.hostname.toLowerCase()
+    const pathname = window.location.pathname.toLowerCase()
+    const isHelpDomain = hostname.startsWith('help.') || hostname.startsWith('support.') || hostname.includes('intercom.help') || hostname.includes('zendesk.com')
+    const isArticlePath = pathname.includes('/articles/') || pathname.includes('/article/') || pathname.includes('/help/') || pathname.includes('/kb/') || pathname.includes('/support/') || pathname.includes('/faq')
+
+    if (!isHelpDomain && !isArticlePath) return false
+
+    const title = (document.title || '').toLowerCase()
+    const headingEl = document.querySelector('h1, h2')
+    const heading = (headingEl ? headingEl.innerText : '').toLowerCase()
+    return /cancel.*subscri|how.*cancel|איך לבטל|ביטול מנוי|stop.*plan|end.*member/i.test(title + ' ' + heading)
+  }
+
+  function injectHelpArticleHUD(serviceName, directUrl, googlePlayUrl, appleUrl) {
+    if (document.getElementById('subsnap-helparticle-hud')) return
+    hudInjected = true
+
+    const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-helparticle-hud'
+    hud.style.cssText = `
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #3b82f6;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(59, 130, 246, 0.22);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ${isHebrew ? 'rtl' : 'ltr'};
+      min-width: 380px; max-width: 560px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      </style>
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; border: 1.5px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; color: #2563eb;">
+        📖
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+          <span>${isHebrew ? 'אותר מדריך הביטול הרשמי' : 'Official Cancellation Guide'}</span>
+          <span style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${serviceName} ⚡</span>
+        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
+          ${isHebrew ? 'המדריך מציין דרכי ביטול שונות. בחר את הדרך שבה נרשמת למעבר ישיר:' : 'Choose how you subscribed to leap straight to cancellation:'}
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+          ${directUrl ? `
+            <button id="subsnap-help-web-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+              ${isHebrew ? 'ביטול באתר / Stripe ➔' : 'Cancel on Website ➔'}
+            </button>
+          ` : ''}
+          ${googlePlayUrl ? `
+            <button id="subsnap-help-play-btn" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              Google Play ➔
+            </button>
+          ` : ''}
+          ${appleUrl ? `
+            <button id="subsnap-help-apple-btn" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              Apple ID ➔
+            </button>
+          ` : ''}
+        </div>
+      </div>
+      <button id="subsnap-help-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px; align-self: flex-start;">
+        ✕
+      </button>
+    `
+
+    document.body.appendChild(hud)
+
+    if (directUrl) {
+      hud.querySelector('#subsnap-help-web-btn')?.addEventListener('click', () => {
+        let host = serviceName
+        try { host = new URL(directUrl).hostname.replace(/^www\./, '') } catch(e) {}
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({
+            subsnap_active_intent: {
+              name: serviceName,
+              targetHost: host,
+              cancelUrl: directUrl,
+              timestamp: Date.now()
+            }
+          }, () => { window.location.href = directUrl })
+        } else {
+          window.location.href = directUrl
+        }
+      })
+    }
+
+    if (googlePlayUrl) {
+      hud.querySelector('#subsnap-help-play-btn')?.addEventListener('click', () => {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({
+            subsnap_active_intent: {
+              name: serviceName,
+              targetHost: 'play.google.com',
+              cancelUrl: googlePlayUrl,
+              timestamp: Date.now()
+            }
+          }, () => { window.location.href = googlePlayUrl })
+        } else {
+          window.location.href = googlePlayUrl
+        }
+      })
+    }
+
+    if (appleUrl) {
+      hud.querySelector('#subsnap-help-apple-btn')?.addEventListener('click', () => {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({
+            subsnap_active_intent: {
+              name: serviceName,
+              targetHost: 'apple.com',
+              cancelUrl: appleUrl,
+              timestamp: Date.now()
+            }
+          }, () => { window.location.href = appleUrl })
+        } else {
+          window.location.href = appleUrl
+        }
+      })
+    }
+
+    hud.querySelector('#subsnap-help-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
+  function handleHelpArticleExtractor() {
+    if (!isHelpArticlePage()) return false
+
+    const articleLinks = Array.from(document.querySelectorAll('article a[href^="http"], main a[href^="http"], [class*="article"] a[href^="http"], [class*="content"] a[href^="http"], #content a[href^="http"]'))
+
+    let directPortalLink = null
+    let googlePlayLink = null
+    let appleLink = null
+
+    const currentHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+    const rootDomain = currentHost.replace(/^(help|support|faq|kb)\./, '')
+
+    for (const a of articleLinks) {
+      const href = a.href || ''
+      const hrefLower = href.toLowerCase()
+      const textLower = (a.innerText || '').toLowerCase()
+
+      if (hrefLower.includes('play.google.com/store/account/subscriptions')) {
+        googlePlayLink = href
+      } else if (hrefLower.includes('apple.com') && (hrefLower.includes('subscriptions') || textLower.includes('apple'))) {
+        appleLink = href
+      } else if (
+        (hrefLower.includes(rootDomain) && !hrefLower.includes('help.') && !hrefLower.includes('support.')) ||
+        hrefLower.includes('stripe.com') ||
+        textLower.includes('interface') ||
+        textLower.includes('log in') ||
+        textLower.includes('sign in') ||
+        textLower.includes('account') ||
+        textLower.includes('portal')
+      ) {
+        if (!directPortalLink) directPortalLink = href
+      }
+    }
+
+    if (!directPortalLink && rootDomain && rootDomain.includes('.')) {
+      directPortalLink = `https://${rootDomain}`
+    }
+
+    injectHelpArticleHUD(rootDomain, directPortalLink, googlePlayLink, appleLink)
+    return true
+  }
+
   function injectSelfHealingHUD(title, desc, onTriggerAction) {
     if (document.getElementById('subsnap-assistant-hud')) {
       document.getElementById('subsnap-assistant-hud').remove()
@@ -1449,6 +1621,11 @@
       return true
     }
 
+    // 0.1 Help Center Article Extraction: Automatically extract direct app/portal links from articles
+    if (handleHelpArticleExtractor()) {
+      return true
+    }
+
     // Check if a previous candidate click achieved verified success
     verifyAndCommitPendingHeal()
 
@@ -1592,8 +1769,8 @@
         if (activeObserver) activeObserver.disconnect()
 
         const isSearchEngine = (cleanHost === 'google.com' || cleanHost.endsWith('.google.com') || cleanHost.includes('bing.com') || cleanHost.includes('duckduckgo.com'))
-        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login, 404, or search engines!)
-        if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && !isSearchEngine && chrome.storage && chrome.storage.local) {
+        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login, 404, search engines, or help articles!)
+        if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && !isSearchEngine && !isHelpArticlePage() && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
             const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
