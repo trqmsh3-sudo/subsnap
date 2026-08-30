@@ -1870,7 +1870,40 @@
     }
   }
 
-  // --- Tier 3: Emergency AI Escalation with Prioritization and Pinned Element References ---
+  // --- Tier 3: Emergency AI Escalation with Prioritization, Financial Context & Pinned Elements ---
+
+  function extractPageFinancialContext() {
+    try {
+      const fullText = (document.body.innerText || '').slice(0, 15000)
+      const lines = fullText.split('\n').map(l => l.trim()).filter(Boolean)
+      const relevantLines = []
+
+      const financialRegex = /(\$|€|£|₪|\busd\b|\bils\b|next payment|next billing|recurring|active|renews|renewal|current plan|plan:|billing cycle|free plan|canceled|cancelled|expired|החיוב הבא|תשלום הבא|מתחדש|מנוי פעיל|תוכנית)/i
+
+      for (const line of lines) {
+        if (line.length < 150 && financialRegex.test(line)) {
+          relevantLines.push(line)
+          if (relevantLines.length >= 15) break
+        }
+      }
+
+      const tabs = Array.from(document.querySelectorAll('[role="tab"], nav a, div[class*="tab"] a, div[class*="tab"] button, ul[class*="nav"] li, a[href*="billing"]'))
+        .map(el => (el.innerText || '').trim())
+        .filter(t => t && t.length < 35)
+        .slice(0, 10)
+
+      return {
+        pageTitle: document.title,
+        url: window.location.href,
+        signals: relevantLines,
+        tabs,
+        hasAmount: /\$\s*\d+([.,]\d+)?|\b\d+([.,]\d+)?\s*(usd|eur|ils|₪|€|£)/i.test(fullText),
+        hasRecurringActive: /recurring:\s*active/i.test(fullText) || /status:\s*active/i.test(fullText)
+      }
+    } catch (e) {
+      return { signals: [], tabs: [], hasAmount: false, hasRecurringActive: false }
+    }
+  }
 
   async function triggerAIEscalation(intent) {
     if (isLoginPage() || isLoggedOutState()) return
@@ -1886,8 +1919,10 @@
       `לא אותר כפתור ביטול מוכר. סייר Gemini סורק את אלמנטי העמוד של ${serviceName}...`
     )
 
-    // Fix #3: Intelligent Prioritization with Shadow DOM support
-    const allInteractive = queryDeep('button, a, div[role="button"], span[role="button"], input[type="submit"]')
+    const pageContext = extractPageFinancialContext()
+
+    // Query interactive elements including dark pattern chevrons, tabs, and toggles
+    const allInteractive = queryDeep('button, a, div[role="button"], span[role="button"], input[type="submit"], [class*="chevron"], [class*="caret"], [class*="arrow"], [class*="toggle"], [data-testid*="dropdown"], [data-testid*="toggle"], [aria-expanded], [aria-haspopup], [role="tab"]')
       .filter(el => isVisible(el) && !isDisallowedElement(el))
 
     const scoredElements = allInteractive.map(el => {
@@ -1898,8 +1933,9 @@
 
       if (inMain) score += 6
       if (inNav) score -= 8
-      if (/subscri|member|plan|bill|renew|cancel|end|deactiv/i.test(text)) score += 12
+      if (/subscri|member|plan|bill|renew|cancel|end|deactiv|active|recurring/i.test(text)) score += 15
       if (/pref|manage|opt|setting/i.test(text)) score += 4
+      if (el.matches && el.matches('[class*="chevron"], [class*="caret"], [aria-expanded], [role="tab"]')) score += 6
 
       return { el, score, text }
     })
@@ -1934,13 +1970,21 @@
       payload: {
         serviceName,
         hostname: cleanHost,
-        elements: payloadElements
+        elements: payloadElements,
+        pageContext
       }
     }, (res) => {
       const existingHud = document.getElementById('subsnap-ai-hud')
       let targetEl = null
 
-      // Fix #1: Wrap querySelector in isolated try/catch so invalid CSS syntax does NOT kill execution!
+      const accountState = (res && res.data && res.data.accountState) || 'unknown'
+      const detectedAmount = (res && res.data && res.data.detectedAmount) || null
+      const nextPaymentDate = (res && res.data && res.data.nextPaymentDate) || null
+      const planName = (res && res.data && res.data.planName) || ''
+      const guidanceHe = (res && res.data && res.data.guidanceHe) || ''
+      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+
+      // Fix #1: Wrap querySelector in isolated try/catch
       if (res && res.success && res.data && res.data.targetSelector) {
         try {
           const found = document.querySelector(res.data.targetSelector)
@@ -1952,7 +1996,7 @@
         }
       }
 
-      // Fix #2: Fallback to PINNED DOM Reference (using closure reference, NOT re-querying shifted DOM!)
+      // Fix #2: Fallback to PINNED DOM Reference
       if (!targetEl && res && res.success && res.data && typeof res.data.bestMatchIndex === 'number' && res.data.bestMatchIndex >= 0) {
         const candidate = prioritized[res.data.bestMatchIndex]
         if (candidate && candidate.el && candidate.el.isConnected && isVisible(candidate.el) && !isDisallowedElement(candidate.el)) {
@@ -1960,7 +2004,7 @@
         }
       }
 
-      // If valid target was resolved:
+      // SCENARIO 1: Valid Target Element Resolved (e.g. Cancel button or Chevron/Tab)
       if (targetEl) {
         if (existingHud) existingHud.remove()
         hudInjected = false
@@ -1969,42 +2013,77 @@
         targetEl.style.outline = '3px solid #10b981'
         targetEl.style.outlineOffset = '3px'
 
-        injectSelfHealingHUD(
-          'נתיב הביטול אותר ע&quot;י AI 🤖⚡',
-          `ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...`,
-          () => {
-            // Two-Phase Verification: Staged in sessionStorage, NOT committed blindly!
-            try {
-              sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
-                host: cleanHost,
-                urlBefore: window.location.href,
-                selector: res.data ? res.data.targetSelector : null,
-                timestamp: Date.now()
-              }))
-            } catch (e) {}
+        const hudTitle = accountState === 'active_paid' && detectedAmount
+          ? (isHebrew ? `💳 מנוי פעיל: ${planName || serviceName} (${detectedAmount})` : `💳 Active Plan: ${planName || serviceName} (${detectedAmount})`)
+          : (isHebrew ? 'נתיב הביטול אותר ע&quot;י AI 🤖⚡' : 'AI Located Cancellation Pathway 🤖⚡')
 
-            forceClick(targetEl)
-            setTimeout(startScanningEngine, 1000)
-          }
-        )
+        const hudSub = guidanceHe || (isHebrew ? 'ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...' : 'SubSnap AI identified the path. Proceeding...')
+
+        injectSelfHealingHUD(hudTitle, hudSub, () => {
+          try {
+            sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
+              host: cleanHost,
+              urlBefore: window.location.href,
+              selector: res.data ? res.data.targetSelector : null,
+              timestamp: Date.now()
+            }))
+          } catch (e) {}
+
+          forceClick(targetEl)
+          setTimeout(startScanningEngine, 1000)
+        })
         return
       }
 
-      // When AI confirms user is on a free tier OR confirms no cancellation button exists:
-      if (res && res.success && res.data && (res.data.isFreeTier || res.data.bestMatchIndex === -1)) {
+      // SCENARIO 2: Active Paid Subscription Confirmed (CRITICAL ANTI-FREE SHIELD)
+      // Never, under ANY circumstances, say "No active subscription" when paid indicators exist!
+      if (accountState === 'active_paid' || detectedAmount || (pageContext.hasAmount && pageContext.hasRecurringActive)) {
+        if (existingHud) existingHud.remove()
+        hudInjected = false
+
+        const title = isHebrew
+          ? `💳 זוהה מנוי פעיל: ${planName || serviceName} ${detectedAmount ? `(${detectedAmount})` : ''}`
+          : `💳 Active Subscription: ${planName || serviceName} ${detectedAmount ? `(${detectedAmount})` : ''}`
+
+        const defaultGuidance = isHebrew
+          ? `המנוי שלך פעיל${nextPaymentDate ? ` (חיוב הבא: ${nextPaymentDate})` : ''}. האתר מסתיר את הביטול — לחץ על החץ ליד 'Recurring: Active ⌵' או עבור ללשונית 'Billing info'.`
+          : `Your subscription is active${nextPaymentDate ? ` (Next payment: ${nextPaymentDate})` : ''}. Cancellation is hidden behind 'Recurring: Active ⌵' or 'Billing info' tab.`
+
+        const sub = guidanceHe || defaultGuidance
+
+        // Highlight any chevron or billing tab on page to empower user immediately
+        const chevronOrTab = document.querySelector('[class*="chevron"], [aria-expanded], a[href*="billing"], [role="tab"]')
+        if (chevronOrTab && isVisible(chevronOrTab)) {
+          chevronOrTab.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          chevronOrTab.style.outline = '3px solid #f59e0b'
+          chevronOrTab.style.outlineOffset = '3px'
+        }
+
+        injectPeaceOfMindHUD(title, sub)
+        return
+      }
+
+      // SCENARIO 3: Genuine Positive Free Tier (ZERO dollar amount, ZERO active recurring)
+      if ((accountState === 'free_tier' || (res.data && res.data.isFreeTier)) && !pageContext.hasAmount && !pageContext.hasRecurringActive) {
         if (existingHud) existingHud.remove()
         hudInjected = false
         if (chrome.storage && chrome.storage.local) {
           chrome.storage.local.remove(['subsnap_active_intent'])
         }
         injectPeaceOfMindHUD(
-          'בשורות טובות: לא נמצא מנוי פעיל! 🛡️',
-          `סייר ה-AI סרק את עמוד המנויים של ${serviceName || cleanHost} ואימת שאינך מחויב במנוי פעיל (תוכנית חינמית / ללא מנוי בתשלום).`
+          isHebrew ? 'בשורות טובות: אין מנוי פעיל! 🛡️' : 'Good News: No Active Subscription! 🛡️',
+          isHebrew ? `סייר ה-AI אימת שחשבונך ב-${serviceName || cleanHost} הוא ללא מנוי בתשלום.` : `SubSnap verified your account on ${serviceName || cleanHost} has no recurring paid subscription.`
         )
         return
       }
 
-      // Fallback: Never disappear into silence! Update HUD to unresolved guidance.
+      // SCENARIO 4: Already Cancelled
+      if (accountState === 'already_cancelled') {
+        recordCancellationSuccess(serviceName)
+        return
+      }
+
+      // SCENARIO 5: Fallback unresolved guidance
       updateAIHUDUnresolved(existingHud, serviceName, cleanHost)
     })
   }

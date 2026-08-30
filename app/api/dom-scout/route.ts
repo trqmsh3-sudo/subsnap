@@ -13,13 +13,13 @@ const redis = hasRedis
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { serviceName, hostname, elements } = body
+    const { serviceName, hostname, elements, pageContext } = body
 
     if (!Array.isArray(elements) || elements.length === 0) {
       return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, reason: 'no_elements' })
     }
 
-    // 1. Quick check against Redis distributed cache
+    // 1. Quick check against Redis distributed cache (only for direct deterministic buttons)
     if (redis && hostname) {
       try {
         const cached = await redis.get<string>(`selector:${hostname.toLowerCase()}`)
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    // 2. Run Gemini 2.5 Flash on the DOM snapshot
+    // 2. Run Gemini 2.5 Flash on the DOM snapshot + Financial Context
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, reason: 'no_api_key' })
@@ -38,26 +38,47 @@ export async function POST(req: NextRequest) {
     const genai = new GoogleGenerativeAI(apiKey)
     const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-    const prompt = `You are SubSnap Self-Healing DOM Scout.
-Analyze this list of interactive elements from the subscription/billing page of "${serviceName || hostname}".
-Your mission is to find the single element that initiates subscription cancellation, stopping auto-renewal, or ending membership.
+    const prompt = `You are SubSnap Autonomous Subscription & Billing AI Scout.
+Analyze this subscription/account page for "${serviceName || hostname}".
 
-Elements Snapshot:
-${JSON.stringify(elements.slice(0, 40), null, 2)}
+PAGE FINANCIAL CONTEXT (Raw text signals, active plan, billing dates, amounts from DOM):
+${JSON.stringify(pageContext || {}, null, 2)}
 
-STRICT SAFETY & ACCURACY RULES:
-1. NEVER pick "Delete account", "Close account", "Cancel order", or payment removal.
-2. NEVER pick "Upgrade", "Buy", "Purchase", "Get Pro", "Start Free Trial", or new subscription signups. Those are for BUYING, NOT CANCELLING!
-3. If the page only has upgrade, purchase, marketing, or general navigation buttons and NO option to cancel an existing subscription, you MUST return: bestMatchIndex: -1, targetSelector: null, confidence: 0.
-4. Pick ONLY genuine cancellation, ending plan renewal, or ending membership buttons.
+INTERACTIVE ELEMENTS ON PAGE (buttons, links, chevrons, tabs, dropdowns):
+${JSON.stringify(elements.slice(0, 45), null, 2)}
 
-Return ONLY a JSON object:
+YOUR 2-STAGE ANALYSIS MISSION:
+
+STAGE 1: FINANCIAL STATE DIAGNOSIS
+Determine the user's ACTUAL subscription status based on the Page Financial Context and page text:
+1. "active_paid": The page indicates an active paid subscription (e.g. Next payment: $199, Recurring: Active, Billing cycle, Renews on, Pro/Plus/One tier with price).
+2. "free_tier": The user is explicitly on a Free/Basic plan with ZERO recurring charges (e.g. "Current Plan: Free", and NO dollar recurring charges or renew dates).
+3. "already_cancelled": The subscription was already cancelled (e.g. "Cancelled", "Cancels on", "Expires on", "Renewal: Inactive").
+4. "unknown": Cannot determine with confidence.
+
+STAGE 2: CANCELLATION PATHWAY IDENTIFICATION
+Find the single interactive element or lever that allows cancelling or turning off auto-renewal:
+- Check for direct cancel buttons (e.g. "Cancel subscription", "End plan", "Turn off auto-renew").
+- Check for DARK PATTERNS & DROPDOWNS: Enterprise SaaS (like Semrush, HubSpot, Zoom) hides cancellation behind chevrons (e.g. "Recurring: Active ⌵", a chevron/caret icon, or a settings gear).
+- Check for sub-tabs (e.g. "Billing info", "Payments", "Manage Plan") if the current view is only a summary/overview.
+
+STRICT CRITICAL RULES:
+1. If the financial context has a price, payment date, or says "Recurring: Active", you MUST diagnose accountState as "active_paid"! You are STRICTLY FORBIDDEN from declaring "free_tier" or saying no subscription exists!
+2. NEVER pick "Delete account", "Close account", "Buy", "Upgrade", "Purchase", or "Compare plans". Those are NOT cancellation!
+3. If accountState is "active_paid" and a chevron or dropdown (like "Recurring: Active ⌵") controls billing renewal, pick THAT element's index.
+
+Return ONLY a valid JSON object matching this schema:
 {
-  "bestMatchIndex": number (0-based index in the elements array, or -1 if no genuine cancel button is found),
+  "accountState": "active_paid" | "free_tier" | "already_cancelled" | "unknown",
+  "detectedAmount": "string with currency like $199.00 or null",
+  "nextPaymentDate": "string like September 6, 2026 or null",
+  "planName": "string like Semrush One or null",
+  "bestMatchIndex": number (0-based index in the elements array, or -1 if no trigger can be found),
   "targetSelector": "CSS selector if uniquely identifiable, or null",
-  "confidence": number (0.0 to 1.0, must be 0 if bestMatchIndex is -1),
-  "isFreeTier": boolean (set to true if the elements show the user is currently on a Free/Basic plan, e.g. "Current Plan" on Free, or only upgrade/pro purchase buttons exist without an active paid subscription),
-  "explanation": "Short reason"
+  "actionType": "click_cancel" | "open_dropdown" | "switch_tab" | "contact_support" | "none",
+  "confidence": number (0.0 to 1.0),
+  "guidanceHe": "Clear Hebrew message explaining status and next step",
+  "guidanceEn": "Clear English message explaining status and next step"
 }
 `
 
@@ -66,37 +87,48 @@ Return ONLY a JSON object:
     const cleanJson = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
     const parsed = JSON.parse(cleanJson)
 
-    if (parsed && parsed.bestMatchIndex >= 0 && parsed.bestMatchIndex < elements.length && parsed.confidence >= 0.7) {
-      const matched = elements[parsed.bestMatchIndex]
-      const derivedSelector = matched.testid ? `[data-testid="${matched.testid}"]` :
-                              matched.uia ? `[data-uia="${matched.uia}"]` :
-                              matched.id ? `#${matched.id}` :
-                              matched.aria ? `${matched.tag}[aria-label="${matched.aria}"]` :
-                              parsed.targetSelector || null
+    if (parsed) {
+      let derivedSelector = parsed.targetSelector || null
+      if (parsed.bestMatchIndex >= 0 && parsed.bestMatchIndex < elements.length) {
+        const matched = elements[parsed.bestMatchIndex]
+        derivedSelector = matched.testid ? `[data-testid="${matched.testid}"]` :
+                          matched.uia ? `[data-uia="${matched.uia}"]` :
+                          matched.id ? `#${matched.id}` :
+                          matched.aria ? `${matched.tag}[aria-label="${matched.aria}"]` :
+                          derivedSelector
+      }
 
-      if (derivedSelector && redis && hostname) {
+      if (derivedSelector && parsed.actionType === 'click_cancel' && redis && hostname && parsed.confidence >= 0.8) {
         try {
           await redis.set(`selector:${hostname.toLowerCase()}`, derivedSelector, { ex: 60 * 60 * 24 * 7 })
         } catch {}
       }
 
       return NextResponse.json({
+        accountState: parsed.accountState || 'unknown',
+        detectedAmount: parsed.detectedAmount || null,
+        nextPaymentDate: parsed.nextPaymentDate || null,
+        planName: parsed.planName || null,
+        bestMatchIndex: typeof parsed.bestMatchIndex === 'number' ? parsed.bestMatchIndex : -1,
         targetSelector: derivedSelector,
-        bestMatchIndex: parsed.bestMatchIndex,
-        confidence: parsed.confidence,
-        isFreeTier: !!parsed.isFreeTier,
-        source: 'gemini_dom_scout'
+        actionType: parsed.actionType || 'none',
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+        guidanceHe: parsed.guidanceHe || null,
+        guidanceEn: parsed.guidanceEn || null,
+        isFreeTier: parsed.accountState === 'free_tier',
+        source: 'gemini_cognitive_scout'
       })
     }
 
     return NextResponse.json({
+      accountState: 'unknown',
       targetSelector: null,
       bestMatchIndex: -1,
-      isFreeTier: !!(parsed && parsed.isFreeTier),
-      source: 'no_confident_match'
+      isFreeTier: false,
+      source: 'no_match'
     })
   } catch (err) {
     console.warn('[DOM Scout Error]:', err)
-    return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, error: String(err) })
+    return NextResponse.json({ accountState: 'unknown', targetSelector: null, bestMatchIndex: -1, error: String(err) })
   }
 }
