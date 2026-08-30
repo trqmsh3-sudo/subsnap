@@ -319,17 +319,37 @@
       if (onTriggerAction) onTriggerAction()
     }
 
-    let seconds = 2
-    const timerBadge = hud.querySelector('#subsnap-heal-timer')
-    countdownTimer = setInterval(() => {
-      seconds--
-      if (seconds > 0) {
-        if (timerBadge) timerBadge.textContent = `${seconds}s`
-      } else {
-        clearInterval(countdownTimer)
-        doAction()
-      }
-    }, 1000)
+    function startHealingCountdown() {
+      let seconds = 2
+      countdownTimer = setInterval(() => {
+        seconds--
+        if (seconds > 0) {
+          if (timerBadge) timerBadge.textContent = `${seconds}s`
+        } else {
+          clearInterval(countdownTimer)
+          doAction()
+        }
+      }, 1000)
+    }
+
+    const storageApi = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null
+    if (storageApi) {
+      storageApi.get(['autopilot_mode'], (res) => {
+        const mode = res ? res.autopilot_mode : 'countdown_5s'
+        if (mode === 'manual_highlight') {
+          if (timerBadge) {
+            timerBadge.textContent = 'ידני 🎯'
+            timerBadge.style.color = '#4338ca'
+            timerBadge.style.background = '#eef2ff'
+            timerBadge.style.borderColor = '#c7d2fe'
+          }
+        } else {
+          startHealingCountdown()
+        }
+      })
+    } else {
+      startHealingCountdown()
+    }
 
     hud.querySelector('#subsnap-heal-now-btn').addEventListener('click', doAction)
     hud.querySelector('#subsnap-heal-close-btn').addEventListener('click', () => {
@@ -442,18 +462,6 @@
       forceClick(btn)
     }
 
-    let secondsLeft = 5
-    countdownTimer = setInterval(() => {
-      secondsLeft -= 1
-      if (secondsLeft > 0) {
-        timerBadge.textContent = `${secondsLeft}s`
-        descEl.textContent = `Subscription pathway located. Proceeding in ${secondsLeft}s...`
-      } else {
-        clearInterval(countdownTimer)
-        triggerCancel()
-      }
-    }, 1000)
-
     actionBtn.addEventListener('click', triggerCancel)
     stopBtn.addEventListener('click', () => {
       if (countdownTimer) clearInterval(countdownTimer)
@@ -465,6 +473,42 @@
       hud.remove()
       hudInjected = false
     })
+
+    function startCountdown() {
+      let secondsLeft = 5
+      countdownTimer = setInterval(() => {
+        secondsLeft -= 1
+        if (secondsLeft > 0) {
+          timerBadge.textContent = `${secondsLeft}s`
+          descEl.textContent = `Subscription pathway located. Proceeding in ${secondsLeft}s...`
+        } else {
+          clearInterval(countdownTimer)
+          triggerCancel()
+        }
+      }, 1000)
+    }
+
+    // Respect user's Execution Mode preference
+    const storageApi = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null
+    if (storageApi) {
+      storageApi.get(['autopilot_mode'], (res) => {
+        const mode = res ? res.autopilot_mode : 'countdown_5s'
+        if (mode === 'manual_highlight') {
+          // Manual Mode: NO automatic countdown!
+          timerBadge.textContent = 'Manual 🎯'
+          timerBadge.style.color = '#4338ca'
+          timerBadge.style.background = '#eef2ff'
+          timerBadge.style.borderColor = '#c7d2fe'
+          descEl.textContent = 'Target located & highlighted. Click Proceed or the button on-page.'
+          stopBtn.style.display = 'none'
+          actionBtn.textContent = 'Confirm & Cancel ➔'
+        } else {
+          startCountdown()
+        }
+      })
+    } else {
+      startCountdown()
+    }
   }
 
   // --- Tier 3: Emergency AI Escalation (Called ONLY when genuinely stuck) ---
