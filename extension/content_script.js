@@ -2104,6 +2104,18 @@
 
     const targetName = activeIntent.name || ''
 
+    // Tier 0.2: Identified Non-Subscription or Free Community Platform
+    if (activeIntent.isNonSubscription || /lablab|wikipedia/i.test(cleanHost) || (activeIntent.notes && (activeIntent.notes.includes('ללא מנויים') || activeIntent.notes.includes('אין חיוב')))) {
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_active_intent'])
+      }
+      injectPeaceOfMindHUD(
+        'פלטפורמה חינמית ללא מנויים! 🛡️',
+        `סייר SubSnap זיהה כי ${targetName || cleanHost} הינה פלטפורמה חינמית. אין חיובים פעילים ואין צורך בביטול.`
+      )
+      return true
+    }
+
     // 0. THE INVISIBLE LOGIN BRIDGE: Check if returning from a successful login
     const wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
     if (wasWaitingLogin && !isLoginPage() && activeIntent && activeIntent.cancelUrl) {

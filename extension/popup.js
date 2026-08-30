@@ -298,7 +298,14 @@ if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get(['subsnap_learned_services', 'subsnap_savings_stats'], (res) => {
     if (res && Array.isArray(res.subsnap_learned_services)) {
       const now = Date.now()
-      LEARNED_SERVICES = res.subsnap_learned_services.filter(s => !s.savedAt || (now - s.savedAt < CACHE_TTL_MS))
+      LEARNED_SERVICES = res.subsnap_learned_services
+        .filter(s => !s.savedAt || (now - s.savedAt < CACHE_TTL_MS))
+        .map(s => {
+          if (s.notes && (s.notes.includes('ללא מנויים') || s.notes.includes('אין חיוב'))) {
+            s.isNonSubscription = true
+          }
+          return s
+        })
     }
 
     // Render Trophy Banner (Dopamine Savings Counter)
@@ -319,20 +326,27 @@ if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
 function saveLearnedService(service) {
   if (!service || !service.name || !service.cancelUrl) return
   const sName = service.name.toLowerCase()
-  const exists = LEARNED_SERVICES.some(s => s.name.toLowerCase() === sName)
-  if (!exists) {
-    LEARNED_SERVICES.unshift({
-      name: service.name,
-      nameHe: service.nameHe || service.name,
-      cancelUrl: service.cancelUrl,
-      notes: service.notes || 'AI Scout verified direct cancellation pathway',
-      keywords: [sName, ...(service.keywords || [])],
-      isLearned: true,
-      savedAt: Date.now()
-    })
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.set({ subsnap_learned_services: LEARNED_SERVICES.slice(0, 50) })
-    }
+  const isNonSub = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
+  const existsIndex = LEARNED_SERVICES.findIndex(s => s.name.toLowerCase() === sName)
+  const item = {
+    name: service.name,
+    nameHe: service.nameHe || service.name,
+    cancelUrl: service.cancelUrl,
+    notes: service.notes || 'AI Scout verified direct cancellation pathway',
+    keywords: [sName, ...(service.keywords || [])],
+    isLearned: true,
+    isNonSubscription: isNonSub,
+    savedAt: Date.now()
+  }
+
+  if (existsIndex >= 0) {
+    LEARNED_SERVICES[existsIndex] = item
+  } else {
+    LEARNED_SERVICES.unshift(item)
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set({ subsnap_learned_services: LEARNED_SERVICES.slice(0, 50) })
   }
 }
 
@@ -356,19 +370,38 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
     return
   }
   currentEntry = service
+  const isNonSub = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
+  service.isNonSubscription = isNonSub
+
   serviceNameEl.textContent = service.nameHe ? `${service.name} (${service.nameHe})` : service.name
   serviceNotesEl.textContent = service.notes || 'Direct cancellation pathway identified'
-  if (modeTagEl) modeTagEl.textContent = sourceTag
+
+  if (modeTagEl) {
+    modeTagEl.textContent = isNonSub ? '🛡️ פלטפורמה חינמית' : sourceTag
+    if (isNonSub) {
+      modeTagEl.style.background = '#ecfdf5'
+      modeTagEl.style.color = '#059669'
+      modeTagEl.style.border = '1px solid #a7f3d0'
+    } else {
+      modeTagEl.style.background = ''
+      modeTagEl.style.color = ''
+      modeTagEl.style.border = ''
+    }
+  }
 
   if (btnCancel) {
-    if (service.isNonSubscription) {
-      btnCancel.textContent = 'שירות חינמי ✓'
+    if (isNonSub) {
+      btnCancel.textContent = 'אתר חינמי · אין צורך בביטול ✓'
       btnCancel.style.background = '#10b981'
+      btnCancel.style.color = '#ffffff'
       btnCancel.style.cursor = 'default'
+      btnCancel.disabled = true
     } else {
       btnCancel.textContent = 'בטל עכשיו ➔'
       btnCancel.style.background = '#0f172a'
+      btnCancel.style.color = '#ffffff'
       btnCancel.style.cursor = 'pointer'
+      btnCancel.disabled = false
     }
   }
 
@@ -381,7 +414,7 @@ async function queryAIScout(query) {
     const data = await res.json()
     if (data && data.entry) {
       if (data.entry.isSubscriptionService === false) {
-        return {
+        const nonSub = {
           name: data.entry.name || query,
           nameHe: data.entry.nameHe,
           cancelUrl: data.entry.cancelUrl || `https://${query}`,
@@ -389,6 +422,8 @@ async function queryAIScout(query) {
           keywords: [query.toLowerCase()],
           isNonSubscription: true
         }
+        saveLearnedService(nonSub)
+        return nonSub
       }
 
       if (data.entry.cancelUrl) {
@@ -416,6 +451,15 @@ async function queryAIScout(query) {
 
 function executeCancel(service) {
   if (!service || !service.cancelUrl) return
+
+  const isFreePlatform = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
+  if (isFreePlatform) {
+    // Free platform: Open directly WITHOUT active intent, preventing unnecessary DOM cancel scans
+    chrome.tabs.create({ url: service.cancelUrl, active: true }, () => {
+      window.close()
+    })
+    return
+  }
 
   resultCard.style.display = 'none'
   loadingState.style.display = 'block'
