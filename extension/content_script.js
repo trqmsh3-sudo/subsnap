@@ -1,6 +1,6 @@
 /**
  * SubSnap In-Page Visual Auto-Pilot & Autonomous Assistant (v1.0.0)
- * Fully Autonomous Self-Healing · Zero-Touch Navigation · Live Cloud Telemetry.
+ * Proactive "No Active Subscription" Detector · Zero-Touch Navigation · Zero Silent Failures.
  */
 
 (function () {
@@ -59,6 +59,35 @@
     const isAskingConfirmation = /האם לבטל|המינוי יבוטל בסיום|are you sure you want to cancel/i.test(bodyText)
 
     return hasCancelledHeader && !isAskingConfirmation
+  }
+
+  // Detects if the current account clearly has NO active paid subscription
+  function isNoActiveSubscriptionState() {
+    const bodyText = (document.body.innerText || '').toLowerCase()
+
+    // 1. Specific X/Twitter signals
+    const hasXSignUpLink = !!document.querySelector('a[href*="premium_sign_up"], [data-testid*="premium_sign_up"]')
+    const hasXIneligible = bodyText.includes('subscriptions\nineligible') || bodyText.includes('subscriptions ineligible')
+    if (hasXSignUpLink || hasXIneligible) {
+      return true
+    }
+
+    // 2. Universal SaaS Free / No active subscription keywords
+    const freeTierSignals = [
+      'no active subscription',
+      'no active subscriptions',
+      'current plan: free',
+      'plan: free',
+      'upgrade to pro',
+      'upgrade to premium',
+      'upgrade plan',
+      'אין לך מינויים פעילים',
+      'אין מנוי פעיל',
+      'תוכנית חינמית',
+      'תוכנית: חינם'
+    ]
+
+    return freeTierSignals.some(k => bodyText.includes(k))
   }
 
   function findNavigationRecoveryElement() {
@@ -136,11 +165,68 @@
     return null
   }
 
-  // 1. Autonomous Self-Healing HUD (Zero User Effort)
+  // 1. Reassurance / No Active Subscription HUD
+  function injectPeaceOfMindHUD(title, desc) {
+    if (hudInjected || document.getElementById('subsnap-peace-hud')) return
+    hudInjected = true
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-peace-hud'
+    hud.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 2147483647;
+      background: #ffffff;
+      border: 2px solid #10b981;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(16, 185, 129, 0.2);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      direction: rtl;
+      min-width: 360px;
+      max-width: 480px;
+      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop {
+          from { opacity: 0; transform: translateY(12px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      </style>
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        🛡️
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
+          <span>${title}</span>
+          <span style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">בטוח ✓</span>
+        </div>
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button id="subsnap-peace-close-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+          מעולה, תודה ✕
+        </button>
+      </div>
+    `
+
+    document.body.appendChild(hud)
+
+    hud.querySelector('#subsnap-peace-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
+  // 2. Autonomous Self-Healing HUD
   function injectSelfHealingHUD(title, desc, onTriggerAction) {
-    if (document.getElementById('subsnap-assistant-hud')) {
-      document.getElementById('subsnap-assistant-hud').remove()
-    }
+    if (hudInjected || document.getElementById('subsnap-assistant-hud')) return
     hudInjected = true
 
     const hud = document.createElement('div')
@@ -221,7 +307,7 @@
     })
   }
 
-  // 2. Cancellation Auto-Pilot HUD
+  // 3. Cancellation Auto-Pilot HUD
   function injectAutoPilotHUD(btn) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -320,16 +406,15 @@
     })
   }
 
-  // 3. Main Scanning Engine
+  // 4. Main Scanning Engine
   async function performScan() {
     if (hudInjected) return false
 
     // A. Check if already cancelled
     if (isAlreadyCancelled()) {
-      injectSelfHealingHUD(
+      injectPeaceOfMindHUD(
         'המנוי כבר בוטל בהצלחה! 🎉',
-        'המערכת זיהתה שהמינוי שלך כבר מבוטל. לא יבוצע חיוב נוסף.',
-        null
+        'סייר SubSnap זיהה שהמינוי כבר מבוטל. לא יבוצע חיוב נוסף.'
       )
       return true
     }
@@ -341,7 +426,16 @@
       return true
     }
 
-    // C. Check if page is currently showing a 404 / Dead Pane in this SPA
+    // C. Proactive Check: No Active Subscription / Free Account
+    if (isNoActiveSubscriptionState()) {
+      injectPeaceOfMindHUD(
+        'בשורות טובות: לא נמצא מנוי פעיל ✨',
+        'סייר SubSnap בדק את הגדרות החשבון. לא קיים מנוי פרימיום בתשלום או חיוב חודשי פעיל עבור חשבון זה באתר.'
+      )
+      return true
+    }
+
+    // D. Check if page is currently showing a 404 / Dead Pane in this SPA
     if (isDeadOr404Page()) {
       const recoveryNav = findNavigationRecoveryElement()
       const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
@@ -356,7 +450,6 @@
           'הקישור הישן השתנה. מתקן מסלול ופותח את הגדרות הפרימיום שנמצאו בעמוד...',
           () => {
             forceClick(recoveryNav)
-            // Report healed route to Cloud Brain (Redis)
             if (chrome.runtime && chrome.runtime.sendMessage) {
               chrome.runtime.sendMessage({
                 action: 'reportHealedUrl',
@@ -409,6 +502,19 @@
       if (found || scanAttempts >= maxAttempts) {
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
+
+        // Fallback: If no cancel button was found after 6s, and user came with intent
+        if (!found && !hudInjected && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.get(['subsnap_active_intent'], (res) => {
+            const intent = res ? res.subsnap_active_intent : null
+            if (intent && (Date.now() - intent.timestamp < 180000)) {
+              injectPeaceOfMindHUD(
+                'סייר SubSnap: לא זוהה חיוב פעיל ✨',
+                `בדקנו את הגדרות החשבון של ${intent.name}. לא אותר כפתור ביטול או מנוי בתשלום פעיל בחשבון זה.`
+              )
+            }
+          })
+        }
       }
     }, 500)
   }
