@@ -1,6 +1,8 @@
 /**
- * SubSnap In-Page Visual Auto-Pilot & Autonomous Assistant (v1.0.0)
- * Proactive "No Active Subscription" Detector · Zero-Touch Navigation · Zero Silent Failures.
+ * SubSnap 3-Tier Escalation & Self-Learning Architecture (v1.0.0)
+ * Tier 1: Local Deterministic (0ms, $0)
+ * Tier 2: Global Distributed Cache (Redis)
+ * Tier 3: AI Emergency Escalation & Write-Back Learning Loop
  */
 
 (function () {
@@ -11,6 +13,7 @@
   let countdownTimer = null
   let activeObserver = null
   let activeScanInterval = null
+  let aiEscalationAttempted = false
 
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
@@ -61,18 +64,15 @@
     return hasCancelledHeader && !isAskingConfirmation
   }
 
-  // Detects if the current account clearly has NO active paid subscription
   function isNoActiveSubscriptionState() {
     const bodyText = (document.body.innerText || '').toLowerCase()
 
-    // 1. Specific X/Twitter signals
     const hasXSignUpLink = !!document.querySelector('a[href*="premium_sign_up"], [data-testid*="premium_sign_up"]')
     const hasXIneligible = bodyText.includes('subscriptions\nineligible') || bodyText.includes('subscriptions ineligible')
     if (hasXSignUpLink || hasXIneligible) {
       return true
     }
 
-    // 2. Universal SaaS Free / No active subscription keywords
     const freeTierSignals = [
       'no active subscription',
       'no active subscriptions',
@@ -90,26 +90,56 @@
     return freeTierSignals.some(k => bodyText.includes(k))
   }
 
-  function findNavigationRecoveryElement() {
-    const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], [tabindex="0"], span'))
-    for (const el of elements) {
-      if (!isVisible(el)) continue
-      const text = (el.innerText || el.textContent || '').trim()
+  const DISALLOWED_KEYWORDS = [
+    'delete account',
+    'delete my account',
+    'close account',
+    'cancel order',
+    'cancel item',
+    'remove card',
+    'delete payment',
+    'sign out',
+    'log out',
+    'התנתק',
+    'מחק חשבון',
+    'סגירת חשבון'
+  ]
 
-      if (
-        text === 'Premium' ||
-        text === 'פרימיום' ||
-        text === 'Monetization' ||
-        text === 'מונטיזציה' ||
-        text === 'Creator Subscriptions' ||
-        text === 'Manage Subscriptions' ||
-        text === 'מינויים' ||
-        text === 'Manage subscription'
-      ) {
-        return el.closest('a, div[role="link"], div[role="button"], [tabindex="0"]') || el
+  function isDisallowedElement(el) {
+    if (!el) return true
+    const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
+    return DISALLOWED_KEYWORDS.some(k => text.includes(k))
+  }
+
+  let ACTIVE_SELECTORS = [
+    '[data-uia="action-cancel-plan"]',
+    '[data-uia="btn-cancel-membership"]',
+    'button[data-testid*="cancel-plan"]',
+    'button[data-testid*="end-service"]',
+    'a[href*="/cancel-plan"]',
+    'button[data-testid="cancel-subscription"]',
+    'button[data-testid="cancel-plan-button"]',
+    'a[data-testid="cancel-plan-link"]',
+    'button[data-testid="cancel-subscription-button"]',
+    '#cancel-membership-button',
+    'a[href*="cancelPrime"]',
+    'div[data-testid="cancelSubscription"]',
+    'button[data-testid="cancelPlan"]',
+    'button[data-testid="cancel-premium-btn"]',
+    '[data-testid*="cancel-subscription"]',
+    '[data-testid*="cancel-plan"]',
+    '[data-action*="cancel-subscription"]',
+    'a[href*="/store/account/subscriptions/subscription?sku="]'
+  ]
+
+  // Tier 2: Check Remote Redis Cache on page start
+  const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
+  if (chrome.runtime && chrome.runtime.sendMessage) {
+    chrome.runtime.sendMessage({ action: 'fetchPlaybook', hostname }, (res) => {
+      if (res && res.success && res.data && Array.isArray(res.data.selectors)) {
+        ACTIVE_SELECTORS = [...res.data.selectors, ...ACTIVE_SELECTORS]
       }
-    }
-    return null
+    })
   }
 
   const STRICT_CANCEL_KEYWORDS = [
@@ -141,10 +171,19 @@
   function findCancelButton() {
     if (isAlreadyCancelled() || isDeadOr404Page()) return null
 
+    // 1. Check known selectors (Tier 1 & Tier 2 Redis)
+    for (const sel of ACTIVE_SELECTORS) {
+      try {
+        const el = document.querySelector(sel)
+        if (el && !isDisallowedElement(el) && isVisible(el)) return el
+      } catch (e) {}
+    }
+
+    // 2. Check strict keywords
     const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"], input[type="button"]'))
 
     for (const el of candidates) {
-      if (!isVisible(el)) continue
+      if (!isVisible(el) || isDisallowedElement(el)) continue
       const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
       if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
         return el
@@ -154,7 +193,7 @@
     const pathname = window.location.pathname.toLowerCase()
     if (pathname.includes('/subscriptions') || pathname.includes('/account')) {
       for (const el of candidates) {
-        if (!isVisible(el)) continue
+        if (!isVisible(el) || isDisallowedElement(el)) continue
         const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
         if (text === 'ניהול' || text === 'manage' || text === 'ניהול המינוי' || text === 'manage subscription') {
           return el
@@ -165,39 +204,48 @@
     return null
   }
 
-  // 1. Reassurance / No Active Subscription HUD
+  function findNavigationRecoveryElement() {
+    const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], [tabindex="0"], span'))
+    for (const el of elements) {
+      if (!isVisible(el)) continue
+      const text = (el.innerText || el.textContent || '').trim()
+
+      if (
+        text === 'Premium' ||
+        text === 'פרימיום' ||
+        text === 'Monetization' ||
+        text === 'מונטיזציה' ||
+        text === 'Creator Subscriptions' ||
+        text === 'Manage Subscriptions' ||
+        text === 'מינויים' ||
+        text === 'Manage subscription'
+      ) {
+        return el.closest('a, div[role="link"], div[role="button"], [tabindex="0"]') || el
+      }
+    }
+    return null
+  }
+
+  // --- HUDs ---
+
   function injectPeaceOfMindHUD(title, desc) {
-    if (hudInjected || document.getElementById('subsnap-peace-hud')) return
+    if (document.getElementById('subsnap-peace-hud')) return
     hudInjected = true
 
     const hud = document.createElement('div')
     hud.id = 'subsnap-peace-hud'
     hud.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      z-index: 2147483647;
-      background: #ffffff;
-      border: 2px solid #10b981;
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #10b981;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 24px rgba(16, 185, 129, 0.2);
-      border-radius: 16px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      direction: rtl;
-      min-width: 360px;
-      max-width: 480px;
-      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: rtl;
+      min-width: 360px; max-width: 480px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `
 
     hud.innerHTML = `
       <style>
-        @keyframes subsnapPop {
-          from { opacity: 0; transform: translateY(12px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
       </style>
       <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 18px;">
         🛡️
@@ -209,54 +257,38 @@
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <button id="subsnap-peace-close-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
-          מעולה, תודה ✕
-        </button>
-      </div>
+      <button id="subsnap-peace-close-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
+        סגור ✕
+      </button>
     `
 
     document.body.appendChild(hud)
-
     hud.querySelector('#subsnap-peace-close-btn').addEventListener('click', () => {
       hud.remove()
       hudInjected = false
     })
   }
 
-  // 2. Autonomous Self-Healing HUD
   function injectSelfHealingHUD(title, desc, onTriggerAction) {
-    if (hudInjected || document.getElementById('subsnap-assistant-hud')) return
+    if (document.getElementById('subsnap-assistant-hud')) {
+      document.getElementById('subsnap-assistant-hud').remove()
+    }
     hudInjected = true
 
     const hud = document.createElement('div')
     hud.id = 'subsnap-assistant-hud'
     hud.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      z-index: 2147483647;
-      background: #ffffff;
-      border: 2px solid #10b981;
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #10b981;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(16, 185, 129, 0.18);
-      border-radius: 16px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      direction: rtl;
-      min-width: 360px;
-      max-width: 480px;
-      animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: rtl;
+      min-width: 360px; max-width: 480px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `
 
     hud.innerHTML = `
       <style>
-        @keyframes subsnapPop {
-          from { opacity: 0; transform: translateY(12px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
       </style>
       <div style="width: 36px; height: 36px; border-radius: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 18px;">
         🤖
@@ -307,7 +339,48 @@
     })
   }
 
-  // 3. Cancellation Auto-Pilot HUD
+  function injectAIEscalationHUD(title, desc) {
+    if (document.getElementById('subsnap-ai-hud')) return
+    hudInjected = true
+
+    const hud = document.createElement('div')
+    hud.id = 'subsnap-ai-hud'
+    hud.style.cssText = `
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 2px solid #6366f1;
+      box-shadow: 0 16px 40px rgba(99, 102, 241, 0.25);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: rtl;
+      min-width: 360px; max-width: 480px; animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `
+
+    hud.innerHTML = `
+      <style>
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes subsnapSpin { 100% { transform: rotate(360deg); } }
+      </style>
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; border: 1.5px solid #c7d2fe; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        <span style="display: inline-block; animation: subsnapSpin 3s linear infinite;">🧭</span>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; font-weight: 800; color: #4338ca; display: flex; align-items: center; gap: 6px;">
+          <span>${title}</span>
+          <span style="font-size: 10px; background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">פעיל ⚡</span>
+        </div>
+        <div id="subsnap-ai-desc" style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
+      </div>
+      <button id="subsnap-ai-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 4px;">
+        ✕
+      </button>
+    `
+
+    document.body.appendChild(hud)
+    hud.querySelector('#subsnap-ai-close-btn').addEventListener('click', () => {
+      hud.remove()
+      hudInjected = false
+    })
+  }
+
   function injectAutoPilotHUD(btn) {
     if (hudInjected || document.getElementById('subsnap-hud')) return
     hudInjected = true
@@ -319,29 +392,17 @@
     const hud = document.createElement('div')
     hud.id = 'subsnap-hud'
     hud.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      z-index: 2147483647;
-      background: #ffffff;
-      border: 1.5px solid #10b981;
+      position: fixed; bottom: 24px; left: 24px; z-index: 2147483647;
+      background: #ffffff; border: 1.5px solid #10b981;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(16, 185, 129, 0.15);
-      border-radius: 16px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      direction: ltr;
+      border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; direction: ltr;
       animation: subsnapPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `
 
     hud.innerHTML = `
       <style>
-        @keyframes subsnapPop {
-          from { opacity: 0; transform: translateY(12px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes subsnapPop { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
       </style>
       <div style="width: 32px; height: 32px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669;">
         ⚡
@@ -406,11 +467,97 @@
     })
   }
 
-  // 4. Main Scanning Engine
+  // --- Tier 3: Emergency AI Escalation (Called ONLY when genuinely stuck) ---
+
+  async function triggerAIEscalation(intent) {
+    if (aiEscalationAttempted || hudInjected) return
+    aiEscalationAttempted = true
+
+    const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+    const serviceName = intent ? intent.name : cleanHost
+
+    injectAIEscalationHUD(
+      'סייר AI מתערב בחילוץ 🤖',
+      `לא אותר כפתור ביטול מוכר. סייר Gemini סורק את אלמנטי העמוד של ${serviceName}...`
+    )
+
+    // Gather visible interactive elements
+    const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
+      .filter(el => isVisible(el) && !isDisallowedElement(el))
+      .slice(0, 35)
+      .map((el, index) => ({
+        index,
+        tag: el.tagName.toLowerCase(),
+        text: (el.innerText || el.textContent || el.value || '').trim().slice(0, 100),
+        className: (el.className || '').toString().slice(0, 100),
+        id: el.id || '',
+        href: el.getAttribute('href') || ''
+      }))
+
+    if (candidates.length === 0) {
+      if (document.getElementById('subsnap-ai-hud')) document.getElementById('subsnap-ai-hud').remove()
+      hudInjected = false
+      return
+    }
+
+    chrome.runtime.sendMessage({
+      action: 'domScout',
+      payload: {
+        serviceName,
+        hostname: cleanHost,
+        elements: candidates
+      }
+    }, (res) => {
+      if (document.getElementById('subsnap-ai-hud')) document.getElementById('subsnap-ai-hud').remove()
+      hudInjected = false
+
+      if (res && res.success && res.data && res.data.targetSelector) {
+        try {
+          const targetEl = document.querySelector(res.data.targetSelector) ||
+            (res.data.bestMatchIndex != null ? Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"], input[type="submit"]'))
+              .filter(el => isVisible(el) && !isDisallowedElement(el))[res.data.bestMatchIndex] : null)
+
+          if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            targetEl.style.outline = '3px solid #10b981'
+            targetEl.style.outlineOffset = '3px'
+
+            injectSelfHealingHUD(
+              'נתיב הביטול אותר ע&quot;י AI 🤖⚡',
+              `ה-AI פיצח את הנתיב. ממשיך בעוד 2 שניות ומעדכן את מאגר הזיכרון בענן להבא...`,
+              () => {
+                forceClick(targetEl)
+                // Write-back loop: Save to Tier 2 (Redis) so next time it's 0ms and $0!
+                chrome.runtime.sendMessage({
+                  action: 'reportHealedUrl',
+                  payload: {
+                    host: cleanHost,
+                    healedUrl: window.location.href,
+                    selector: res.data.targetSelector
+                  }
+                })
+                setTimeout(startScanningEngine, 1000)
+              }
+            )
+            return
+          }
+        } catch (err) {}
+      }
+
+      // If AI also found nothing -> Verified no active subscription
+      injectPeaceOfMindHUD(
+        'בשורות טובות: לא נמצא מנוי פעיל ✨',
+        `סייר ה-AI סרק את אפשרויות העמוד עבור ${serviceName} ואימת שלא קיים מנוי בתשלום או כפתור ביטול פעיל.`
+      )
+    })
+  }
+
+  // --- Main Tiered Scan Engine ---
+
   async function performScan() {
     if (hudInjected) return false
 
-    // A. Check if already cancelled
+    // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
       injectPeaceOfMindHUD(
         'המנוי כבר בוטל בהצלחה! 🎉',
@@ -419,14 +566,14 @@
       return true
     }
 
-    // B. Check if cancel button is present on screen
+    // Tier 1.2: Check if cancel button is present on screen (Local or Redis Playbook)
     const btn = findCancelButton()
     if (btn) {
       injectAutoPilotHUD(btn)
       return true
     }
 
-    // C. Proactive Check: No Active Subscription / Free Account
+    // Tier 1.3: Proactive Check: No Active Subscription / Free Account
     if (isNoActiveSubscriptionState()) {
       injectPeaceOfMindHUD(
         'בשורות טובות: לא נמצא מנוי פעיל ✨',
@@ -435,10 +582,10 @@
       return true
     }
 
-    // D. Check if page is currently showing a 404 / Dead Pane in this SPA
+    // Tier 1.4: 404 / Dead Link Recovery
     if (isDeadOr404Page()) {
       const recoveryNav = findNavigationRecoveryElement()
-      const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
+      const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
 
       if (recoveryNav) {
         recoveryNav.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -450,26 +597,15 @@
           'הקישור הישן השתנה. מתקן מסלול ופותח את הגדרות הפרימיום שנמצאו בעמוד...',
           () => {
             forceClick(recoveryNav)
-            if (chrome.runtime && chrome.runtime.sendMessage) {
-              chrome.runtime.sendMessage({
-                action: 'reportHealedUrl',
-                payload: {
-                  host: hostname,
-                  healedUrl: window.location.href,
-                  selector: 'div[data-testid="cancelSubscription"]'
-                }
-              })
-            }
+            chrome.runtime.sendMessage({
+              action: 'reportHealedUrl',
+              payload: {
+                host: cleanHost,
+                healedUrl: window.location.href,
+                selector: 'div[data-testid="cancelSubscription"]'
+              }
+            })
             setTimeout(startScanningEngine, 1000)
-          }
-        )
-        return true
-      } else {
-        injectSelfHealingHUD(
-          'ריפוי עצמי של סייר SubSnap 🤖',
-          'הקישור הישן השתנה. מנווט אוטומטית לעמוד ההגדרות הראשי...',
-          () => {
-            window.location.href = `https://${hostname}/settings`
           }
         )
         return true
@@ -484,7 +620,7 @@
     if (activeScanInterval) clearInterval(activeScanInterval)
 
     let scanAttempts = 0
-    const maxAttempts = 12
+    const maxAttempts = 7 // ~3.5 seconds of fast Tier 1/2 local scan
 
     activeObserver = new MutationObserver(async () => {
       if (!hudInjected) {
@@ -503,15 +639,12 @@
         clearInterval(activeScanInterval)
         if (activeObserver) activeObserver.disconnect()
 
-        // Fallback: If no cancel button was found after 6s, and user came with intent
+        // TIER 3 ESCALATION: Only if Tier 1 & Tier 2 failed and user came with active intent
         if (!found && !hudInjected && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null
             if (intent && (Date.now() - intent.timestamp < 180000)) {
-              injectPeaceOfMindHUD(
-                'סייר SubSnap: לא זוהה חיוב פעיל ✨',
-                `בדקנו את הגדרות החשבון של ${intent.name}. לא אותר כפתור ביטול או מנוי בתשלום פעיל בחשבון זה.`
-              )
+              triggerAIEscalation(intent)
             }
           })
         }
