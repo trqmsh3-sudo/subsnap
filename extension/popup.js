@@ -137,12 +137,25 @@ let LEARNED_SERVICES = []
 let searchDebounceTimer = null
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000 // 14 Days Cache Expiration
 
-// Load locally learned services from storage (with automatic TTL eviction)
+// Load locally learned services from storage (with automatic TTL eviction) & Trophy Stats
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-  chrome.storage.local.get(['subsnap_learned_services'], (res) => {
+  chrome.storage.local.get(['subsnap_learned_services', 'subsnap_savings_stats'], (res) => {
     if (res && Array.isArray(res.subsnap_learned_services)) {
       const now = Date.now()
       LEARNED_SERVICES = res.subsnap_learned_services.filter(s => !s.savedAt || (now - s.savedAt < CACHE_TTL_MS))
+    }
+
+    // Render Trophy Banner (Dopamine Savings Counter)
+    const stats = res ? res.subsnap_savings_stats : null
+    if (stats && stats.cancelledCount > 0) {
+      const banner = document.getElementById('trophyBanner')
+      const amountEl = document.getElementById('trophyAmount')
+      const subEl = document.getElementById('trophySub')
+      if (banner && amountEl && subEl) {
+        amountEl.textContent = `₪${stats.totalSavedIls || stats.cancelledCount * 80}`
+        subEl.textContent = `${stats.cancelledCount} מנויים בוטלו בהצלחה · שומר הראש הפיננסי שלך 🛡️`
+        banner.style.display = 'flex'
+      }
     }
   })
 }

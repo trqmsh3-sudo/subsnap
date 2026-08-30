@@ -859,6 +859,7 @@
       // Allow DOM transitions and re-arm scan engine for subsequent steps (modals, surveys, confirmations)
       setTimeout(() => {
         if (isAlreadyCancelled()) {
+          recordCancellationSuccess(window.location.hostname.replace(/^www\./, ''))
           hud.remove()
           hudInjected = false
           injectPeaceOfMindHUD(
@@ -1088,6 +1089,37 @@
     })
   }
 
+  // --- Room 5: Trophy Room & Savings Engine ---
+  function recordCancellationSuccess(serviceName = '') {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(['subsnap_savings_stats'], (res) => {
+          const stats = res && res.subsnap_savings_stats ? res.subsnap_savings_stats : {
+            cancelledCount: 0,
+            totalSavedIls: 0,
+            services: []
+          }
+
+          const sName = serviceName || window.location.hostname.replace(/^www\./, '')
+          const now = Date.now()
+          const alreadyRecorded = stats.services && stats.services.some(s => s.name === sName && (now - s.timestamp < 86400000))
+          if (!alreadyRecorded) {
+            const estimatedMonthlySavings = 80 // Estimated average monthly SaaS savings in ILS (~$22)
+            stats.cancelledCount = (stats.cancelledCount || 0) + 1
+            stats.totalSavedIls = (stats.totalSavedIls || 0) + estimatedMonthlySavings
+            if (!Array.isArray(stats.services)) stats.services = []
+            stats.services.push({
+              name: sName,
+              timestamp: now,
+              saved: estimatedMonthlySavings
+            })
+            chrome.storage.local.set({ subsnap_savings_stats: stats })
+          }
+        })
+      }
+    } catch (e) {}
+  }
+
   // --- Two-Phase Outcome Verification Engine ---
   function verifyAndCommitPendingHeal() {
     try {
@@ -1201,6 +1233,7 @@
 
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
+      recordCancellationSuccess(targetName || window.location.hostname.replace(/^www\./, ''))
       sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
       sessionStorage.removeItem('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
