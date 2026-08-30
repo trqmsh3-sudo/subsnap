@@ -313,8 +313,8 @@
     const fullText = (document.body.innerText || '').toLowerCase()
 
     const hasCancelledHeader = (
-      /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלכם בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|פג תוקף|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled|your subscription has been cancelled|your plan has been cancelled/i.test(scopeText) ||
-      /\bהמינוי שלכם בוטל\b|\bהמינוי שלך בוטל\b|\bהמינוי בוטל\b|\byour subscription has been cancelled\b/i.test(fullText)
+      /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלכם בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|הגישה מסתיימת בתאריך|הגישה תסתיים ב-|הגישה מסתיימת ב-|הישארו בתוכנית|הישאר בתוכנית|הישארו במנוי|להישאר בתוכנית|פג תוקף|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled|your subscription has been cancelled|your plan has been cancelled|access ends on|access will end on|your access ends|plan ends on|plan will end on|subscription ends on|keep your plan|re-subscribe|resubscribe/i.test(scopeText) ||
+      /\bהמינוי שלכם בוטל\b|\bהמינוי שלך בוטל\b|\bהמינוי בוטל\b|\bהגישה מסתיימת בתאריך\b|\bהישארו בתוכנית\b|\byour subscription has been cancelled\b|\baccess ends on\b/i.test(fullText)
     )
 
     // Intermediate warning/confirmation phrases (if these are present, cancellation is not finished yet)
@@ -1914,8 +1914,9 @@
           console.log('[SubSnap checkActiveIntent]', { cleanHost, intentTarget: intent?.targetHost, match: intent ? isHostMatch(intent.targetHost, cleanHost) : false })
           if (!intent) return resolve(null)
 
-          // 10 minutes session window
-          if (Date.now() - intent.timestamp >= 600000) {
+          // 5 minutes session window - clean up if expired!
+          if (Date.now() - intent.timestamp >= 300000) {
+            chrome.storage.local.remove(['subsnap_active_intent'])
             return resolve(null)
           }
 
