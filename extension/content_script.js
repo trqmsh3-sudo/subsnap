@@ -198,12 +198,13 @@
       hostname.startsWith('accounts.')
     )
 
-    // 2. DOM Password / Credential check
+    // 2. DOM Password / Credential / SSO check
     const hasPasswordField = !!document.querySelector('input[type="password"]')
     const hasLoginForm = !!document.querySelector('form[action*="login"], form[action*="signin"], form[data-testid*="login"]')
     const hasSignInHeading = /התחברות|התחבר לחשבון|כניסה לחשבון|sign in|log in|welcome back/i.test(document.title || '')
+    const hasSSOButton = !!document.querySelector('button[data-provider="google"], button[data-testid*="google"], a[href*="accounts.google.com"], [aria-label*="Google" i][role="button"]')
 
-    return (isLoginPath && (hasPasswordField || hasLoginForm || hasSignInHeading)) || (hasPasswordField && !pathname.includes('/account'))
+    return (isLoginPath && (hasPasswordField || hasLoginForm || hasSignInHeading || hasSSOButton)) || (hasPasswordField && !pathname.includes('/account'))
   }
 
   function isAlreadyCancelled() {
@@ -543,12 +544,35 @@
     return null
   }
 
+  function isNavigationDisallowed(el) {
+    if (!el) return true
+    const text = (el.innerText || el.textContent || el.value || '').toLowerCase()
+    const href = (el.getAttribute('href') || '').toLowerCase()
+    const aria = (el.getAttribute('aria-label') || '').toLowerCase()
+    const id = (el.id || '').toLowerCase()
+    const cls = (el.className || '').toString().toLowerCase()
+    const combined = `${text} ${href} ${aria} ${id} ${cls}`
+
+    // 1. NEVER click Login, Sign In, SSO, Auth, or Signup buttons as in-app navigation!
+    if (/sign in|log in|signin|login|auth|sso|google|apple|github|התחבר|כניסה לחשבון|הרשמה|sign up|signup/i.test(combined)) {
+      return true
+    }
+
+    // 2. NEVER click external Help Center, Docs, or Support links as in-app navigation!
+    if (/help\.|support\.|zendesk|intercom|\/help|\/support|\/faq|\/docs|מרכז תמיכה|עזרה|מדריך/i.test(combined)) {
+      return true
+    }
+
+    // 3. Disallow destructors and pause traps
+    return isDisallowedElement(el)
+  }
+
   function findNavigationRecoveryElement() {
     // 1. Direct billing/subscription links
     const billingCandidates = Array.from(document.querySelectorAll(
       'a[href*="billing"], a[href*="subscription"], a[href*="plan"], a[href*="upgrade"], ' +
       '[data-testid*="billing"], [data-testid*="subscription"], [data-testid*="plan"]'
-    )).filter(el => isVisible(el) && !isDisallowedElement(el))
+    )).filter(el => isVisible(el) && !isNavigationDisallowed(el))
 
     if (billingCandidates.length > 0) {
       return billingCandidates[0]
@@ -558,7 +582,7 @@
     const settingsCandidates = Array.from(document.querySelectorAll(
       'a[href*="settings"], a[href*="account"], [data-testid*="settings"], [data-testid*="account"], ' +
       '[aria-label*="Settings" i], [aria-label*="Account" i], [aria-label*="הגדרות"], [aria-label*="חשבון"]'
-    )).filter(el => isVisible(el) && !isDisallowedElement(el))
+    )).filter(el => isVisible(el) && !isNavigationDisallowed(el))
 
     if (settingsCandidates.length > 0) {
       return settingsCandidates[0]
@@ -570,7 +594,7 @@
       'button[aria-label*="Profile" i], button[aria-label*="User" i], button[aria-label*="Account" i], ' +
       'div[aria-label*="Profile" i], div[aria-label*="Account" i], ' +
       '[class*="avatar"], [class*="user-profile"], [class*="profile-button"]'
-    )).filter(el => isVisible(el) && !isDisallowedElement(el))
+    )).filter(el => isVisible(el) && !isNavigationDisallowed(el))
 
     if (avatarCandidates.length > 0) {
       return avatarCandidates[0]
@@ -579,7 +603,7 @@
     // 4. Fallback text scanning for navigation anchors
     const elements = Array.from(document.querySelectorAll('a, div[role="link"], div[role="button"], button, [tabindex="0"], span'))
     for (const el of elements) {
-      if (!isVisible(el) || isDisallowedElement(el)) continue
+      if (!isVisible(el) || isNavigationDisallowed(el)) continue
       const text = (el.innerText || el.textContent || '').toLowerCase().trim()
 
       if (
@@ -973,22 +997,32 @@
     document.body.appendChild(hud)
 
     if (directUrl) {
-      let secondsLeft = 3
-      const autoHopTimer = setInterval(() => {
-        if (document.hidden) return
-        secondsLeft -= 1
-        const badge = hud.querySelector('#subsnap-help-timer')
-        if (badge) badge.textContent = `${secondsLeft}s`
-        if (secondsLeft <= 0) {
-          clearInterval(autoHopTimer)
-          if (hud.isConnected) {
-            hud.querySelector('#subsnap-help-web-btn')?.click()
+      const hopCount = parseInt(sessionStorage.getItem('subsnap_helphop_count') || '0', 10)
+      const canAutoHop = hopCount === 0
+
+      let autoHopTimer = null
+      if (canAutoHop) {
+        sessionStorage.setItem('subsnap_helphop_count', String(hopCount + 1))
+        let secondsLeft = 3
+        autoHopTimer = setInterval(() => {
+          if (document.hidden) return
+          secondsLeft -= 1
+          const badge = hud.querySelector('#subsnap-help-timer')
+          if (badge) badge.textContent = `${secondsLeft}s`
+          if (secondsLeft <= 0) {
+            clearInterval(autoHopTimer)
+            if (hud.isConnected) {
+              hud.querySelector('#subsnap-help-web-btn')?.click()
+            }
           }
-        }
-      }, 1000)
+        }, 1000)
+      } else {
+        const badge = hud.querySelector('#subsnap-help-timer')
+        if (badge) badge.textContent = 'מדריך 📖'
+      }
 
       hud.querySelector('#subsnap-help-close-btn')?.addEventListener('click', () => {
-        clearInterval(autoHopTimer)
+        if (autoHopTimer) clearInterval(autoHopTimer)
       })
 
       hud.querySelector('#subsnap-help-web-btn')?.addEventListener('click', () => {
@@ -1805,22 +1839,26 @@
 
     // Tier 1.5: In-App Settings & Billing Drilldown (Homepage / Dashboard navigation)
     // When on the target service domain but no direct cancel button is yet visible on screen:
-    const drilldownNav = findNavigationRecoveryElement()
-    if (drilldownNav && !hudInjected) {
-      const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
-      drilldownNav.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      drilldownNav.style.outline = '3px solid #10b981'
-      drilldownNav.style.outlineOffset = '3px'
+    const drilldownAttempted = sessionStorage.getItem('subsnap_drilldown_done_for_' + window.location.pathname) === 'true'
+    if (!drilldownAttempted && !isLoginPage()) {
+      const drilldownNav = findNavigationRecoveryElement()
+      if (drilldownNav && !hudInjected) {
+        sessionStorage.setItem('subsnap_drilldown_done_for_' + window.location.pathname, 'true')
+        const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+        drilldownNav.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        drilldownNav.style.outline = '3px solid #10b981'
+        drilldownNav.style.outlineOffset = '3px'
 
-      injectSelfHealingHUD(
-        isHebrew ? 'מנווט להגדרות המנוי ⚡' : 'Navigating to Subscription Settings ⚡',
-        isHebrew ? 'נתיב החשבון אותר. פותח את הגדרות המנוי להמשך ביטול...' : 'Account settings located. Opening to proceed with cancellation...',
-        () => {
-          forceClick(drilldownNav)
-          setTimeout(startScanningEngine, 1200)
-        }
-      )
-      return true
+        injectSelfHealingHUD(
+          isHebrew ? 'מנווט להגדרות המנוי ⚡' : 'Navigating to Subscription Settings ⚡',
+          isHebrew ? 'נתיב החשבון אותר. פותח את הגדרות המנוי להמשך ביטול...' : 'Account settings located. Opening to proceed with cancellation...',
+          () => {
+            forceClick(drilldownNav)
+            setTimeout(startScanningEngine, 1500)
+          }
+        )
+        return true
+      }
     }
 
     return false
