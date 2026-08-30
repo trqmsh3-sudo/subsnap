@@ -13,40 +13,69 @@ const redis = hasRedis
 
 const DYNAMIC_CACHE = new Map<string, CancellationEntry>()
 
-async function verifyUrlAlive(url: string): Promise<boolean> {
+async function verifyCandidateUrl(url: string, brandQuery: string = ''): Promise<boolean> {
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 2500)
+    const timeout = setTimeout(() => controller.abort(), 3500)
     const res = await fetch(url, {
-      method: 'HEAD',
+      method: 'GET',
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       }
     })
     clearTimeout(timeout)
-    if (res.status === 404 || res.status === 410) {
+
+    // 1. Status check: 404, 410, 500, 502, 503 are dead
+    if (!res.ok || res.status === 404 || res.status === 410 || res.status >= 500) {
       return false
     }
+
+    const text = (await res.text()).slice(0, 5000).toLowerCase()
+
+    // 2. Anti-Directory / Anti-Apache / Anti-Server Default check (Prevents index of / Apache listings)
+    if (
+      text.includes('index of /') ||
+      text.includes('apache/2.') ||
+      text.includes('directory listing for') ||
+      text.includes('welcome to nginx') ||
+      text.includes('iis windows server') ||
+      text.includes('default web site page')
+    ) {
+      console.warn(`[URL Validator] REJECTED server directory listing: ${url}`)
+      return false
+    }
+
+    // 3. Anti-Parked / Anti-Squatting check
+    if (
+      text.includes('domain for sale') ||
+      text.includes('buy this domain') ||
+      text.includes('this domain is parked') ||
+      text.includes('hugedomains') ||
+      text.includes('sedoparking') ||
+      text.includes('namecheap.com/domains') ||
+      text.includes('godaddy.com/domainsearch')
+    ) {
+      console.warn(`[URL Validator] REJECTED parked domain: ${url}`)
+      return false
+    }
+
+    // 4. Brand Sanity check (Only if query is longer than 3 chars)
+    const cleanBrand = brandQuery.toLowerCase().replace(/subscription|cancel|מנוי|ביטול/g, '').trim()
+    if (cleanBrand.length >= 4) {
+      const urlHost = new URL(url).hostname.toLowerCase()
+      // If brand is not mentioned anywhere in host or page content, suspicious candidate!
+      const mentionsBrand = urlHost.includes(cleanBrand) || text.includes(cleanBrand)
+      if (!mentionsBrand) {
+        console.warn(`[URL Validator] REJECTED domain without brand presence: ${url} for brand ${cleanBrand}`)
+        return false
+      }
+    }
+
     return true
   } catch {
-    try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 2500)
-      const res = await fetch(url, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'Range': 'bytes=0-200',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-        }
-      })
-      clearTimeout(timeout)
-      if (res.status === 404 || res.status === 410) return false
-      return true
-    } catch {
-      return false
-    }
+    return false
   }
 }
 
@@ -126,21 +155,11 @@ If it is an unknown arbitrary domain like "example.io", deduce the standard sett
       const parsed = JSON.parse(cleanJson)
 
       if (parsed && parsed.cancelUrl) {
-        let verifiedCancelUrl = parsed.cancelUrl
-        const isCancelAlive = await verifyUrlAlive(verifiedCancelUrl)
+        const verifiedCancelUrl = parsed.cancelUrl
+        const isCancelAlive = await verifyCandidateUrl(verifiedCancelUrl, query)
         if (!isCancelAlive) {
-          console.warn(`[AI Scout Pre-flight Guard]: Gemini generated dead cancelUrl: ${verifiedCancelUrl}`)
-          try {
-            const urlObj = new URL(verifiedCancelUrl)
-            const originAlive = await verifyUrlAlive(urlObj.origin)
-            if (originAlive) {
-              verifiedCancelUrl = urlObj.origin
-            } else {
-              throw new Error(`Domain ${urlObj.hostname} is dead or unreachable.`)
-            }
-          } catch {
-            throw new Error(`Invalid or dead cancelUrl: ${verifiedCancelUrl}`)
-          }
+          console.warn(`[AI Scout Pre-flight Guard]: Candidate URL failed sanity check: ${verifiedCancelUrl}`)
+          throw new Error(`Candidate URL ${verifiedCancelUrl} is invalid, parked, or failed brand verification.`)
         }
 
         const entry: CancellationEntry = {

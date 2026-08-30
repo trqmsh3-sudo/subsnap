@@ -46,6 +46,23 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     ],
   },
   {
+    name: 'Manus AI',
+    nameHe: 'מאנוס איי איי (Manus AI)',
+    keywords: ['manus', 'manus ai', 'manus.im', 'מאנוס', 'מאנוס ai'],
+    loginUrl: 'https://manus.im/login',
+    cancelUrl: 'https://manus.im',
+    method: 'url',
+    notes: 'אתר השירות הרשמי של Manus AI - ניהול מנוי בהגדרות החשבון',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'נכנסים לאתר הרשמי של Manus (manus.im)',
+      'לוחצים על תמונת הפרופיל (Avatar) בפינה הימנית העליונה',
+      'בוחרים ב-Account ולאחר מכן Upgrade / Manage Plan',
+      'לוחצים על Cancel Subscription ומאשרים',
+    ],
+  },
+  {
     name: 'Netflix',
     nameHe: 'נטפליקס (Netflix)',
     keywords: ['netflix', 'nflx', 'netflix.com', 'netflix international', 'נטפליקס', 'נטפליכס'],
