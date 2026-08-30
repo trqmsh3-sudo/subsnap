@@ -284,6 +284,19 @@
       return false
     }
 
+    // 3.1 Help Centers, Knowledgebases, and Docs are documentation, not marketing login walls!
+    const host = window.location.hostname.toLowerCase()
+    if (
+      host.startsWith('help.') ||
+      host.startsWith('support.') ||
+      host.startsWith('docs.') ||
+      pathname.includes('/article/') ||
+      pathname.includes('/help/') ||
+      pathname.includes('/support/')
+    ) {
+      return false
+    }
+
     // 4. Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
     const hasUserProfile = !!document.querySelector(
       '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
@@ -449,7 +462,29 @@
     'keep subscription',
     'keep plan',
     'keep pro',
-    'keep my plan'
+    'keep my plan',
+    // Irrelevant management & tutorial traps (e.g. "Manage projects in Asana", "How to create a project")
+    'manage project',
+    'manage projects',
+    'manage task',
+    'manage tasks',
+    'manage team',
+    'manage file',
+    'manage files',
+    'manage cookies',
+    'manage tags',
+    'ניהול פרויקט',
+    'ניהול פרויקטים',
+    'ניהול משימות',
+    'ניהול עובדים',
+    'ניהול קבצים',
+    'ניהול צוות',
+    'how to create',
+    'video tutorial',
+    'video tutorials',
+    'tutorial',
+    'tutorials',
+    'מדריך וידאו'
   ]
 
   function isDisallowedElement(el) {
@@ -673,12 +708,17 @@
         const inCard = searchIn(card)
         if (inCard) return inCard
 
-        // Manage button inside the target card
+        // Manage button inside the target card - MUST BE STRICTLY SUBSCRIPTION RELATED!
         const manageBtns = queryDeep('button, a, div[role="button"], span[role="button"], [jsaction*="click"], [tabindex="0"]', card)
         for (const el of manageBtns) {
           if (!isVisible(el) || isDisallowedElement(el)) continue
           const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
-          if (text === 'ניהול' || text === 'manage' || text.includes('ניהול') || text.includes('manage')) {
+          const isStrictSubscriptionManage = (
+            text === 'ניהול המינוי' || text === 'ניהול מנוי' || text === 'ניהול תוכנית' || text === 'ניהול חבילה' ||
+            text === 'manage subscription' || text === 'manage plan' || text === 'manage membership' || text === 'manage billing' ||
+            ((text === 'ניהול' || text === 'manage') && /(מינוי|מנוי|subscription|membership|plan|billing|חיוב)/i.test(card.innerText || ''))
+          )
+          if (isStrictSubscriptionManage) {
             return el
           }
         }
@@ -789,6 +829,10 @@
         text === 'manage subscription' ||
         text === 'manage subscriptions' ||
         text === 'manage plan' ||
+        text === 'admin console' ||
+        text === 'admin' ||
+        text === 'ניהול מערכת' ||
+        text === 'לוח בקרה' ||
         text === 'settings' ||
         text === 'הגדרות' ||
         text === 'account' ||
