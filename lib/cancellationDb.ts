@@ -425,6 +425,23 @@ export const CANCELLATION_DB: CancellationEntry[] = [
       'העמוד נפתח ישירות על רשימת האפליקציות המחוברות ל-X',
       'בוחרים באפליקציה ולוחצים על Revoke app permissions (ביטול הרשאות)',
     ],
+  },
+  {
+    name: 'Vercel',
+    nameHe: 'ורסל (Vercel)',
+    keywords: ['vercel', 'ורסל', 'vercel.com'],
+    loginUrl: 'https://vercel.com/login',
+    cancelUrl: 'https://vercel.com/dashboard',
+    method: 'url',
+    notes: 'עמוד ניהול חשבון, צוותים והורדת תוכנית ל-Hobby ב-Vercel',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'נכנסים לדשבורד של Vercel ב-https://vercel.com/dashboard',
+      'בוחרים בצוות (Team) הרלוונטי או בחשבון האישי',
+      'עוברים להגדרות (Settings) ואז לחיובים (Billing)',
+      'תחת Plan בוחרים ב-Downgrade to Hobby ומאשרים',
+    ],
   }
 ]
 

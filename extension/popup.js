@@ -105,6 +105,18 @@ const TOP_SERVICES = [
     keywords: ['google', 'google one', 'google play', 'גוגל פליי'],
     cancelUrl: 'https://play.google.com/store/account/subscriptions',
     notes: 'Direct Google Play active subscriptions'
+  },
+  {
+    name: 'Vercel',
+    keywords: ['vercel', 'ורסל', 'vercel.com'],
+    cancelUrl: 'https://vercel.com/dashboard',
+    notes: 'Direct Vercel billing & team plan downgrade pathway'
+  },
+  {
+    name: 'Google Connected Apps',
+    keywords: ['google connected apps', 'google apps', 'אפליקציות מחוברות', 'חיבורי חשבון גוגל', 'google sign in'],
+    cancelUrl: 'https://myaccount.google.com/connections',
+    notes: 'Direct Google account third-party connected apps management'
   }
 ]
 
@@ -120,15 +132,47 @@ const modeSelect = document.getElementById('modeSelect')
 const savedIndicator = document.getElementById('savedIndicator')
 
 let currentEntry = null
+let LEARNED_SERVICES = []
+let searchDebounceTimer = null
+
+// Load locally learned services from storage
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+  chrome.storage.local.get(['subsnap_learned_services'], (res) => {
+    if (res && Array.isArray(res.subsnap_learned_services)) {
+      LEARNED_SERVICES = res.subsnap_learned_services
+    }
+  })
+}
+
+function saveLearnedService(service) {
+  if (!service || !service.name || !service.cancelUrl) return
+  const sName = service.name.toLowerCase()
+  const exists = LEARNED_SERVICES.some(s => s.name.toLowerCase() === sName)
+  if (!exists) {
+    LEARNED_SERVICES.unshift({
+      name: service.name,
+      nameHe: service.nameHe || service.name,
+      cancelUrl: service.cancelUrl,
+      notes: service.notes || 'AI Scout verified direct cancellation pathway',
+      keywords: [sName, ...(service.keywords || [])],
+      isLearned: true
+    })
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ subsnap_learned_services: LEARNED_SERVICES.slice(0, 50) })
+    }
+  }
+}
 
 function matchLocalService(query) {
   if (!query || query.trim().length < 2) return null
   const q = query.toLowerCase().trim()
-  
-  return TOP_SERVICES.find(s => {
+  const all = [...LEARNED_SERVICES, ...TOP_SERVICES]
+
+  return all.find(s => {
     const sName = s.name.toLowerCase()
-    if (sName === q || sName.startsWith(q)) return true
-    return s.keywords.some(k => k === q || k.startsWith(q) || (q.length >= 4 && k.includes(q)))
+    const sNameHe = (s.nameHe || '').toLowerCase()
+    if (sName === q || sName.startsWith(q) || sNameHe === q || sNameHe.startsWith(q)) return true
+    return s.keywords && s.keywords.some(k => k === q || k.startsWith(q) || (q.length >= 3 && k.includes(q)))
   })
 }
 
@@ -139,7 +183,7 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
     return
   }
   currentEntry = service
-  serviceNameEl.textContent = service.name
+  serviceNameEl.textContent = service.nameHe ? `${service.name} (${service.nameHe})` : service.name
   serviceNotesEl.textContent = service.notes || 'Direct cancellation pathway identified'
   if (modeTagEl) modeTagEl.textContent = sourceTag
   resultCard.style.display = 'block'
@@ -150,12 +194,16 @@ async function queryAIScout(query) {
     const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
     const data = await res.json()
     if (data && data.entry && data.entry.cancelUrl) {
-      return {
+      const entry = {
         name: data.entry.name || query,
+        nameHe: data.entry.nameHe,
         cancelUrl: data.entry.cancelUrl,
         notes: data.entry.notes || 'AI Scout identified direct billing pathway',
-        isLocal: false
+        keywords: [query.toLowerCase()],
+        isLearned: true
       }
+      saveLearnedService(entry)
+      return entry
     }
   } catch (err) {}
   
@@ -222,6 +270,7 @@ async function handleActionDispatch() {
 
     const lookedUp = await queryAIScout(val)
     if (lookedUp) {
+      saveLearnedService(lookedUp)
       executeCancel(lookedUp)
     }
   }
@@ -230,6 +279,7 @@ async function handleActionDispatch() {
 searchInput.addEventListener('input', (e) => {
   const val = e.target.value
   clearBtn.style.display = val ? 'block' : 'none'
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
   
   if (val.trim().length < 2) {
     showResult(null)
@@ -238,14 +288,37 @@ searchInput.addEventListener('input', (e) => {
 
   const localMatch = matchLocalService(val)
   if (localMatch) {
-    showResult(localMatch, '⚡ Verified Pathway')
-  } else {
-    showResult({
-      name: val.trim(),
-      cancelUrl: '',
-      notes: 'Click Launch or press Enter for AI Scout direct pathway discovery'
-    }, '🤖 AI Scout Ready')
+    showResult(localMatch, localMatch.isLearned ? '🤖 AI Learned Pathway' : '⚡ Verified Pathway')
+    return
   }
+
+  // Initial feedback stub
+  showResult({
+    name: val.trim(),
+    cancelUrl: '',
+    notes: 'Checking cloud database and AI Scout for verified pathway...'
+  }, '🤖 AI Scout Ready')
+
+  // Real-time debounced cloud lookup (250ms)
+  searchDebounceTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(val.trim())}`)
+      const data = await res.json()
+      // Only apply if user hasn't changed the input in the meantime
+      if (searchInput.value.trim().toLowerCase() === val.trim().toLowerCase() && data && data.entry && data.entry.cancelUrl) {
+        const learned = {
+          name: data.entry.name || val.trim(),
+          nameHe: data.entry.nameHe,
+          cancelUrl: data.entry.cancelUrl,
+          notes: data.entry.notes || 'AI Scout verified direct cancellation pathway',
+          keywords: [val.trim().toLowerCase()],
+          isLearned: true
+        }
+        saveLearnedService(learned)
+        showResult(learned, data.source === 'cache' || data.source === 'global_redis_cache' ? '⚡ Cloud Synced' : '🤖 AI Scout Discovered')
+      }
+    } catch (err) {}
+  }, 250)
 })
 
 searchInput.addEventListener('keydown', (e) => {
