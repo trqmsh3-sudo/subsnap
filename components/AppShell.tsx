@@ -32,6 +32,8 @@ export default function AppShell() {
       })
       const data = await res.json()
       setSubscriptions(data.subscriptions ?? [])
+    } catch (err) {
+      console.error('[AppShell] analyze request failed:', err)
     } finally {
       setAnalyzing(false)
     }

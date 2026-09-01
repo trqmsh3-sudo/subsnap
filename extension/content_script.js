@@ -63,6 +63,25 @@
     return false
   }
 
+  // Escapes text before it's interpolated into an innerHTML template, so HUD copy sourced
+  // from user input or an AI response (guidanceHe, planName, service names, etc.) can never
+  // be parsed as markup on the page the extension is running on.
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+  }
+
+  // sessionStorage throws SecurityError in some browser privacy-mode configurations —
+  // these mirror the defensive style already used for every chrome.storage call in this file.
+  function safeSessionGet(key) {
+    try { return sessionStorage.getItem(key) } catch (e) { return null }
+  }
+  function safeSessionSet(key, value) {
+    try { sessionStorage.setItem(key, value) } catch (e) {}
+  }
+  function safeSessionRemove(key) {
+    try { sessionStorage.removeItem(key) } catch (e) {}
+  }
+
   function isVisible(el) {
     if (!el || el.offsetParent === null) return false
     const style = window.getComputedStyle(el)
@@ -191,9 +210,11 @@
     if (isDead && !staleEvicted) {
       staleEvicted = true
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-      if (chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({ action: 'evictStalePlaybook', hostname: cleanHost })
-      }
+      try {
+        if (chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'evictStalePlaybook', hostname: cleanHost })
+        }
+      } catch (e) {}
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['subsnap_learned_services'], (res) => {
           if (res && Array.isArray(res.subsnap_learned_services)) {
@@ -602,13 +623,15 @@
 
   // Tier 2: Check Remote Redis Cache on page start
   const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '')
-  if (chrome.runtime && chrome.runtime.sendMessage) {
-    chrome.runtime.sendMessage({ action: 'fetchPlaybook', hostname }, (res) => {
-      if (res && res.success && res.data && Array.isArray(res.data.selectors)) {
-        ACTIVE_SELECTORS = [...res.data.selectors, ...ACTIVE_SELECTORS]
-      }
-    })
-  }
+  try {
+    if (chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ action: 'fetchPlaybook', hostname }, (res) => {
+        if (res && res.success && res.data && Array.isArray(res.data.selectors)) {
+          ACTIVE_SELECTORS = [...res.data.selectors, ...ACTIVE_SELECTORS]
+        }
+      })
+    }
+  } catch (e) {}
 
   const STRICT_CANCEL_KEYWORDS = [
     'ביטול המינוי',
@@ -670,11 +693,14 @@
       )
 
       if (isPromo) {
-        const closeBtn = modal.querySelector(
-          'button[aria-label*="close" i], button[aria-label*="dismiss" i], button[title*="close" i], ' +
-          '[class*="close-button" i], [class*="modal-close" i], [data-testid*="close" i], ' +
-          'button svg, div[role="button"]:has(svg), button'
-        )
+        let closeBtn = null
+        try {
+          closeBtn = modal.querySelector(
+            'button[aria-label*="close" i], button[aria-label*="dismiss" i], button[title*="close" i], ' +
+            '[class*="close-button" i], [class*="modal-close" i], [data-testid*="close" i], ' +
+            'button svg, div[role="button"]:has(svg), button'
+          )
+        } catch (e) {}
         if (closeBtn && isVisible(closeBtn)) {
           console.log('[SubSnap] Auto-dismissing promotional pop-up to clear screen...')
           forceClick(closeBtn)
@@ -986,10 +1012,10 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
-          <span>${title}</span>
+          <span>${escapeHtml(title)}</span>
           <span style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">בטוח ✓</span>
         </div>
-        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${escapeHtml(desc)}</div>
       </div>
       <button id="subsnap-peace-close-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
         סגור ✕
@@ -1040,7 +1066,7 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? `התחברות לחשבון (${sName})` : `Sign in to ${sName}`}</span>
+          <span>${isHebrew ? `התחברות לחשבון (${escapeHtml(sName)})` : `Sign in to ${escapeHtml(sName)}`}</span>
           <span style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ממתין ⏳' : 'Waiting ⏳'}</span>
         </div>
         <div id="subsnap-login-subtext" style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
@@ -1087,7 +1113,7 @@
         }
 
         // When credentials exist, execute click!
-        sessionStorage.setItem('subsnap_waiting_login', 'true')
+        safeSessionSet('subsnap_waiting_login', 'true')
         if (chrome.storage && chrome.storage.local) {
           chrome.storage.local.set({ subsnap_waiting_login: cleanHost })
         }
@@ -1100,7 +1126,7 @@
       const loginTriggers = queryDeep('form, button[type="submit"], input[type="submit"], button[data-provider], a[href*="google"], a[href*="facebook"], [aria-label*="Google"], [aria-label*="Facebook"]')
       loginTriggers.forEach(trigger => {
         trigger.addEventListener('click', () => {
-          sessionStorage.setItem('subsnap_waiting_login', 'true')
+          safeSessionSet('subsnap_waiting_login', 'true')
           if (chrome.storage && chrome.storage.local) {
             chrome.storage.local.set({ subsnap_waiting_login: cleanHost })
           }
@@ -1203,15 +1229,15 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? `בטל את מנוי ${serviceName || host} בקליק אחד` : `Cancel ${serviceName || host} in 1-Click`}</span>
+          <span>${isHebrew ? `בטל את מנוי ${escapeHtml(serviceName || host)} בקליק אחד` : `Cancel ${escapeHtml(serviceName || host)} in 1-Click`}</span>
           <span style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">Direct ⚡</span>
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
-          ${isHebrew ? `סייר SubSnap פותח ישירות את אתר השירות (${host}) ומפעיל את הטייס האוטומטי לביטול!` : `SubSnap will open the service site (${host}) directly and engage Auto-Pilot!`}
+          ${isHebrew ? `סייר SubSnap פותח ישירות את אתר השירות (${escapeHtml(host)}) ומפעיל את הטייס האוטומטי לביטול!` : `SubSnap will open the service site (${escapeHtml(host)}) directly and engage Auto-Pilot!`}
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
           <button id="subsnap-search-proceed-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 11px; font-weight: 800; cursor: pointer;">
-            ${isHebrew ? `פתח את ${host} ובטל עכשיו ➔` : `Open ${host} & Cancel Now ➔`}
+            ${isHebrew ? `פתח את ${escapeHtml(host)} ובטל עכשיו ➔` : `Open ${escapeHtml(host)} & Cancel Now ➔`}
           </button>
         </div>
       </div>
@@ -1389,7 +1415,7 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? `מדלג על המאמר ועובר ל-${serviceName || 'האתר'}` : `Jumping to ${serviceName || 'App'}`}</span>
+          <span>${isHebrew ? `מדלג על המאמר ועובר ל-${escapeHtml(serviceName || 'האתר')}` : `Jumping to ${escapeHtml(serviceName || 'App')}`}</span>
           <span id="subsnap-help-timer" style="font-size: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">3s ⚡</span>
         </div>
         <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
@@ -1421,12 +1447,12 @@
     document.body.appendChild(hud)
 
     if (directUrl) {
-      const hopCount = parseInt(sessionStorage.getItem('subsnap_helphop_count') || '0', 10)
+      const hopCount = parseInt(safeSessionGet('subsnap_helphop_count') || '0', 10)
       const canAutoHop = hopCount === 0
 
       let autoHopTimer = null
       if (canAutoHop) {
-        sessionStorage.setItem('subsnap_helphop_count', String(hopCount + 1))
+        safeSessionSet('subsnap_helphop_count', String(hopCount + 1))
         let secondsLeft = 3
         autoHopTimer = setInterval(() => {
           if (document.hidden) return
@@ -1576,10 +1602,10 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
-          <span>${title}</span>
+          <span>${escapeHtml(title)}</span>
           <span id="subsnap-heal-timer" style="font-size: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-weight: 800;">2s</span>
         </div>
-        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${escapeHtml(desc)}</div>
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
         <button id="subsnap-heal-now-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
@@ -1671,10 +1697,10 @@
       </div>
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #4338ca; display: flex; align-items: center; gap: 6px;">
-          <span>${title}</span>
+          <span>${escapeHtml(title)}</span>
           <span style="font-size: 10px; background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 1px 6px; border-radius: 4px; font-weight: 800;">פעיל ⚡</span>
         </div>
-        <div id="subsnap-ai-desc" style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${desc}</div>
+        <div id="subsnap-ai-desc" style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">${escapeHtml(desc)}</div>
       </div>
       <button id="subsnap-ai-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 4px;">
         ✕
@@ -1840,8 +1866,8 @@
       descEl.textContent = isHebrew ? 'הטייס האוטומטי נעצר.' : 'Auto-Pilot stopped.'
       timerBadge.textContent = isHebrew ? 'הופסק 🛑' : 'Halted 🛑'
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-      sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
-      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
+      safeSessionSet('subsnap_halted_at_' + cleanHost, String(Date.now()))
+      safeSessionRemove('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
@@ -1853,8 +1879,8 @@
       hud.remove()
       hudInjected = false
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
-      sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
-      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
+      safeSessionSet('subsnap_halted_at_' + cleanHost, String(Date.now()))
+      safeSessionRemove('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
@@ -2002,6 +2028,7 @@
       href: item.el.getAttribute('href') || ''
     }))
 
+    try {
     chrome.runtime.sendMessage({
       action: 'domScout',
       payload: {
@@ -2058,7 +2085,7 @@
 
         injectSelfHealingHUD(hudTitle, hudSub, () => {
           try {
-            sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
+            safeSessionSet('subsnap_pending_verification', JSON.stringify({
               host: cleanHost,
               urlBefore: window.location.href,
               selector: res.data ? res.data.targetSelector : null,
@@ -2106,7 +2133,7 @@
       }
 
       // SCENARIO 3: Genuine Positive Free Tier (ZERO dollar amount, ZERO active recurring)
-      if ((accountState === 'free_tier' || (res.data && res.data.isFreeTier)) && !pageContext.hasAmount && !pageContext.hasRecurringActive) {
+      if ((accountState === 'free_tier' || (res && res.data && res.data.isFreeTier)) && !pageContext.hasAmount && !pageContext.hasRecurringActive) {
         if (existingHud) existingHud.remove()
         hudInjected = false
         if (chrome.storage && chrome.storage.local) {
@@ -2139,6 +2166,9 @@
       // SCENARIO 5: Fallback unresolved guidance
       updateAIHUDUnresolved(existingHud, serviceName, cleanHost)
     })
+    } catch (e) {
+      console.warn('[SubSnap] domScout sendMessage failed:', e)
+    }
   }
 
   // --- Room 5: Autonomous Playbook Recorder & Continuous Learning Fleet ---
@@ -2158,7 +2188,7 @@
 
   function stagePlaybookStep(stepInfo) {
     try {
-      let staged = JSON.parse(sessionStorage.getItem('subsnap_staged_playbook') || '[]')
+      let staged = JSON.parse(safeSessionGet('subsnap_staged_playbook') || '[]')
       staged.push({
         stepNumber: staged.length + 1,
         type: stepInfo.type || 'click',
@@ -2166,14 +2196,14 @@
         fallbackText: (stepInfo.text || '').slice(0, 60),
         timestamp: Date.now()
       })
-      sessionStorage.setItem('subsnap_staged_playbook', JSON.stringify(staged))
+      safeSessionSet('subsnap_staged_playbook', JSON.stringify(staged))
     } catch (e) {}
   }
 
   function commitVerifiedPlaybook(serviceName, cleanHost) {
     try {
-      const staged = JSON.parse(sessionStorage.getItem('subsnap_staged_playbook') || '[]')
-      sessionStorage.removeItem('subsnap_staged_playbook')
+      const staged = JSON.parse(safeSessionGet('subsnap_staged_playbook') || '[]')
+      safeSessionRemove('subsnap_staged_playbook')
 
       if (Array.isArray(staged) && staged.length > 0) {
         // Anti-poison check
@@ -2264,13 +2294,13 @@
   // --- Two-Phase Outcome Verification Engine ---
   function verifyAndCommitPendingHeal() {
     try {
-      const pendingRaw = sessionStorage.getItem('subsnap_pending_verification')
+      const pendingRaw = safeSessionGet('subsnap_pending_verification')
       if (!pendingRaw) return
       const pending = JSON.parse(pendingRaw)
 
       // Expire candidates after 60 seconds
       if (Date.now() - pending.timestamp > 60000) {
-        sessionStorage.removeItem('subsnap_pending_verification')
+        safeSessionRemove('subsnap_pending_verification')
         return
       }
 
@@ -2289,7 +2319,7 @@
             }
           })
         }
-        sessionStorage.removeItem('subsnap_pending_verification')
+        safeSessionRemove('subsnap_pending_verification')
       }
     } catch (e) {}
   }
@@ -2299,7 +2329,7 @@
   function checkActiveIntent(cleanHost) {
     return new Promise((resolve) => {
       // Clean legacy keys
-      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
+      safeSessionRemove('subsnap_halted_' + cleanHost)
 
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['subsnap_active_intent'], (res) => {
@@ -2318,7 +2348,7 @@
           }
 
           // Check if this tab was explicitly stopped/halted AFTER this intent was launched
-          const haltedAt = parseInt(sessionStorage.getItem('subsnap_halted_at_' + cleanHost) || '0', 10)
+          const haltedAt = parseInt(safeSessionGet('subsnap_halted_at_' + cleanHost) || '0', 10)
           if (haltedAt > intent.timestamp) {
             return resolve(null)
           }
@@ -2390,7 +2420,7 @@
     }
 
     // 0. THE INVISIBLE LOGIN BRIDGE: Check if returning from a successful login
-    let wasWaitingLogin = sessionStorage.getItem('subsnap_waiting_login') === 'true'
+    let wasWaitingLogin = safeSessionGet('subsnap_waiting_login') === 'true'
     if (!wasWaitingLogin && chrome.storage && chrome.storage.local) {
       const stored = await new Promise(r => chrome.storage.local.get(['subsnap_waiting_login'], r))
       if (stored && stored.subsnap_waiting_login === cleanHost) {
@@ -2399,7 +2429,7 @@
     }
 
     if (wasWaitingLogin && !isLoginPage() && activeIntent && activeIntent.cancelUrl) {
-      sessionStorage.removeItem('subsnap_waiting_login')
+      safeSessionRemove('subsnap_waiting_login')
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_waiting_login'])
       }
@@ -2425,8 +2455,8 @@
     // Tier 1.1: Check if already cancelled
     if (isAlreadyCancelled()) {
       recordCancellationSuccess(targetName || window.location.hostname.replace(/^www\./, ''))
-      sessionStorage.setItem('subsnap_halted_at_' + cleanHost, String(Date.now()))
-      sessionStorage.removeItem('subsnap_halted_' + cleanHost)
+      safeSessionSet('subsnap_halted_at_' + cleanHost, String(Date.now()))
+      safeSessionRemove('subsnap_halted_' + cleanHost)
       if (chrome.storage && chrome.storage.local) {
         chrome.storage.local.remove(['subsnap_active_intent'])
       }
@@ -2454,7 +2484,7 @@
       }
       if (activeObserver) activeObserver.disconnect()
       if (activeScanInterval) clearInterval(activeScanInterval)
-      sessionStorage.removeItem('subsnap_staged_playbook')
+      safeSessionRemove('subsnap_staged_playbook')
 
       const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
       injectPeaceOfMindHUD(
@@ -2468,7 +2498,7 @@
 
     // 1. LOGIN WALL DETECTED: Only if no active plan or app state was found!
     if (isLoggedOutState()) {
-      sessionStorage.setItem('subsnap_waiting_login', 'true')
+      safeSessionSet('subsnap_waiting_login', 'true')
       injectLoginBridgeHUD(targetName)
       return true
     }
@@ -2488,7 +2518,7 @@
           'הקישור הישן השתנה. מתקן מסלול ופותח את הגדרות הפרימיום שנמצאו בעמוד...',
           () => {
             try {
-              sessionStorage.setItem('subsnap_pending_verification', JSON.stringify({
+              safeSessionSet('subsnap_pending_verification', JSON.stringify({
                 host: cleanHost,
                 urlBefore: window.location.href,
                 selector: 'div[data-testid="cancelSubscription"]',
@@ -2526,7 +2556,12 @@
 
     activeObserver = new MutationObserver(async () => {
       if (!hudInjected) {
-        const found = await performScan()
+        let found = false
+        try {
+          found = await performScan()
+        } catch (e) {
+          console.warn('[SubSnap] performScan (observer) failed:', e)
+        }
         if (found && activeObserver) activeObserver.disconnect()
       }
     })
@@ -2535,7 +2570,12 @@
 
     activeScanInterval = setInterval(async () => {
       scanAttempts++
-      const found = await performScan()
+      let found = false
+      try {
+        found = await performScan()
+      } catch (e) {
+        console.warn('[SubSnap] performScan (interval) failed:', e)
+      }
 
       if (found || scanAttempts >= maxAttempts) {
         clearInterval(activeScanInterval)

@@ -13,8 +13,12 @@ export default function SuccessContent({ credits, amountTotal }: Props) {
   const [total, setTotal] = useState<number | null>(null)
 
   useEffect(() => {
-    const newTotal = addLocalCredits(credits)
-    setTotal(newTotal)
+    try {
+      const newTotal = addLocalCredits(credits)
+      setTotal(newTotal)
+    } catch (err) {
+      console.error('[SuccessContent] addLocalCredits failed:', err)
+    }
   }, [credits])
 
   const amountFormatted = (amountTotal / 100).toFixed(2)

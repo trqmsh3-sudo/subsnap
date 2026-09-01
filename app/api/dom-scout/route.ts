@@ -89,14 +89,18 @@ Return ONLY a valid JSON object matching this schema:
     const cleanJson = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
     const parsed = JSON.parse(cleanJson)
 
+    // Values that would break out of the CSS attribute-selector string or corrupt the
+    // shared Redis-cached selector for every future user of this hostname.
+    const isUnsafeForSelector = (v: unknown): v is string => typeof v === 'string' && /["<>`]/.test(v)
+
     if (parsed) {
       let derivedSelector = parsed.targetSelector || null
       if (parsed.bestMatchIndex >= 0 && parsed.bestMatchIndex < elements.length) {
         const matched = elements[parsed.bestMatchIndex]
-        derivedSelector = matched.testid ? `[data-testid="${matched.testid}"]` :
-                          matched.uia ? `[data-uia="${matched.uia}"]` :
-                          matched.id ? `#${matched.id}` :
-                          matched.aria ? `${matched.tag}[aria-label="${matched.aria}"]` :
+        derivedSelector = (matched.testid && !isUnsafeForSelector(matched.testid)) ? `[data-testid="${matched.testid}"]` :
+                          (matched.uia && !isUnsafeForSelector(matched.uia)) ? `[data-uia="${matched.uia}"]` :
+                          (matched.id && !isUnsafeForSelector(matched.id)) ? `#${matched.id}` :
+                          (matched.aria && !isUnsafeForSelector(matched.aria)) ? `${matched.tag}[aria-label="${matched.aria}"]` :
                           derivedSelector
       }
 

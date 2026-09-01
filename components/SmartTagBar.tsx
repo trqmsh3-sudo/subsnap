@@ -282,6 +282,7 @@ export default function SmartTagBar() {
                     .then((d) => {
                       if (d.entry) executeCancel(d.entry)
                     })
+                    .catch((err) => console.error('[SmartTagBar] tag lookup failed:', err))
                 }
               }}
               className="studio-tag px-3 py-1.5 rounded-xl text-xs font-semibold hover:border-emerald-500/40 hover:text-emerald-300 flex items-center gap-1.5 transition-all"

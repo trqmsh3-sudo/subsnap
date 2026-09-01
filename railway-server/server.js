@@ -87,16 +87,19 @@ async function getNextActionGemini(screenshotBase64, goal, steps) {
 
 async function runCancel(cancelUrl, serviceName, difficulty, steps) {
   console.log(`[playwright] launching browser for ${serviceName}`)
-  const browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage()
-
-  const timeoutMs = 90_000
-  const timeoutHandle = setTimeout(async () => {
-    console.warn(`[playwright] ${timeoutMs / 1000}s timeout — closing browser`)
-    await browser.close().catch(() => {})
-  }, timeoutMs)
+  let browser
+  let timeoutHandle
 
   try {
+    browser = await chromium.launch({ headless: true })
+    const page = await browser.newPage()
+
+    const timeoutMs = 90_000
+    timeoutHandle = setTimeout(async () => {
+      console.warn(`[playwright] ${timeoutMs / 1000}s timeout — closing browser`)
+      await browser.close().catch(() => {})
+    }, timeoutMs)
+
     console.log(`[playwright] navigating to ${cancelUrl}`)
     await page.goto(cancelUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 })
     console.log('[playwright] page loaded, taking screenshot')
@@ -156,7 +159,7 @@ async function runCancel(cancelUrl, serviceName, difficulty, steps) {
     clearTimeout(timeoutHandle)
     const msg = error?.message ?? String(error)
     console.error('[playwright] error:', msg)
-    await browser.close().catch(() => {})
+    if (browser) await browser.close().catch(() => {})
     return { success: false, message: `Automation error: ${msg}` }
   }
 }

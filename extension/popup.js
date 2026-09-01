@@ -346,7 +346,7 @@ function saveLearnedService(service) {
   if (!service || !service.name || !service.cancelUrl) return
   const sName = service.name.toLowerCase()
   const isNonSub = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
-  const existsIndex = LEARNED_SERVICES.findIndex(s => s.name.toLowerCase() === sName)
+  const existsIndex = LEARNED_SERVICES.findIndex(s => (s.name || '').toLowerCase() === sName)
   const item = {
     name: service.name,
     nameHe: service.nameHe || service.name,
@@ -375,7 +375,7 @@ function matchLocalService(query) {
   const all = [...TOP_SERVICES, ...LEARNED_SERVICES]
 
   return all.find(s => {
-    const sName = s.name.toLowerCase()
+    const sName = (s.name || '').toLowerCase()
     const sNameHe = (s.nameHe || '').toLowerCase()
     if (sName === q || sName.startsWith(q) || sNameHe === q || sNameHe.startsWith(q)) return true
     return s.keywords && s.keywords.some(k => k === q || k.startsWith(q) || (q.length >= 3 && k.includes(q)))

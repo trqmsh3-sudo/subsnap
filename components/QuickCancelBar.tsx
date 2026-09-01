@@ -238,6 +238,7 @@ export default function QuickCancelBar() {
                   .then((d) => {
                     if (d.entry) executeCancel(d.entry)
                   })
+                  .catch((err) => console.error('[QuickCancelBar] tag lookup failed:', err))
               }
             }}
             className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200 border border-transparent transition-all"

@@ -97,7 +97,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
   {
     name: 'Grok / X Premium',
     nameHe: 'גרוק / X פרימיום (טוויטר)',
-    keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'איקס', 'x'],
+    keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'איקס'],
     loginUrl: 'https://x.com/i/flow/login',
     cancelUrl: 'https://x.com/settings/manage_subscriptions',
     method: 'url',
@@ -485,6 +485,7 @@ export function findCancellationEntry(serviceName: string): CancellationEntry | 
       return entry
     }
     for (const keyword of entry.keywords) {
+      if (keyword.length < 3) continue // too generic for substring matching (e.g. 'x' matches "xbox", "dropbox")
       if (normalized.includes(keyword) || keyword.includes(normalized)) {
         return entry
       }

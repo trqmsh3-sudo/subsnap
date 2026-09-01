@@ -13,8 +13,24 @@ const redis = hasRedis
 
 const DYNAMIC_CACHE = new Map<string, CancellationEntry>()
 
+// Blocks the server from being tricked into fetching internal/private network targets
+// (loopback, private ranges, link-local incl. cloud metadata endpoints) via a user- or
+// AI-supplied hostname.
+function isPrivateOrInternalHost(hostname: string): boolean {
+  const h = hostname.toLowerCase()
+  if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal')) return true
+  if (h === '0.0.0.0' || h === '::1' || h === '[::1]') return true
+  if (/^127\./.test(h)) return true
+  if (/^10\./.test(h)) return true
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true
+  if (/^192\.168\./.test(h)) return true
+  if (/^169\.254\./.test(h)) return true
+  return false
+}
+
 async function verifyCandidateUrl(url: string, brandQuery: string = ''): Promise<boolean> {
   try {
+    if (isPrivateOrInternalHost(new URL(url).hostname)) return false
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 3500)
     const res = await fetch(url, {
@@ -138,6 +154,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ entry: null })
   }
 
+  if (query.length > 200) {
+    return NextResponse.json({ entry: null })
+  }
+
   const qLower = query.toLowerCase().trim()
 
   // 1. Direct verified matching from primary CANCELLATION_DB (highest source of truth)
@@ -148,7 +168,9 @@ export async function GET(req: NextRequest) {
 
   // 2. Simple fuzzy keyword search in CANCELLATION_DB
   for (const item of CANCELLATION_DB) {
-    if (item.keywords.some((k) => qLower.includes(k) || k.includes(qLower))) {
+    // Skip keywords under 3 chars for substring matching — too generic (e.g. 'x' would
+    // match "xbox", "dropbox"), same guard as lib/cancellationDb.ts's findCancellationEntry.
+    if (item.keywords.some((k) => k.length >= 3 && (qLower.includes(k) || k.includes(qLower)))) {
       return NextResponse.json({ entry: item, source: 'fuzzy_db' })
     }
   }

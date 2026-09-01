@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { redactCanvas, canvasToBase64 } from '@/lib/redact'
 
 interface RedactorProps {
@@ -11,17 +11,31 @@ interface RedactorProps {
 
 export default function Redactor({ sourceCanvas, textItems, onRedacted }: RedactorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    const redacted = redactCanvas(sourceCanvas, textItems as any[])
-    const ctx = canvasRef.current?.getContext('2d')
-    if (ctx && canvasRef.current) {
-      canvasRef.current.width = redacted.width
-      canvasRef.current.height = redacted.height
-      ctx.drawImage(redacted, 0, 0)
-      onRedacted(canvasToBase64(redacted))
+    try {
+      const redacted = redactCanvas(sourceCanvas, textItems as any[])
+      const ctx = canvasRef.current?.getContext('2d')
+      if (ctx && canvasRef.current) {
+        canvasRef.current.width = redacted.width
+        canvasRef.current.height = redacted.height
+        ctx.drawImage(redacted, 0, 0)
+        onRedacted(canvasToBase64(redacted))
+      }
+    } catch (err) {
+      console.error('[Redactor] redaction failed:', err)
+      setError(true)
     }
   }, [sourceCanvas, textItems, onRedacted])
+
+  if (error) {
+    return (
+      <div className="mt-4 p-3 bg-red-50/40 rounded-2xl border border-red-100/60 text-xs text-red-700">
+        לא ניתן היה לעבד את התמונה. נסה קובץ אחר.
+      </div>
+    )
+  }
 
   return (
     <div className="mt-4 p-3 bg-emerald-50/40 rounded-2xl border border-emerald-100/60">

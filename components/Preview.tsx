@@ -92,11 +92,12 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
 }
 
 export default function Preview({ subscriptions }: { subscriptions: Subscription[] }) {
-  if (subscriptions.length === 0) return null
+  const list = Array.isArray(subscriptions) ? subscriptions : []
+  if (list.length === 0) return null
 
   return (
     <div className="space-y-3">
-      {subscriptions.map((sub, i) => (
+      {list.map((sub, i) => (
         <SubscriptionCard key={`${sub.name}-${i}`} sub={sub} />
       ))}
     </div>

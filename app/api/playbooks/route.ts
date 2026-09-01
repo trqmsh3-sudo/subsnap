@@ -156,10 +156,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Poisoned selector rejected by safety gate' }, { status: 422 })
     }
 
+    // Size gate: keeps one bad/abusive caller from bloating the shared 30-day-TTL cache
+    // entry for a host with an oversized payload.
+    const MAX_STEPS = 20
+    const MAX_FIELD_LEN = 300
+    if (typeof selector === 'string' && selector.length > MAX_FIELD_LEN) {
+      return NextResponse.json({ error: 'selector exceeds max length' }, { status: 422 })
+    }
+
     if (Array.isArray(steps)) {
+      if (steps.length > MAX_STEPS) {
+        return NextResponse.json({ error: 'too many steps' }, { status: 422 })
+      }
       for (const step of steps) {
         if (isPoisoned(step.selector) || isPoisoned(step.fallbackText || '')) {
           return NextResponse.json({ error: 'Poisoned step rejected by safety gate' }, { status: 422 })
+        }
+        if ((typeof step.selector === 'string' && step.selector.length > MAX_FIELD_LEN) ||
+            (typeof step.fallbackText === 'string' && step.fallbackText.length > MAX_FIELD_LEN)) {
+          return NextResponse.json({ error: 'step field exceeds max length' }, { status: 422 })
         }
       }
     }
