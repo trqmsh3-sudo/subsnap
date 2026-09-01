@@ -1714,29 +1714,32 @@
     })
   }
 
-  function updateAIHUDUnresolved(hud, serviceName, host) {
+  function updateAIHUDUnresolved(hud, serviceName, host, customTitle, customSub) {
     if (!hud) hud = document.getElementById('subsnap-ai-hud')
     if (!hud) return
     const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
 
-    hud.style.borderColor = '#f59e0b'
+    const displayTitle = customTitle || (isHebrew ? 'הנחיית סייר ה-AI של SubSnap 🤖' : 'SubSnap AI Scout Guidance 🤖')
+    const displaySub = customSub || (isHebrew ? 'סייר ה-AI סרק את האתר. השתמש בכפתורים מטה למעבר להגדרות החשבון או למדריך הרשמי.' : 'AI Scout analyzed the page. Use the buttons below for account settings or official guide.')
+
+    hud.style.borderColor = '#6366f1'
     hud.innerHTML = `
-      <div style="width: 36px; height: 36px; border-radius: 10px; background: #fef3c7; border: 1.5px solid #fde68a; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-        💡
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; border: 1.5px solid #c7d2fe; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        🤖
       </div>
       <div style="flex: 1;">
-        <div style="font-size: 13px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px;">
-          <span>${isHebrew ? 'לא אותר כפתור ביטול ישיר בעמוד זה' : 'No Direct Cancel Button On This Page'}</span>
+        <div style="font-size: 13px; font-weight: 800; color: #3730a3; display: flex; align-items: center; gap: 6px;">
+          <span>${escapeHtml(displayTitle)}</span>
         </div>
-        <div style="font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.35;">
-          ${isHebrew ? 'סייר ה-AI סרק את האתר אך לא זיהה נתיב ביטול פעיל. מומלץ לבדוק במרכז העזרה או לעבור לדף הבית.' : 'AI Scout completed scanning. No active cancellation button found. Check help center or homepage.'}
+        <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">
+          ${escapeHtml(displaySub)}
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
           <button id="subsnap-ai-settings-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
             ${isHebrew ? 'הגדרות חשבון ➔' : 'Account Settings ➔'}
           </button>
           <button id="subsnap-ai-search-btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-            ${isHebrew ? 'חפש מדריך בגוגל 🔍' : 'Search Guide 🔍'}
+            ${isHebrew ? 'מדריך ביטול 🔍' : 'Cancel Guide 🔍'}
           </button>
         </div>
       </div>
@@ -2163,8 +2166,16 @@
         return
       }
 
-      // SCENARIO 5: Fallback unresolved guidance
-      updateAIHUDUnresolved(existingHud, serviceName, cleanHost)
+      // SCENARIO 5: Fallback unresolved guidance with live Gemini AI analysis
+      const aiTitle = isHebrew
+        ? (accountState === 'active_paid' ? `💳 מנוי ${planName || serviceName || ''} פעיל ${detectedAmount ? `(${detectedAmount})` : ''}` : `הנחיית סייר AI (${serviceName || cleanHost})`)
+        : (accountState === 'active_paid' ? `💳 Active ${planName || serviceName || ''} ${detectedAmount ? `(${detectedAmount})` : ''}` : `AI Guidance (${serviceName || cleanHost})`)
+
+      const aiSub = (isHebrew ? (guidanceHe || (res && res.data && res.data.guidanceHe)) : (guidanceEn || (res && res.data && res.data.guidanceEn))) || (isHebrew
+        ? `סייר ה-AI סרק את העמוד. לחץ על 'הגדרות חשבון' כדי לעבור לעמוד ניהול החיובים.`
+        : `AI Scout analyzed the page. Click 'Account Settings' to navigate to billing management.`)
+
+      updateAIHUDUnresolved(existingHud, serviceName, cleanHost, aiTitle, aiSub)
     })
     } catch (e) {
       console.warn('[SubSnap] domScout sendMessage failed:', e)
