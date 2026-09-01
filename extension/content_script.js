@@ -2027,6 +2027,11 @@
               selector: res.data ? res.data.targetSelector : null,
               timestamp: Date.now()
             }))
+            stagePlaybookStep({
+              type: 'click',
+              selector: (res && res.data && res.data.targetSelector) || getElementSelector(targetEl),
+              text: targetEl.innerText || ''
+            })
           } catch (e) {}
 
           forceClick(targetEl)
@@ -2088,11 +2093,72 @@
     })
   }
 
-  // --- Room 5: Trophy Room & Continuous Learning Engine ---
+  // --- Room 5: Autonomous Playbook Recorder & Continuous Learning Fleet ---
+
+  function getElementSelector(el) {
+    if (!el) return ''
+    if (el.getAttribute('data-testid')) return `[data-testid="${el.getAttribute('data-testid')}"]`
+    if (el.getAttribute('data-uia')) return `[data-uia="${el.getAttribute('data-uia')}"]`
+    if (el.id) return `#${el.id}`
+    if (el.getAttribute('aria-label')) return `${el.tagName.toLowerCase()}[aria-label="${el.getAttribute('aria-label')}"]`
+    if (el.className && typeof el.className === 'string') {
+      const firstClass = el.className.split(/\s+/).filter(c => c && !c.includes(':') && !c.startsWith('subsnap'))[0]
+      if (firstClass) return `${el.tagName.toLowerCase()}.${firstClass}`
+    }
+    return el.tagName.toLowerCase()
+  }
+
+  function stagePlaybookStep(stepInfo) {
+    try {
+      let staged = JSON.parse(sessionStorage.getItem('subsnap_staged_playbook') || '[]')
+      staged.push({
+        stepNumber: staged.length + 1,
+        type: stepInfo.type || 'click',
+        selector: stepInfo.selector || '',
+        fallbackText: (stepInfo.text || '').slice(0, 60),
+        timestamp: Date.now()
+      })
+      sessionStorage.setItem('subsnap_staged_playbook', JSON.stringify(staged))
+    } catch (e) {}
+  }
+
+  function commitVerifiedPlaybook(serviceName, cleanHost) {
+    try {
+      const staged = JSON.parse(sessionStorage.getItem('subsnap_staged_playbook') || '[]')
+      sessionStorage.removeItem('subsnap_staged_playbook')
+
+      if (Array.isArray(staged) && staged.length > 0) {
+        // Anti-poison check
+        const validSteps = staged.filter(s => {
+          const t = (s.selector + ' ' + (s.fallbackText || '')).toLowerCase()
+          return !t.includes('buy') && !t.includes('upgrade') && !t.includes('purchase') &&
+                 !t.includes('购买') && !t.includes('升级') && !t.includes('delete')
+        })
+
+        if (validSteps.length > 0) {
+          if (chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage({
+              action: 'reportVerifiedPlaybook',
+              payload: {
+                host: cleanHost,
+                serviceName: serviceName || cleanHost,
+                cancelUrl: window.location.href,
+                steps: validSteps
+              }
+            })
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
   function recordCancellationSuccess(serviceName = '') {
     try {
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
       const sName = serviceName || cleanHost
+
+      // Commit verified Golden Playbook to global fleet!
+      commitVerifiedPlaybook(sName, cleanHost)
 
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['subsnap_savings_stats', 'subsnap_learned_services'], (res) => {
@@ -2425,7 +2491,7 @@
     if (activeScanInterval) clearInterval(activeScanInterval)
 
     let scanAttempts = 0
-    const maxAttempts = 7 // ~3.5 seconds of fast Tier 1/2 local scan
+    const maxAttempts = 2 // Fast 1s local check, then IMMEDIATE AI Trailblazer if needed!
 
     activeObserver = new MutationObserver(async () => {
       if (!hudInjected) {
@@ -2446,7 +2512,7 @@
 
         const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
         const isSearchEngine = (cleanHost === 'google.com' || cleanHost.endsWith('.google.com') || cleanHost.includes('bing.com') || cleanHost.includes('duckduckgo.com'))
-        // TIER 3 ESCALATION: Strict Host Matching - ONLY if Tier 1 & Tier 2 failed on the EXACT intended service domain (and not on login, 404, search engines, or help articles!)
+        // IMMEDIATE AI TRAILBLAZER: If Tier 1 & Tier 2 haven't found a proven button within 1 second, engage AI Trailblazer immediately!
         if (!found && !hudInjected && !isLoginPage() && !isDeadOr404Page() && !isSearchEngine && !isHelpArticlePage() && chrome.storage && chrome.storage.local) {
           chrome.storage.local.get(['subsnap_active_intent'], (res) => {
             const intent = res ? res.subsnap_active_intent : null

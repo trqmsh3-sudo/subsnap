@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true
   }
 
-  if (request.action === 'reportHealedUrl' && request.payload) {
+  if ((request.action === 'reportHealedUrl' || request.action === 'reportVerifiedPlaybook') && request.payload) {
     fetch('https://www.subsnap.net/api/playbooks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
