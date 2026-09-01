@@ -47,10 +47,16 @@ const TOP_SERVICES = [
     notes: 'Direct GitHub Copilot subscription settings'
   },
   {
-    name: 'Grok / X Premium (Twitter)',
-    keywords: ['grok', 'x premium', 'twitter blue', 'xai', 'x.ai', 'twitter', 'גרוק', 'טוויטר', 'x'],
+    name: 'Grok (xAI)',
+    keywords: ['grok', 'grok ai', 'grok.com', 'xai', 'x.ai', 'גרוק'],
+    cancelUrl: 'https://grok.com/',
+    notes: 'Direct Grok xAI subscription settings'
+  },
+  {
+    name: 'X Premium (Twitter)',
+    keywords: ['x premium', 'twitter blue', 'twitter', 'טוויטר', 'x'],
     cancelUrl: 'https://x.com/settings/manage_subscriptions',
-    notes: 'Direct X/Grok subscription management'
+    notes: 'Direct X Premium account subscriptions'
   },
   {
     name: 'Semrush',
@@ -299,10 +305,17 @@ let LEARNED_SERVICES = []
 let searchDebounceTimer = null
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000 // 14 Days Cache Expiration
 
-// Load locally learned services from storage (with automatic TTL eviction) & Trophy Stats
+const CURRENT_STORAGE_VERSION = 3
+
+// Load locally learned services from storage (with auto version migration & TTL eviction) & Trophy Stats
 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-  chrome.storage.local.get(['subsnap_learned_services', 'subsnap_savings_stats'], (res) => {
-    if (res && Array.isArray(res.subsnap_learned_services)) {
+  chrome.storage.local.get(['subsnap_storage_version', 'subsnap_learned_services', 'subsnap_savings_stats'], (res) => {
+    if (!res || res.subsnap_storage_version !== CURRENT_STORAGE_VERSION) {
+      // 100% Clean Cache Purge for the new 4-Tier Engine!
+      chrome.storage.local.remove(['subsnap_learned_services', 'subsnap_active_intent'])
+      chrome.storage.local.set({ subsnap_storage_version: CURRENT_STORAGE_VERSION })
+      LEARNED_SERVICES = []
+    } else if (Array.isArray(res.subsnap_learned_services)) {
       const now = Date.now()
       LEARNED_SERVICES = res.subsnap_learned_services
         .filter(s => !s.savedAt || (now - s.savedAt < CACHE_TTL_MS))

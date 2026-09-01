@@ -395,13 +395,14 @@
       return true
     }
 
+    const isXHost = window.location.hostname.includes('x.com') || window.location.hostname.includes('twitter.com')
     const hasXSignUpLink = !!document.querySelector('a[href*="premium_sign_up"], [data-testid*="premium_sign_up"]')
-    const hasXIneligible = (
-      /subscriptions[\s\S]{0,60}ineligible/i.test(bodyText) ||
-      /creator studio[\s\S]{0,100}subscriptions[\s\S]{0,60}ineligible/i.test(bodyText) ||
+    const hasXIneligible = isXHost && (
+      /subscriptions[\s\S]{0,100}ineligible/i.test(bodyText) ||
+      /creator studio/i.test(bodyText) ||
       window.location.pathname.includes('/creators/studio') ||
-      bodyText.includes('subscriptions\nineligible') ||
-      bodyText.includes('subscriptions ineligible')
+      window.location.pathname.includes('/creators') ||
+      bodyText.includes('ineligible')
     )
     if (hasXSignUpLink || hasXIneligible) {
       return true
