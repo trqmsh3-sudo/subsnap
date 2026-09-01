@@ -797,12 +797,24 @@
       }
 
       // 2. Check strict keywords
+      // 2. Check strict keywords & exact cancel buttons inside billing context
       const candidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"], input[type="submit"], input[type="button"]', root)
       for (const el of candidates) {
         if (!isVisible(el) || isDisallowedElement(el)) continue
         const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
+        
+        // Match explicit cancellation phrases
         if (STRICT_CANCEL_KEYWORDS.some(k => text === k || (text.includes(k) && text.length < 35))) {
-          return el
+          return el.closest('button, a, div[role="button"], [tabindex="0"], [jsaction*="click"]') || el
+        }
+
+        // Match exact "Cancel" / "ביטול" when situated in a Cancellation or Subscription section/heading
+        if (text === 'cancel' || text === 'ביטול' || text === 'בטל') {
+          const section = el.closest('section, div[class*="section"], div[class*="card"], div[class*="row"], div[class*="container"], tr, form') || el.parentElement
+          const sectionText = (section ? section.innerText : '').toLowerCase()
+          if (/(cancellation|subscription|billing|plan|pro|membership|ביטול|מנוי|חיוב)/i.test(sectionText)) {
+            return el.closest('button, a, div[role="button"], [tabindex="0"], [jsaction*="click"]') || el
+          }
         }
       }
 
