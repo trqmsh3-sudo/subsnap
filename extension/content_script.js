@@ -363,6 +363,12 @@
   }
 
   function isNoActiveSubscriptionState() {
+    const finContext = extractPageFinancialContext()
+    // STRICT ANTI-FREE SHIELD: If paid indicators (amount or recurring active) exist, NEVER declare free tier!
+    if (finContext.hasAmount || finContext.hasRecurringActive) {
+      return false
+    }
+
     // 0. Only an ACTIVE cancellation modal or survey blocks free-plan detection (feature tooltips do NOT block!)
     const activeSurvey = document.querySelector('[role="dialog"], dialog, div[aria-modal="true"]')
     if (activeSurvey) {
@@ -2407,6 +2413,13 @@
 
     // Tier 1.3: Check if Free Account / No Active Subscription (ONLY if no cancel button or modal is active!)
     if (isNoActiveSubscriptionState()) {
+      if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove(['subsnap_active_intent'])
+      }
+      if (activeObserver) activeObserver.disconnect()
+      if (activeScanInterval) clearInterval(activeScanInterval)
+      sessionStorage.removeItem('subsnap_staged_playbook')
+
       const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
       injectPeaceOfMindHUD(
         isHebrew ? 'בשורות טובות: אין מנוי פעיל לתשלום! ✨' : 'Good News: No Active Paid Subscription! ✨',
