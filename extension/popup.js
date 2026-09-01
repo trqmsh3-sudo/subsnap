@@ -49,7 +49,7 @@ const TOP_SERVICES = [
   {
     name: 'Grok (xAI)',
     keywords: ['grok', 'grok ai', 'grok.com', 'xai', 'x.ai', 'גרוק'],
-    cancelUrl: 'https://grok.com/',
+    cancelUrl: 'https://grok.com/settings',
     notes: 'Direct Grok xAI subscription settings'
   },
   {
