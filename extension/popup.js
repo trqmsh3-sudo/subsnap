@@ -49,7 +49,7 @@ const TOP_SERVICES = [
   {
     name: 'Grok (xAI)',
     keywords: ['grok', 'grok ai', 'grok.com', 'xai', 'x.ai', 'גרוק'],
-    cancelUrl: 'https://grok.com/settings',
+    cancelUrl: 'https://grok.com/',
     notes: 'Direct Grok xAI subscription settings'
   },
   {
@@ -247,7 +247,7 @@ const TOP_SERVICES = [
   {
     name: 'Strava Summit / Premium',
     keywords: ['strava', 'סטראבה'],
-    cancelUrl: 'https://www.strava.com/settings/account',
+    cancelUrl: 'https://www.strava.com/account',
     notes: 'Direct Strava account & membership management'
   },
   {
