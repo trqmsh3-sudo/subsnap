@@ -57,15 +57,17 @@ Determine the user's ACTUAL subscription status based on the Page Financial Cont
 4. "unknown": Cannot determine with confidence.
 
 STAGE 2: CANCELLATION PATHWAY IDENTIFICATION
-Find the single interactive element or lever that allows cancelling or turning off auto-renewal:
-- Check for direct cancel buttons (e.g. "Cancel subscription", "End plan", "Turn off auto-renew").
-- Check for DARK PATTERNS & DROPDOWNS: Enterprise SaaS (like Semrush, HubSpot, Zoom) hides cancellation behind chevrons (e.g. "Recurring: Active ⌵", a chevron/caret icon, or a settings gear).
-- Check for sub-tabs (e.g. "Billing info", "Payments", "Manage Plan") if the current view is only a summary/overview.
+Find the single interactive element or lever that progresses toward cancellation:
+- Direct cancel buttons (e.g. "Cancel subscription", "End plan", "Turn off auto-renew").
+- DARK PATTERNS & DROPDOWNS: Enterprise SaaS (like Semrush, HubSpot, Zoom) hides cancellation behind chevrons (e.g. "Recurring: Active ⌵", a chevron/caret icon, or a settings gear).
+- Sub-tabs or Menus (e.g. "Subscription info", "Billing info", "Payments", "Manage Plan", or Avatar/Profile dropdown) if currently on a dashboard or overview page.
+- Retention Survey (e.g. "Why are you leaving?", radio options, feedback textareas, "Continue to cancel").
 
 STRICT CRITICAL RULES:
 1. If the financial context has a price, payment date, or says "Recurring: Active", you MUST diagnose accountState as "active_paid"! You are STRICTLY FORBIDDEN from declaring "free_tier" or saying no subscription exists!
 2. NEVER pick "Delete account", "Close account", "Buy", "Upgrade", "Purchase", or "Compare plans". Those are NOT cancellation!
-3. If accountState is "active_paid" and a chevron or dropdown (like "Recurring: Active ⌵") controls billing renewal, pick THAT element's index.
+3. If on a dashboard or homepage without direct cancel buttons, pick the navigation link (e.g. "Subscription info", "Billing", "Account", or Avatar) that leads toward subscriptions and set actionType to "navigate_to_billing".
+4. If accountState is "active_paid" and a chevron or dropdown (like "Recurring: Active ⌵") controls billing renewal, pick THAT element's index.
 
 Return ONLY a valid JSON object matching this schema:
 {
@@ -75,7 +77,7 @@ Return ONLY a valid JSON object matching this schema:
   "planName": "string like Semrush One or null",
   "bestMatchIndex": number (0-based index in the elements array, or -1 if no trigger can be found),
   "targetSelector": "CSS selector if uniquely identifiable, or null",
-  "actionType": "click_cancel" | "open_dropdown" | "switch_tab" | "contact_support" | "none",
+  "actionType": "click_cancel" | "open_dropdown" | "navigate_to_billing" | "fill_survey" | "switch_tab" | "contact_support" | "none",
   "confidence": number (0.0 to 1.0),
   "guidanceHe": "Clear Hebrew message explaining status and next step",
   "guidanceEn": "Clear English message explaining status and next step"

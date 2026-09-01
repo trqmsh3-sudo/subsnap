@@ -37,7 +37,7 @@ const BASE_PLAYBOOKS: Record<string, string[]> = {
   'youtube.com': ['button[aria-label*="Deactivate"]', 'button[aria-label*="Cancel membership"]', 'button:has-text("Cancel")'],
   'duolingo.com': ['button[data-testid="cancel-subscription"]', 'button:has-text("Cancel Subscription")', 'button:has-text("Cancel Super")'],
   'canva.com': ['button[data-testid="cancel-subscription-button"]', 'button:has-text("Cancel subscription")'],
-  'semrush.com': ['[class*="chevron"], [aria-expanded="false"], a[href*="billing"]', 'button[data-testid*="cancel"]', 'button:has-text("Cancel")'],
+  'semrush.com': ['button[data-testid*="cancel"]', 'a[href*="subscription-info"]', 'button:has-text("Cancel subscription")', 'button:has-text("Cancel")'],
   'grammarly.com': ['button[data-testid="cancel-subscription"]', 'button:has-text("Cancel subscription")', 'a[href*="cancel"]'],
   'zoom.us': ['button[data-testid="cancel-plan"]', 'button:has-text("Cancel Plan")', 'a[href*="/billing/cancel"]'],
   'dropbox.com': ['button[data-testid="cancel-plan"]', 'button:has-text("Cancel plan")', 'a[href*="cancel"]'],
