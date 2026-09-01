@@ -281,60 +281,51 @@
     // 1. Direct login page check takes absolute precedence!
     if (isLoginPage()) return true
 
-    // 2. Active application URLs are DEFINITELY logged in!
-    if (
-      pathname.startsWith('/app') ||
-      pathname.startsWith('/dashboard') ||
-      pathname.startsWith('/console') ||
-      pathname.startsWith('/workspace') ||
-      pathname.startsWith('/chat') ||
-      pathname.startsWith('/project') ||
-      pathname.startsWith('/settings') ||
-      pathname.startsWith('/account') ||
-      pathname.startsWith('/billing')
-    ) {
-      return false
-    }
+    // 2. Check if user is on a logged-out guest SPA (like ChatGPT with Log in button & Welcome back modal)
+    const hasLogOutPrompt = /(welcome back|stay logged out|sign up for free|התחברות לחשבון)/i.test(document.body.innerText || '')
+    const hasLoginButton = Array.from(document.querySelectorAll('a, button')).some(el => {
+      if (!isVisible(el)) return false
+      const text = (el.innerText || el.textContent || '').toLowerCase().trim()
+      const href = (el.getAttribute('href') || '').toLowerCase()
+      return (
+        text === 'log in' || text === 'sign in' || text === 'signin' || text === 'login' ||
+        text === 'התחברות' || text === 'התחבר' || text === 'כניסה' ||
+        href.includes('/login') || href.includes('/signin')
+      )
+    })
 
-    // 3. If page displays free plan or cancelled state, user is authenticated
-    if (isNoActiveSubscriptionState() || isAlreadyCancelled()) {
-      return false
-    }
-
-    // 3.1 Help Centers, Knowledgebases, and Docs are documentation, not marketing login walls!
-    const host = window.location.hostname.toLowerCase()
-    if (
-      host.startsWith('help.') ||
-      host.startsWith('support.') ||
-      host.startsWith('docs.') ||
-      pathname.includes('/article/') ||
-      pathname.includes('/help/') ||
-      pathname.includes('/support/')
-    ) {
-      return false
-    }
-
-    // 4. Check if on marketing page with visible Login / Sign In CTA and no logged-in user profile
     const hasUserProfile = !!document.querySelector(
       '[data-testid*="avatar"], [data-testid*="user-menu"], [data-testid*="profile"], ' +
       'button[aria-label*="Profile" i], button[aria-label*="Account" i], ' +
       '[class*="avatar"], [class*="user-profile"], [class*="user-menu"]'
     )
-    if (hasUserProfile) return false
 
-    const loginLinks = Array.from(document.querySelectorAll('a, button'))
-      .filter(el => {
-        if (!isVisible(el)) return false
-        const text = (el.innerText || el.textContent || '').toLowerCase().trim()
-        const href = (el.getAttribute('href') || '').toLowerCase()
-        return (
-          text === 'log in' || text === 'sign in' || text === 'signin' || text === 'login' ||
-          text === 'התחברות' || text === 'התחבר' || text === 'כניסה' ||
-          href.includes('/login') || href.includes('/signin')
-        )
-      })
+    if (hasLoginButton && !hasUserProfile) {
+      return true
+    }
 
-    return loginLinks.length > 0
+    if (hasLogOutPrompt && hasLoginButton) {
+      return true
+    }
+
+    // 3. Active application URLs with active user session are logged in!
+    if (
+      pathname.startsWith('/app') ||
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/console') ||
+      pathname.startsWith('/workspace') ||
+      pathname.startsWith('/project') ||
+      pathname.startsWith('/billing')
+    ) {
+      return false
+    }
+
+    // 4. If page displays free plan or cancelled state, user is authenticated
+    if (isNoActiveSubscriptionState() || isAlreadyCancelled()) {
+      return false
+    }
+
+    return false
   }
 
   function isAlreadyCancelled() {
