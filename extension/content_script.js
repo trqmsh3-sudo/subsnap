@@ -884,6 +884,12 @@
         text === 'חיוב' ||
         text === 'subscription' ||
         text === 'subscriptions' ||
+        text === 'subscription info' ||
+        text === 'subscription-info' ||
+        text === 'subscription information' ||
+        text === 'פרטי מנוי' ||
+        text === 'פרטי המנוי' ||
+        text === 'פרטי החשבון' ||
         text === 'manage subscriptions' ||
         text === 'manage subscription' ||
         text === 'manage plan' ||

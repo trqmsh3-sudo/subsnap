@@ -140,7 +140,20 @@ export async function GET(req: NextRequest) {
 
   const qLower = query.toLowerCase().trim()
 
-  // 1. Check Global Redis Distributed Cache (unless force re-scan requested)
+  // 1. Direct verified matching from primary CANCELLATION_DB (highest source of truth)
+  const directMatch = findCancellationEntry(query)
+  if (directMatch) {
+    return NextResponse.json({ entry: directMatch, source: 'static_db' })
+  }
+
+  // 2. Simple fuzzy keyword search in CANCELLATION_DB
+  for (const item of CANCELLATION_DB) {
+    if (item.keywords.some((k) => qLower.includes(k) || k.includes(qLower))) {
+      return NextResponse.json({ entry: item, source: 'fuzzy_db' })
+    }
+  }
+
+  // 3. Check Global Redis Distributed Cache (unless force re-scan requested)
   if (!force && redis) {
     try {
       const cached = await redis.get<CancellationEntry>(`scout:${qLower}`)
@@ -155,26 +168,13 @@ export async function GET(req: NextRequest) {
     } catch {}
   }
 
-  // 2. Check local in-memory cache (unless force re-scan requested)
+  // 4. Check local in-memory cache (unless force re-scan requested)
   if (!force && DYNAMIC_CACHE.has(qLower)) {
     const mem = DYNAMIC_CACHE.get(qLower)
     if (isCachedEntryValid(mem)) {
       return NextResponse.json({ entry: mem, source: 'cache' })
     } else {
       DYNAMIC_CACHE.delete(qLower)
-    }
-  }
-
-  // 3. Direct local matching from static DB
-  const directMatch = findCancellationEntry(query)
-  if (directMatch) {
-    return NextResponse.json({ entry: directMatch, source: 'static_db' })
-  }
-
-  // 4. Simple fuzzy keyword search
-  for (const item of CANCELLATION_DB) {
-    if (item.keywords.some((k) => qLower.includes(k) || k.includes(qLower))) {
-      return NextResponse.json({ entry: item, source: 'fuzzy_db' })
     }
   }
 

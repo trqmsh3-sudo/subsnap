@@ -13,6 +13,22 @@ export interface CancellationEntry {
 
 export const CANCELLATION_DB: CancellationEntry[] = [
   {
+    name: 'Semrush',
+    nameHe: 'סמראש (Semrush)',
+    keywords: ['semrush', 'semrush.com', 'סמראש', 'סמראשש'],
+    loginUrl: 'https://www.semrush.com/login/',
+    cancelUrl: 'https://www.semrush.com/accounts/subscription-info/',
+    method: 'url',
+    notes: 'עמוד פרטי המנוי והביטול הרשמי של Semrush',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'העמוד נפתח ישירות בהגדרות פרטי המנוי של Semrush',
+      'סייר SubSnap מאתר את סטטוס החיוב החוזר (Recurring: Active)',
+      'התוסף מסמן את הקישור ומבצע ביטול'
+    ],
+  },
+  {
     name: 'Readwise',
     nameHe: 'רידווייז (Readwise / Reader)',
     keywords: ['readwise', 'readwise.io', 'רידווייז', 'reader'],
