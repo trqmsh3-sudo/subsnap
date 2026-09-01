@@ -97,6 +97,25 @@
     return rect.width > 0 && rect.height > 0
   }
 
+  // True if `el` is what actually renders at its own on-screen position — i.e. it is not
+  // hidden behind a modal backdrop, overlay, or a different dialog stacked on top of it.
+  // isVisible() alone can't catch this: an element behind an overlay can still have
+  // display/visibility/opacity/size that all look fine. This is what keeps Auto-Pilot from
+  // re-matching a stale button from a previous step once a confirmation modal covers it.
+  function isTopmostAtOwnPosition(el) {
+    if (!el || !el.getBoundingClientRect) return true
+    try {
+      const rect = el.getBoundingClientRect()
+      const x = rect.left + rect.width / 2
+      const y = rect.top + rect.height / 2
+      if (x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight) return true
+      const topEl = document.elementFromPoint(x, y)
+      return !!(topEl && (topEl === el || el.contains(topEl) || topEl.contains(el)))
+    } catch (e) {
+      return true
+    }
+  }
+
   // Shadow DOM traversal for modern SaaS (ChatGPT, Notion, Stripe Customer Portal)
   function queryDeep(selector, root = document, depth = 0) {
     const results = Array.from(root.querySelectorAll(selector))
@@ -675,6 +694,22 @@
   ]
 
   function getActiveDialogScope() {
+    // Prefer the dialog that is actually painted on top of the page, found by hit-testing
+    // the viewport center. DOM order (last dialog[open]/[role="dialog"] in the tree) is a
+    // guess that breaks whenever a component library keeps a previous step's modal mounted
+    // (e.g. mid-transition, or just toggled invisible rather than removed) — hit-testing
+    // reflects real stacking/paint order instead, so it works the same way regardless of
+    // which site's modal library rendered it.
+    try {
+      const cx = window.innerWidth / 2
+      const cy = window.innerHeight / 2
+      const hit = document.elementFromPoint(cx, cy)
+      const topDialog = hit && hit.closest && hit.closest('dialog[open], [role="dialog"], [aria-modal="true"]')
+      if (topDialog && isVisible(topDialog) && (topDialog.innerText || '').trim().length > 10) {
+        return topDialog
+      }
+    } catch (e) {}
+
     const dialogs = Array.from(document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"]'))
       .filter(el => isVisible(el) && (el.innerText || '').trim().length > 10)
     if (dialogs.length === 0) return document
@@ -788,19 +823,25 @@
     }
 
     function searchIn(root) {
+      // When searching the whole document (i.e. no dialog scope was identified), also
+      // reject elements visually covered by something else — e.g. a stale cancel button
+      // from a previous step, left behind an open confirmation modal that getActiveDialogScope()
+      // didn't recognize. Inside an already-identified scope (a modal or a card), the
+      // ordinary visibility check is enough.
+      const okVisible = (el) => isVisible(el) && (root !== document || isTopmostAtOwnPosition(el))
+
       // 1. Check known selectors
       for (const sel of ACTIVE_SELECTORS) {
         try {
           const el = root.querySelector(sel)
-          if (el && !isDisallowedElement(el) && isVisible(el)) return el
+          if (el && !isDisallowedElement(el) && okVisible(el)) return el
         } catch (e) {}
       }
 
-      // 2. Check strict keywords
       // 2. Check strict keywords & exact cancel buttons inside billing context
       const candidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"], input[type="submit"], input[type="button"]', root)
       for (const el of candidates) {
-        if (!isVisible(el) || isDisallowedElement(el)) continue
+        if (!okVisible(el) || isDisallowedElement(el)) continue
         const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
         
         // Match explicit cancellation phrases
@@ -821,7 +862,7 @@
       // 2.1 Direct text match fallback (Material Design action spans)
       const allEls = Array.from(root.querySelectorAll('button, a, span, div'))
       for (const el of allEls) {
-        if (!isVisible(el) || isDisallowedElement(el)) continue
+        if (!okVisible(el) || isDisallowedElement(el)) continue
         const text = (el.innerText || el.textContent || '').trim().toLowerCase()
         if (text === 'ביטול המינוי' || text === 'cancel subscription' || text === 'cancel plan') {
           return el.closest('button, a, div[role="button"], [tabindex="0"], [jsaction*="click"]') || el
@@ -873,7 +914,7 @@
     const pathname = window.location.pathname.toLowerCase()
     const pageCandidates = queryDeep('button, a, div[role="button"], span[role="button"], [role="link"], [jsaction*="click"], [tabindex="0"]', document)
     for (const el of pageCandidates) {
-      if (!isVisible(el) || isDisallowedElement(el)) continue
+      if (!isVisible(el) || !isTopmostAtOwnPosition(el) || isDisallowedElement(el)) continue
       const text = (el.innerText || el.textContent || el.value || '').toLowerCase().trim()
 
       if (text === 'ניהול המינוי' || text === 'manage subscription' || text === 'manage plan' || text === 'ניהול מנוי') {
@@ -1841,7 +1882,19 @@
       // Allow DOM transitions and re-arm scan engine for subsequent steps (modals, surveys, confirmations)
       setTimeout(() => {
         if (isAlreadyCancelled()) {
-          recordCancellationSuccess(window.location.hostname.replace(/^www\./, ''))
+          const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+          recordCancellationSuccess(cleanHost)
+          // Fully halt: without this, subsnap_active_intent stays valid (it has its own
+          // freshness window) and a later revisit — e.g. the user hitting the browser
+          // Back button — can make Auto-Pilot re-engage and try to cancel an already-
+          // cancelled subscription again.
+          safeSessionSet('subsnap_halted_at_' + cleanHost, String(Date.now()))
+          safeSessionRemove('subsnap_halted_' + cleanHost)
+          if (chrome.storage && chrome.storage.local) {
+            chrome.storage.local.remove(['subsnap_active_intent'])
+          }
+          if (activeObserver) activeObserver.disconnect()
+          if (activeScanInterval) clearInterval(activeScanInterval)
           hud.remove()
           hudInjected = false
           injectPeaceOfMindHUD(
@@ -1851,7 +1904,10 @@
           return
         }
 
-        // Smart loop guard: only halt if the EXACT same button was clicked 3 times without DOM advancement
+        // Loop guard: the same button not advancing the page means it needs re-clicking
+        // (e.g. a retention modal that re-renders the same-looking button), so Auto-Pilot
+        // keeps clicking on the user's behalf. The ceiling below is purely an internal
+        // safety valve against a genuinely broken page — it is not a hand-off to the user.
         const isStuckOnSameElement = (window.__subsnap_last_clicked_btn === btn)
         if (isStuckOnSameElement) {
           window.__subsnap_same_btn_clicks = (window.__subsnap_same_btn_clicks || 0) + 1
@@ -1860,11 +1916,14 @@
           window.__subsnap_same_btn_clicks = 1
         }
 
-        if (window.__subsnap_same_btn_clicks >= 3) {
-          descEl.textContent = isHebrew
-            ? 'הטייס האוטומטי זיהה את הכפתור. אנא אשר את הלחיצה ידנית.'
-            : 'Auto-Pilot located target. Please click to confirm manually.'
-          timerBadge.textContent = isHebrew ? 'ידני 🎯' : 'Manual 🎯'
+        const MAX_SAME_BUTTON_RETRIES = 8
+        if (window.__subsnap_same_btn_clicks >= MAX_SAME_BUTTON_RETRIES) {
+          console.warn('[SubSnap] Auto-Pilot gave up after repeated clicks with no page change on:', btn)
+          if (countdownTimer) clearInterval(countdownTimer)
+          hud.remove()
+          hudInjected = false
+          if (activeObserver) activeObserver.disconnect()
+          if (activeScanInterval) clearInterval(activeScanInterval)
           return
         }
 
@@ -2196,9 +2255,13 @@
       if (accountState === 'already_cancelled') {
         if (existingHud) existingHud.remove()
         hudInjected = false
+        safeSessionSet('subsnap_halted_at_' + cleanHost, String(Date.now()))
+        safeSessionRemove('subsnap_halted_' + cleanHost)
         if (chrome.storage && chrome.storage.local) {
           chrome.storage.local.remove(['subsnap_active_intent'])
         }
+        if (activeObserver) activeObserver.disconnect()
+        if (activeScanInterval) clearInterval(activeScanInterval)
         recordCancellationSuccess(serviceName)
         injectPeaceOfMindHUD(
           isHebrew ? 'המנוי כבר בוטל בהצלחה! 🎉' : 'Subscription Already Cancelled! 🎉',
