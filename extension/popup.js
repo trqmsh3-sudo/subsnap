@@ -53,6 +53,12 @@ const TOP_SERVICES = [
     notes: 'Direct X/Grok subscription management'
   },
   {
+    name: 'Semrush',
+    keywords: ['semrush', 'semrush.com', 'סמראש', 'סמראשש'],
+    cancelUrl: 'https://www.semrush.com/accounts/subscription-info/',
+    notes: 'Direct Semrush subscription & recurring billing info'
+  },
+  {
     name: 'Netflix',
     keywords: ['netflix', 'nflx', 'נטפליקס'],
     cancelUrl: 'https://www.netflix.com/cancelplan',
@@ -353,7 +359,7 @@ function saveLearnedService(service) {
 function matchLocalService(query) {
   if (!query || query.trim().length < 2) return null
   const q = query.toLowerCase().trim()
-  const all = [...LEARNED_SERVICES, ...TOP_SERVICES]
+  const all = [...TOP_SERVICES, ...LEARNED_SERVICES]
 
   return all.find(s => {
     const sName = s.name.toLowerCase()

@@ -2486,11 +2486,13 @@
 
     // Tier 1.5: In-App Settings & Billing Drilldown (Homepage / Dashboard navigation)
     // When on the target service domain but no direct cancel button is yet visible on screen:
-    const drilldownAttempted = sessionStorage.getItem('subsnap_drilldown_done_for_' + window.location.pathname) === 'true'
-    if (!drilldownAttempted && !isLoginPage()) {
+    if (!isLoginPage()) {
       const drilldownNav = findNavigationRecoveryElement()
-      if (drilldownNav && !hudInjected) {
-        sessionStorage.setItem('subsnap_drilldown_done_for_' + window.location.pathname, 'true')
+      if (drilldownNav && (!hudInjected || document.getElementById('subsnap-ai-hud'))) {
+        const staleHud = document.getElementById('subsnap-ai-hud')
+        if (staleHud) staleHud.remove()
+        hudInjected = false
+
         const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
         drilldownNav.scrollIntoView({ behavior: 'smooth', block: 'center' })
         drilldownNav.style.outline = '3px solid #10b981'
