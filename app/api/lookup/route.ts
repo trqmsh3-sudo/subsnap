@@ -185,20 +185,24 @@ export async function GET(req: NextRequest) {
       const genai = new GoogleGenerativeAI(apiKey)
       const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-      const prompt = `You are SubSnap Autonomous Subscription Cancellation AI Scout.
+      const prompt = `You are SubSnap Autonomous Subscription Classification AI Scout.
 Analyze this user query / website / service name: "${query}".
 
-First, determine whether this website/service actually operates a recurring paid subscription model (e.g. Netflix, Spotify, ChatGPT Plus, SaaS tools) OR if it is a free service/community/hackathon/informational site WITHOUT paid subscriptions (e.g. Lablab.ai, Wikipedia, Ynet, free open-source tools).
+Classify this query into EXACTLY ONE of these 4 categories:
+1. "web_saas": An online web-based subscription service with self-service billing (e.g. Netflix, Spotify, Adobe, Semrush, Canva, ChatGPT Plus, Zoom, Cloud tools).
+2. "mobile_app_store": A service where subscriptions are managed primarily/exclusively via mobile App Store / Google Play in-app purchases (e.g. Moovit+, Tinder on mobile, Bumble on mobile, Mobile workout apps, Mobile games).
+3. "free_platform": A free public utility, transit guide, news/content site, community, or open-source tool WITHOUT paid recurring subscriptions on the web (e.g. Moovit Web, Wikipedia, Ynet, Waze, GitHub public).
+4. "unrelated": Not a subscription service at all (e.g. physical food like "pizza", animals like "cat", physical stores, random words or gibberish).
 
-Return ONLY a valid JSON object matching this schema (no markdown, no backticks, no other text):
+Return ONLY a valid JSON object matching this schema:
 {
   "name": "Exact Service Name in English",
   "nameHe": "שם השירות בעברית",
+  "category": "web_saas" | "mobile_app_store" | "free_platform" | "unrelated",
   "isSubscriptionService": true or false,
-  "serviceType": "subscription" or "free_community_or_content",
-  "loginUrl": "https://service.com/login",
-  "cancelUrl": "https://service.com/settings/billing or direct cancellation endpoint, or root URL if no subscriptions",
-  "notes": "Direct cancellation pathway instructions, or clear notice if this platform has no subscriptions",
+  "loginUrl": "https://service.com/login (for web_saas) or root domain",
+  "cancelUrl": "https://service.com/settings/billing (for web_saas), or https://play.google.com/store/account/subscriptions (for mobile_app_store), or root domain",
+  "notes": "Clear Hebrew/English explanation for the user",
   "difficulty": "easy" or "hard",
   "steps": [
     "Step 1",
@@ -213,33 +217,54 @@ Return ONLY a valid JSON object matching this schema (no markdown, no backticks,
       const cleanJson = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
       const parsed = JSON.parse(cleanJson)
 
-      if (parsed && (parsed.cancelUrl || parsed.loginUrl)) {
-        let verifiedCancelUrl = ensureValidWebUrl(parsed.cancelUrl, parsed.name || query, parsed.loginUrl)
-        if (parsed.isSubscriptionService !== false) {
+      if (parsed) {
+        const category = parsed.category || (parsed.isSubscriptionService === false ? 'free_platform' : 'web_saas')
+        const isSub = category === 'web_saas' || category === 'mobile_app_store'
+
+        let verifiedCancelUrl = ''
+        if (category === 'mobile_app_store') {
+          verifiedCancelUrl = 'https://play.google.com/store/account/subscriptions'
+        } else if (category === 'web_saas') {
+          verifiedCancelUrl = ensureValidWebUrl(parsed.cancelUrl || '', parsed.name || query, parsed.loginUrl)
           const isCancelAlive = await verifyCandidateUrl(verifiedCancelUrl, query)
           if (!isCancelAlive) {
-            console.warn(`[AI Scout Pre-flight Guard]: Candidate URL failed sanity check: ${verifiedCancelUrl}`)
-            // Fallback to domain root extracted safely from loginUrl or cancelUrl
             verifiedCancelUrl = ensureValidWebUrl('', parsed.name || query, parsed.loginUrl || parsed.cancelUrl)
           }
+        } else {
+          verifiedCancelUrl = ensureValidWebUrl(parsed.cancelUrl || '', parsed.name || query, parsed.loginUrl)
         }
 
         const safeLoginUrl = ensureValidWebUrl(parsed.loginUrl || '', parsed.name || query, verifiedCancelUrl)
 
-        const entry: CancellationEntry & { isSubscriptionService?: boolean } = {
+        let defaultNotes = parsed.notes
+        if (category === 'mobile_app_store') {
+          defaultNotes = parsed.notes || 'מנוי סלולרי בלבד (Google Play / App Store). המנוי מנוהל בחנות האפליקציות של הטלפון.'
+        } else if (category === 'free_platform') {
+          defaultNotes = parsed.notes || 'פלטפורמה חינמית/ציבורית ללא מנויים בתשלום. אין צורך בביטול.'
+        } else if (category === 'unrelated') {
+          defaultNotes = parsed.notes || 'לא זוהה שירות מנויים מוכר עבור שאילתה זו.'
+        }
+
+        const entry: CancellationEntry & {
+          isSubscriptionService?: boolean
+          category?: string
+          appleCancelUrl?: string
+          googleCancelUrl?: string
+        } = {
           name: parsed.name || query,
           nameHe: parsed.nameHe || parsed.name || query,
           keywords: [qLower, (parsed.name || '').toLowerCase(), (parsed.nameHe || '').toLowerCase()],
           loginUrl: safeLoginUrl,
           cancelUrl: verifiedCancelUrl,
           method: 'url',
-          notes: parsed.notes || 'Official billing and cancellation pathway',
+          notes: defaultNotes,
           difficulty: parsed.difficulty === 'hard' ? 'hard' : 'easy',
           tier: 'auto',
-          steps: Array.isArray(parsed.steps) ? parsed.steps : ['Go to account settings', 'Click cancel subscription', 'Confirm']
-        }
-        if (parsed.isSubscriptionService === false) {
-          entry.isSubscriptionService = false
+          steps: Array.isArray(parsed.steps) ? parsed.steps : ['Go to account settings', 'Click cancel subscription', 'Confirm'],
+          isSubscriptionService: isSub,
+          category: category,
+          appleCancelUrl: category === 'mobile_app_store' ? 'https://apps.apple.com/account/subscriptions' : undefined,
+          googleCancelUrl: category === 'mobile_app_store' ? 'https://play.google.com/store/account/subscriptions' : undefined
         }
 
         if (redis && isCachedEntryValid(entry)) {

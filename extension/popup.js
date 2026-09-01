@@ -376,19 +376,34 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
     return
   }
   currentEntry = service
-  const isNonSub = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
+  const category = service.category || (service.isSubscriptionService === false ? 'free_platform' : 'web_saas')
+  const isNonSub = category === 'free_platform' || !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
+  const isMobile = category === 'mobile_app_store'
+  const isUnrelated = category === 'unrelated'
+
   service.isNonSubscription = isNonSub
 
   serviceNameEl.textContent = service.nameHe ? `${service.name} (${service.nameHe})` : service.name
   serviceNotesEl.textContent = service.notes || 'Direct cancellation pathway identified'
 
   if (modeTagEl) {
-    modeTagEl.textContent = isNonSub ? '🛡️ פלטפורמה חינמית' : sourceTag
-    if (isNonSub) {
+    if (isMobile) {
+      modeTagEl.textContent = '📱 מנוי סלולרי (App Store / Google Play)'
+      modeTagEl.style.background = '#eff6ff'
+      modeTagEl.style.color = '#1d4ed8'
+      modeTagEl.style.border = '1px solid #bfdbfe'
+    } else if (isNonSub) {
+      modeTagEl.textContent = '🛡️ פלטפורמה חינמית ללא מנויים'
       modeTagEl.style.background = '#ecfdf5'
       modeTagEl.style.color = '#059669'
       modeTagEl.style.border = '1px solid #a7f3d0'
+    } else if (isUnrelated) {
+      modeTagEl.textContent = 'ℹ️ לא זוהה שירות מנויים'
+      modeTagEl.style.background = '#f8fafc'
+      modeTagEl.style.color = '#64748b'
+      modeTagEl.style.border = '1px solid #e2e8f0'
     } else {
+      modeTagEl.textContent = sourceTag
       modeTagEl.style.background = ''
       modeTagEl.style.color = ''
       modeTagEl.style.border = ''
@@ -396,12 +411,24 @@ function showResult(service, sourceTag = '⚡ Verified Pathway') {
   }
 
   if (btnCancel) {
-    if (isNonSub) {
+    if (isMobile) {
+      btnCancel.textContent = 'בטל בחנות האפליקציות 📱'
+      btnCancel.style.background = '#2563eb'
+      btnCancel.style.color = '#ffffff'
+      btnCancel.style.cursor = 'pointer'
+      btnCancel.disabled = false
+    } else if (isNonSub) {
       btnCancel.textContent = 'אתר חינמי · אין צורך בביטול ✓'
       btnCancel.style.background = '#10b981'
       btnCancel.style.color = '#ffffff'
       btnCancel.style.cursor = 'default'
       btnCancel.disabled = true
+    } else if (isUnrelated) {
+      btnCancel.textContent = 'חיפוש מידע בגוגל 🔍'
+      btnCancel.style.background = '#475569'
+      btnCancel.style.color = '#ffffff'
+      btnCancel.style.cursor = 'pointer'
+      btnCancel.disabled = false
     } else {
       btnCancel.textContent = 'בטל עכשיו ➔'
       btnCancel.style.background = '#0f172a'
@@ -419,31 +446,19 @@ async function queryAIScout(query) {
     const res = await fetch(`https://www.subsnap.net/api/lookup?q=${encodeURIComponent(query)}`)
     const data = await res.json()
     if (data && data.entry) {
-      if (data.entry.isSubscriptionService === false) {
-        const nonSub = {
-          name: data.entry.name || query,
-          nameHe: data.entry.nameHe,
-          cancelUrl: data.entry.cancelUrl || `https://${query}`,
-          notes: 'פלטפורמה חינמית ללא מנויים פעילים (קהילה / האקתונים / תוכן). אין חיוב ואין צורך בביטול.',
-          keywords: [query.toLowerCase()],
-          isNonSubscription: true
-        }
-        saveLearnedService(nonSub)
-        return nonSub
+      const entry = {
+        name: data.entry.name || query,
+        nameHe: data.entry.nameHe,
+        cancelUrl: data.entry.cancelUrl || `https://${query}`,
+        notes: data.entry.notes || 'AI Scout identified direct billing pathway',
+        keywords: [query.toLowerCase()],
+        isLearned: true,
+        category: data.entry.category,
+        isSubscriptionService: data.entry.isSubscriptionService,
+        isNonSubscription: data.entry.category === 'free_platform' || data.entry.isSubscriptionService === false
       }
-
-      if (data.entry.cancelUrl) {
-        const entry = {
-          name: data.entry.name || query,
-          nameHe: data.entry.nameHe,
-          cancelUrl: data.entry.cancelUrl,
-          notes: data.entry.notes || 'AI Scout identified direct billing pathway',
-          keywords: [query.toLowerCase()],
-          isLearned: true
-        }
-        saveLearnedService(entry)
-        return entry
-      }
+      saveLearnedService(entry)
+      return entry
     }
   } catch (err) {}
   
@@ -475,6 +490,15 @@ function executeCancel(service) {
     try {
       targetHost = new URL(service.cancelUrl).hostname.replace(/^www\./, '')
     } catch (e) {}
+  }
+
+  const isMobile = service.category === 'mobile_app_store'
+  if (isMobile) {
+    const mobileUrl = service.cancelUrl || 'https://play.google.com/store/account/subscriptions'
+    chrome.tabs.create({ url: mobileUrl, active: true }, () => {
+      window.close()
+    })
+    return
   }
 
   const isFreePlatform = !!service.isNonSubscription || (service.notes && (service.notes.includes('ללא מנויים') || service.notes.includes('אין חיוב')))
