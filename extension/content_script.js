@@ -431,8 +431,14 @@
       'upgrade to supergrok',
       'upgrade to max',
       'upgrade to ultra',
-      'upgrade to advanced',
+      'upgrade now',
       'upgrade plan',
+      '30-day free trial',
+      '14-day free trial',
+      '7-day free trial',
+      'start free trial',
+      'start trial',
+      'free trial',
       'switch to premium',
       'supergrok',
       'included with supergrok',
@@ -444,6 +450,7 @@
       'compare plans',
       'pick a plan',
       'select a plan',
+      'view plans',
       'try plus',
       'try pro',
       'try supergrok',
@@ -453,6 +460,10 @@
       'get supergrok',
       'get advanced',
       // Hebrew Free Tier Indicators
+      'שדרג עכשיו',
+      'תקופת ניסיון חינם',
+      'ניסיון חינם',
+      'התחל תקופת ניסיון',
       'אין לך מינויים',
       'אין מינויים',
       'אין לך מינויים פעילים',
@@ -2494,33 +2505,6 @@
         // ALWAYS inject Dead Link Recovery HUD when no recovery element exists!
         // Never stay silent on a 404 page!
         injectDeadLinkRecoveryHUD(targetName || cleanHost)
-        return true
-      }
-    }
-
-    // Tier 1.5: In-App Settings & Billing Drilldown (Homepage / Dashboard navigation)
-    // When on the target service domain but no direct cancel button is yet visible on screen:
-    const isPricingPage = window.location.pathname.includes('/pricing') || window.location.search.includes('pricing') || window.location.search.includes('source=badge') || window.location.search.includes('feature=')
-    if (!isLoginPage() && !isPricingPage) {
-      const drilldownNav = findNavigationRecoveryElement()
-      if (drilldownNav && (!hudInjected || document.getElementById('subsnap-ai-hud'))) {
-        const staleHud = document.getElementById('subsnap-ai-hud')
-        if (staleHud) staleHud.remove()
-        hudInjected = false
-
-        const isHebrew = /[\u0590-\u05FF]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
-        drilldownNav.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        drilldownNav.style.outline = '3px solid #10b981'
-        drilldownNav.style.outlineOffset = '3px'
-
-        injectSelfHealingHUD(
-          isHebrew ? 'מנווט להגדרות המנוי ⚡' : 'Navigating to Subscription Settings ⚡',
-          isHebrew ? 'נתיב החשבון אותר. פותח את הגדרות המנוי להמשך ביטול...' : 'Account settings located. Opening to proceed with cancellation...',
-          () => {
-            forceClick(drilldownNav)
-            setTimeout(startScanningEngine, 1500)
-          }
-        )
         return true
       }
     }
