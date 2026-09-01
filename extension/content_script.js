@@ -437,6 +437,13 @@
       'supergrok',
       'included with supergrok',
       'unlock extended capabilities',
+      'declaration of subscriber\'s status',
+      'non-professional (private) subscriber',
+      'professional (commercial) subscriber',
+      'choose your plan',
+      'compare plans',
+      'pick a plan',
+      'select a plan',
       'try plus',
       'try pro',
       'try supergrok',
@@ -874,11 +881,10 @@
       return currentHref.endsWith(href) || currentPath === href || href === window.location.pathname
     }
 
-    // 1. Direct billing/subscription/premium links (Prioritize over generic settings!)
+    // 1. Direct billing/subscription/manage links (Prioritize over generic settings!)
     const billingCandidates = Array.from(document.querySelectorAll(
-      'a[href*="subscription"], a[href*="manage_subscription"], a[href*="billing"], a[href*="premium"], ' +
-      'a[href*="monetization"], a[href*="plan"], a[href*="upgrade"], ' +
-      '[data-testid*="subscription"], [data-testid*="billing"], [data-testid*="premium"], [data-testid*="plan"]'
+      'a[href*="subscription"], a[href*="manage_subscription"], a[href*="billing"], ' +
+      'a[href*="monetization"], [data-testid*="subscription"], [data-testid*="billing"]'
     )).filter(el => isVisible(el) && !isNavigationDisallowed(el) && !isCurrentBrokenLink(el))
 
     if (billingCandidates.length > 0) {
@@ -2494,7 +2500,8 @@
 
     // Tier 1.5: In-App Settings & Billing Drilldown (Homepage / Dashboard navigation)
     // When on the target service domain but no direct cancel button is yet visible on screen:
-    if (!isLoginPage()) {
+    const isPricingPage = window.location.pathname.includes('/pricing') || window.location.search.includes('pricing') || window.location.search.includes('source=badge') || window.location.search.includes('feature=')
+    if (!isLoginPage() && !isPricingPage) {
       const drilldownNav = findNavigationRecoveryElement()
       if (drilldownNav && (!hudInjected || document.getElementById('subsnap-ai-hud'))) {
         const staleHud = document.getElementById('subsnap-ai-hud')
