@@ -40,6 +40,12 @@
   let lastEscalatedUrl = ''
   let aiEscalationAttempted = false
 
+  // Populated by the Tier 2 fetchPlaybook relay below once it resolves. When set, this host
+  // was already classified (by /api/lookup, for any user, at any time in the last 30 days) as
+  // having no paid-subscription capability at all — performScan() short-circuits on it instead
+  // of re-running Tier 1-3 from scratch on every visit.
+  let cachedNonSubscription = null
+
   function isHostMatch(targetHost, currentHost) {
     if (!targetHost || !currentHost) return false
     const t = targetHost.toLowerCase().replace(/^www\./, '')
@@ -395,6 +401,12 @@
 
   function isNoActiveSubscriptionState() {
     const finContext = extractPageFinancialContext()
+
+    // 0. Positive Free Trial / Prospective Pricing Catalog without active billing receipt:
+    if (finContext.isFreeTrial) {
+      return true
+    }
+
     // STRICT ANTI-FREE SHIELD: If paid indicators (amount or recurring active) exist, NEVER declare free tier!
     if (finContext.hasAmount || finContext.hasRecurringActive) {
       return false
@@ -648,6 +660,9 @@
         if (res && res.success && res.data && Array.isArray(res.data.selectors)) {
           ACTIVE_SELECTORS = [...res.data.selectors, ...ACTIVE_SELECTORS]
         }
+        if (res && res.success && res.data && res.data.nonSubscription) {
+          cachedNonSubscription = res.data.nonSubscription
+        }
       })
     }
   } catch (e) {}
@@ -690,7 +705,28 @@
     'הסר גישה',
     'remove access',
     'remove these permissions',
-    'disconnect account'
+    'disconnect account',
+    // Trial/upgrade-page downgrade language — extremely common on pricing pages during an
+    // active free trial (e.g. "Not ready yet? Downgrade to our Free plan") and functionally
+    // equivalent to cancelling: it stops the trial from converting to a paid charge.
+    'downgrade to free',
+    'downgrade to our free plan',
+    'downgrade to the free plan',
+    'downgrade plan',
+    'switch to free plan',
+    'switch to free',
+    'continue with free',
+    'continue with the free plan',
+    'continue on free',
+    'stay on free',
+    'stay free',
+    'keep free plan',
+    'שדרג למטה',
+    'עבור לתוכנית החינמית',
+    'עבור לתוכנית חינם',
+    'המשך עם התוכנית החינמית',
+    'המשך בתוכנית החינמית',
+    'הישאר בתוכנית החינמית'
   ]
 
   function getActiveDialogScope() {
@@ -1220,10 +1256,10 @@
       <div style="flex: 1;">
         <div style="font-size: 13px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px;">
           <span>${isHebrew ? 'נתיב הביטול אינו זמין (שגיאת 404)' : 'Cancellation Link Unavailable (404)'}</span>
-          <span style="font-size: 10px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ריפוי עצמי 🔄' : 'Self-Heal 🔄'}</span>
+          <span id="subsnap-deadlink-timer" style="font-size: 10px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; font-weight: 800;">${isHebrew ? 'ריפוי עצמי 🔄' : 'Self-Heal 🔄'}</span>
         </div>
-        <div style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
-          ${isHebrew ? 'העמוד הוסר או שכתובתו שונתה. SubSnap מחק את הקישור השגוי מהזיכרון.' : 'This page was moved or no longer exists. SubSnap purged the stale link from memory.'}
+        <div id="subsnap-deadlink-sub" style="font-size: 11px; color: #475569; margin-top: 3px; line-height: 1.4;">
+          ${isHebrew ? 'העמוד הוסר או שכתובתו שונתה. SubSnap מחק את הקישור השגוי מהזיכרון ומחפש נתיב מאומת...' : 'This page was moved or no longer exists. SubSnap purged the stale link and is searching for a verified path...'}
         </div>
         <div style="display: flex; gap: 8px; margin-top: 8px;">
           <button id="subsnap-goto-settings-btn" style="background: #0f172a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 800; cursor: pointer;">
@@ -1241,19 +1277,95 @@
 
     document.body.appendChild(hud)
 
+    const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
+    let deadlinkCountdown = null
+    let resolvedUrl = null
+
+    function stopDeadlinkCountdown() {
+      if (deadlinkCountdown) clearInterval(deadlinkCountdown)
+    }
+
     hud.querySelector('#subsnap-goto-settings-btn').addEventListener('click', () => {
-      window.location.href = `https://${window.location.hostname}/settings`
+      stopDeadlinkCountdown()
+      window.location.href = resolvedUrl || `https://${cleanHost}/settings`
     })
 
     hud.querySelector('#subsnap-google-search-btn').addEventListener('click', () => {
-      const q = encodeURIComponent(`how to cancel ${serviceName || window.location.hostname} subscription`)
+      stopDeadlinkCountdown()
+      const q = encodeURIComponent(`how to cancel ${serviceName || cleanHost} subscription`)
       window.location.href = `https://www.google.com/search?q=${q}`
     })
 
     hud.querySelector('#subsnap-deadlink-close-btn').addEventListener('click', () => {
+      stopDeadlinkCountdown()
       hud.remove()
       hudInjected = false
     })
+
+    function startAutoNavigateCountdown(url) {
+      const timerEl = hud.querySelector('#subsnap-deadlink-timer')
+      const storageApi = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) ? chrome.storage.local : null
+
+      const runCountdown = () => {
+        let seconds = 3
+        if (timerEl) timerEl.textContent = `${seconds}s`
+        deadlinkCountdown = setInterval(() => {
+          if (document.hidden) return // Pause countdown while tab is in background!
+          seconds--
+          if (seconds > 0) {
+            if (timerEl) timerEl.textContent = `${seconds}s`
+          } else {
+            clearInterval(deadlinkCountdown)
+            window.location.href = url
+          }
+        }, 1000)
+      }
+
+      if (storageApi) {
+        storageApi.get(['autopilot_mode'], (res) => {
+          const mode = res ? res.autopilot_mode : 'countdown_5s'
+          if (mode === 'manual_highlight') {
+            if (timerEl) {
+              timerEl.textContent = isHebrew ? 'ידני 🎯' : 'Manual 🎯'
+              timerEl.style.color = '#4338ca'
+              timerEl.style.background = '#eef2ff'
+              timerEl.style.borderColor = '#c7d2fe'
+            }
+          } else {
+            runCountdown()
+          }
+        })
+      } else {
+        runCountdown()
+      }
+    }
+
+    // Ask the server for a freshly-verified recovery URL (bypassing any stale cache via
+    // force=true) instead of leaving the customer to choose between a blind /settings guess
+    // and a Google search — if a real path is found, continue there automatically.
+    try {
+      if (chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ action: 'lookupService', query: serviceName || cleanHost }, (res) => {
+          const subEl = hud.querySelector('#subsnap-deadlink-sub')
+          const timerEl = hud.querySelector('#subsnap-deadlink-timer')
+          const candidate = res && res.success && res.data && res.data.entry && res.data.entry.cancelUrl
+          const isSameDeadUrl = candidate && candidate.replace(/\/$/, '') === window.location.href.replace(/\/$/, '')
+
+          if (candidate && !isSameDeadUrl) {
+            resolvedUrl = candidate
+            if (subEl) subEl.textContent = isHebrew
+              ? 'נמצא נתיב מאומת. ממשיך אוטומטית לביטול...'
+              : 'Verified path found. Continuing to cancellation automatically...'
+            startAutoNavigateCountdown(resolvedUrl)
+          } else {
+            if (subEl) subEl.textContent = isHebrew
+              ? 'לא נמצא נתיב מאומת אוטומטית — בחר אחת מהאפשרויות למטה.'
+              : 'No verified path found automatically — pick an option below.'
+            if (timerEl) timerEl.remove()
+          }
+        })
+      }
+    } catch (e) {}
   }
 
   function injectSearchResultActionHUD(serviceName, host, targetUrl) {
@@ -2029,16 +2141,35 @@
         .filter(t => t && t.length < 35)
         .slice(0, 10)
 
+      // 1. Detect if this is a prospective Pricing/Catalog comparison page (e.g. Monday, Zoom, Slack plan pickers)
+      const isPricingCatalog = (
+        window.location.pathname.includes('/pricing') ||
+        window.location.pathname.includes('/plans') ||
+        window.location.pathname.includes('/upgrade') ||
+        /choose the right plan|compare our plans|pick a plan|select a plan|plans that grow with you/i.test(fullText)
+      )
+
+      // 2. Active billing receipt requirement: An amount is only an ACTIVE subscription charge if accompanied by active billing language
+      const amountRegex = /\$\s*\d+([.,]\d+)?|\b\d+([.,]\d+)?\s*(usd|eur|ils|₪|€|£)/i
+      const billingContextRegex = /(your current plan|next payment|next billing|charged on|renews on|renewal amount|billing cycle|החיוב הבא|יחויב בתאריך|סכום לחיוב)/i
+      
+      const hasExplicitActiveReceipt = lines.some(l => amountRegex.test(l) && billingContextRegex.test(l))
+      const hasAmount = hasExplicitActiveReceipt || (!isPricingCatalog && lines.some(l => amountRegex.test(l) && /(plan|subscription|billing|renew|member|month|\/mo\b|year|annual|מנוי|חיוב|תוכנית|תשלום|מתחדש|לחודש|בחודש|לשנה)/i.test(l)))
+
+      const isFreeTrial = /days left on your|current trial|pro free trial|free trial|downgrade to.*free|ניסיון חינם|ימים נותרו לתקופת הניסיון/i.test(fullText)
+
       return {
         pageTitle: document.title,
         url: window.location.href,
         signals: relevantLines,
         tabs,
-        hasAmount: /\$\s*\d+([.,]\d+)?|\b\d+([.,]\d+)?\s*(usd|eur|ils|₪|€|£)/i.test(fullText),
-        hasRecurringActive: /recurring:\s*active/i.test(fullText) || /status:\s*active/i.test(fullText)
+        hasAmount: isFreeTrial ? false : hasAmount,
+        isFreeTrial,
+        isPricingCatalog,
+        hasRecurringActive: /(recurring|subscription|renewal|billing)\s*:\s*active/i.test(fullText)
       }
     } catch (e) {
-      return { signals: [], tabs: [], hasAmount: false, hasRecurringActive: false }
+      return { signals: [], tabs: [], hasAmount: false, isFreeTrial: false, isPricingCatalog: false, hasRecurringActive: false }
     }
   }
 
@@ -2514,6 +2645,48 @@
     }
 
     const targetName = activeIntent.name || ''
+
+    // Tier 0.1: Persistent Non-Subscription Domain Shield — this host was already classified
+    // (by /api/lookup, for any user, at some point) as having no paid-subscription capability
+    // at all. Before trusting that, cheaply sanity-check it against the page actually in front
+    // of us right now: extractPageFinancialContext() is already computed for free on every scan,
+    // so if THIS page currently shows real billing signals (a price/renewal date in a billing
+    // context, or "Recurring: Active"), the cached verdict is stale — evict it and fall through
+    // to the normal Tier 0.2+ flow instead of trusting a calendar guess. No AI call spent to
+    // detect the drift itself; one is only spent if the drift check actually fires.
+    if (cachedNonSubscription) {
+      const liveFinContext = extractPageFinancialContext()
+      const stillLooksFree = !liveFinContext.hasAmount && !liveFinContext.hasRecurringActive
+
+      if (stillLooksFree) {
+        const isHebrew = /[֐-׿]/.test(document.title + ' ' + (document.body.innerText || '').slice(0, 500)) || (navigator.language && navigator.language.startsWith('he'))
+        safeSessionSet('subsnap_halted_at_' + cleanHost, String(Date.now()))
+        safeSessionRemove('subsnap_halted_' + cleanHost)
+        if (chrome.storage && chrome.storage.local) {
+          chrome.storage.local.remove(['subsnap_active_intent'])
+        }
+        if (activeObserver) activeObserver.disconnect()
+        if (activeScanInterval) clearInterval(activeScanInterval)
+
+        injectPeaceOfMindHUD(
+          isHebrew ? 'בשורות טובות: אין כאן אפשרות מנוי בתשלום! 🛡️' : 'Good News: No Paid Subscription Exists Here! 🛡️',
+          cachedNonSubscription.reason || (isHebrew
+            ? `${targetName || cleanHost} הוא שירות ללא מנוי בתשלום. אין צורך בביטול.`
+            : `${targetName || cleanHost} has no paid-subscription tier. There's nothing to cancel.`)
+        )
+        return true
+      }
+
+      // The live page contradicts the cached "no subscription" verdict — evict it so future
+      // visits stop trusting stale data, and let this visit fall through to the normal flow.
+      console.warn('[SubSnap] Cached non-subscription verdict for', cleanHost, 'contradicted by live page signals — evicting.')
+      cachedNonSubscription = null
+      try {
+        if (chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'evictStalePlaybook', hostname: cleanHost })
+        }
+      } catch (e) {}
+    }
 
     // Tier 0.2: Universal Non-Subscription Platform Shield (100% Universal, Zero Hardcoded Domains)
     const isExplicitlyFree = !!activeIntent.isNonSubscription ||

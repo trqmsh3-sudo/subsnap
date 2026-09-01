@@ -91,17 +91,22 @@ export async function GET(req: NextRequest) {
   let structuredPlaybook: ServicePlaybook | null = null
   let healedUrl: string | null = null
   let dynamicSelector: string | null = null
+  // { category, reason, recordedAt } when /api/lookup's AI classification previously
+  // determined this host has no paid-subscription capability at all; null otherwise.
+  let nonSubscription: { category: string; reason?: string; recordedAt?: number } | null = null
 
   if (redis) {
     try {
-      const [pb, hUrl, dSel] = await Promise.all([
+      const [pb, hUrl, dSel, nonSub] = await Promise.all([
         redis.get<ServicePlaybook>(`playbook:${host}`),
         redis.get<string>(`healed_url:${host}`),
-        redis.get<string>(`selector:${host}`)
+        redis.get<string>(`selector:${host}`),
+        redis.get<{ category: string; reason?: string; recordedAt?: number }>(`nonsub:${host}`)
       ])
       structuredPlaybook = pb
       healedUrl = hUrl
       dynamicSelector = dSel
+      nonSubscription = nonSub
     } catch {}
   }
 
@@ -109,6 +114,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       host,
       playbook: structuredPlaybook,
+      nonSubscription,
       source: 'redis_playbook'
     })
   }
@@ -118,6 +124,7 @@ export async function GET(req: NextRequest) {
       host,
       healedUrl,
       selectors: dynamicSelector ? [dynamicSelector, ...(BASE_PLAYBOOKS[host] || [])] : (BASE_PLAYBOOKS[host] || []),
+      nonSubscription,
       source: 'remote_redis'
     })
   }
@@ -126,11 +133,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       host,
       selectors: BASE_PLAYBOOKS[host],
+      nonSubscription,
       source: 'base_playbook'
     })
   }
 
-  return NextResponse.json({ host, selectors: [], playbook: null, source: 'none' })
+  return NextResponse.json({ host, selectors: [], playbook: null, nonSubscription, source: 'none' })
 }
 
 export async function POST(req: NextRequest) {
@@ -224,7 +232,8 @@ export async function DELETE(req: NextRequest) {
       await Promise.all([
         redis.del(`playbook:${host}`),
         redis.del(`healed_url:${host}`),
-        redis.del(`selector:${host}`)
+        redis.del(`selector:${host}`),
+        redis.del(`nonsub:${host}`)
       ])
     }
 

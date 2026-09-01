@@ -289,10 +289,39 @@ Return ONLY a valid JSON object matching this schema:
           googleCancelUrl: category === 'mobile_app_store' ? 'https://play.google.com/store/account/subscriptions' : undefined
         }
 
+        const SCOUT_TTL_SECONDS = 60 * 60 * 24 * 30 // classifications can go stale (a free tool can add paid plans) — don't cache forever
+
         if (redis && isCachedEntryValid(entry)) {
           try {
-            await redis.set(`scout:${qLower}`, entry)
-            if (parsed.name) await redis.set(`scout:${parsed.name.toLowerCase()}`, entry)
+            await redis.set(`scout:${qLower}`, entry, { ex: SCOUT_TTL_SECONDS })
+            if (parsed.name) await redis.set(`scout:${parsed.name.toLowerCase()}`, entry, { ex: SCOUT_TTL_SECONDS })
+          } catch {}
+        }
+
+        // Persist "no subscription possible here" per-HOST (not per-query) so the extension's
+        // content script — which checks by the hostname it's actually sitting on — can skip
+        // Tier 1-3 entirely on a future visit, by any user, instead of re-discovering this
+        // one page-load at a time. Skip the Google-search fallback URL (verifiedCancelUrl
+        // falls back to a google.com search link when no real domain could be verified) —
+        // that's not the service's own host and would poison the cache for google.com itself.
+        //
+        // This is long-lived (not the 30-day scout TTL above) because the real defense against
+        // a site later adding paid plans isn't a calendar guess — it's the content script
+        // checking the live page's financial signals (hasAmount/hasRecurringActive, already
+        // computed for free on every scan) before ever trusting this cache, and evicting it
+        // the moment those signals contradict it. The TTL here only exists as a distant
+        // backstop against a genuinely abandoned entry, not as the primary staleness defense.
+        const NONSUB_TTL_SECONDS = 60 * 60 * 24 * 180
+        if (redis && (category === 'free_platform' || category === 'unrelated')) {
+          try {
+            const host = new URL(verifiedCancelUrl).hostname.toLowerCase().replace(/^www\./, '')
+            if (host && host !== 'google.com') {
+              await redis.set(`nonsub:${host}`, {
+                category,
+                reason: defaultNotes,
+                recordedAt: Date.now()
+              }, { ex: NONSUB_TTL_SECONDS })
+            }
           } catch {}
         }
 
