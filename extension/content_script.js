@@ -343,8 +343,8 @@
     const fullText = (document.body.innerText || '').toLowerCase()
 
     const hasCancelledHeader = (
-      /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלכם בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|הגישה מסתיימת בתאריך|הגישה תסתיים ב-|הגישה מסתיימת ב-|הישארו בתוכנית|הישאר בתוכנית|הישארו במנוי|להישאר בתוכנית|פג תוקף|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled|your subscription has been cancelled|your plan has been cancelled|access ends on|access will end on|your access ends|plan ends on|plan will end on|subscription ends on|keep your plan|re-subscribe|resubscribe/i.test(scopeText) ||
-      /\bהמינוי שלכם בוטל\b|\bהמינוי שלך בוטל\b|\bהמינוי בוטל\b|\bהגישה מסתיימת בתאריך\b|\bהישארו בתוכנית\b|\byour subscription has been cancelled\b|\baccess ends on\b/i.test(fullText)
+      /\bבוטל\b|מבוטל|המינוי בוטל|המינוי שלכם בוטל|המינוי שלך בוטל|בוטל ב-|בוטל בתאריך|להרשמה מחדש|שחזור מנוי|חידוש מנוי|המינוי שלך יסתיים בתאריך|המינוי יסתיים ב-|הגישה מסתיימת בתאריך|הגישה תסתיים ב-|הגישה מסתיימת ב-|הישארו בתוכנית|הישאר בתוכנית|הישארו במנוי|להישאר בתוכנית|פג תוקף|חיוב חוזר: לא פעיל|חיוב חוזר מבוטל|subscription cancelled|subscription canceled|plan canceled|plan cancelled|membership cancelled|your subscription has been cancelled|your plan has been cancelled|access ends on|access will end on|your access ends|plan ends on|plan will end on|subscription ends on|keep your plan|re-subscribe|resubscribe|recurring:\s*inactive|recurring inactive|renewal:\s*inactive|auto-renew.*off|auto-renewal.*disabled|expires on:/i.test(scopeText) ||
+      /\bהמינוי שלכם בוטל\b|\bהמינוי שלך בוטל\b|\bהמינוי בוטל\b|\bהגישה מסתיימת בתאריך\b|\bהישארו בתוכנית\b|\byour subscription has been cancelled\b|\baccess ends on\b|recurring:\s*inactive|expires on:/i.test(fullText)
     )
 
     // Intermediate warning/confirmation phrases (if these are present, cancellation is not finished yet)
@@ -2096,7 +2096,18 @@
 
       // SCENARIO 4: Already Cancelled
       if (accountState === 'already_cancelled') {
+        if (existingHud) existingHud.remove()
+        hudInjected = false
+        if (chrome.storage && chrome.storage.local) {
+          chrome.storage.local.remove(['subsnap_active_intent'])
+        }
         recordCancellationSuccess(serviceName)
+        injectPeaceOfMindHUD(
+          isHebrew ? 'המנוי כבר בוטל בהצלחה! 🎉' : 'Subscription Already Cancelled! 🎉',
+          isHebrew
+            ? `סייר SubSnap זיהה שהחיוב החוזר ב-${serviceName || cleanHost} כבוי (Recurring: Inactive). לא יבוצע חיוב נוסף.`
+            : `SubSnap verified that recurring billing on ${serviceName || cleanHost} is Inactive. No further charges will occur.`
+        )
         return
       }
 
