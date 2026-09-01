@@ -56,28 +56,31 @@ Determine the user's ACTUAL subscription status based on the Page Financial Cont
 3. "already_cancelled": The subscription was already cancelled (e.g. "Cancelled", "Cancels on", "Expires on", "Renewal: Inactive").
 4. "unknown": Cannot determine with confidence.
 
-STAGE 2: CANCELLATION PATHWAY IDENTIFICATION
+STAGE 2: CANCELLATION PATHWAY IDENTIFICATION & AUTONOMOUS RECOVERY
 Find the single interactive element or lever that progresses toward cancellation:
 - Direct cancel buttons (e.g. "Cancel subscription", "End plan", "Turn off auto-renew").
 - DARK PATTERNS & DROPDOWNS: Enterprise SaaS (like Semrush, HubSpot, Zoom) hides cancellation behind chevrons (e.g. "Recurring: Active ⌵", a chevron/caret icon, or a settings gear).
 - Sub-tabs or Menus (e.g. "Subscription info", "Billing info", "Payments", "Manage Plan", or Avatar/Profile dropdown) if currently on a dashboard or overview page.
 - Retention Survey (e.g. "Why are you leaving?", radio options, feedback textareas, "Continue to cancel").
+- BACKTRACK / DEAD-END RECOVERY: If currently on an Upgrade page, Pricing page, or wrong sub-tab (e.g. /upgrade or /pricing) while user has an active paid subscription, pick the Back button (like "Back", "Return to settings", or back arrow) and set actionType to "backtrack", or provide the direct billing URL in "recoveryUrl" and set actionType to "navigate_to_billing".
 
 STRICT CRITICAL RULES:
 1. If the financial context has a price, payment date, or says "Recurring: Active", you MUST diagnose accountState as "active_paid"! You are STRICTLY FORBIDDEN from declaring "free_tier" or saying no subscription exists!
 2. NEVER pick "Delete account", "Close account", "Buy", "Upgrade", "Purchase", or "Compare plans". Those are NOT cancellation!
-3. If on a dashboard or homepage without direct cancel buttons, pick the navigation link (e.g. "Subscription info", "Billing", "Account", or Avatar) that leads toward subscriptions and set actionType to "navigate_to_billing".
-4. If accountState is "active_paid" and a chevron or dropdown (like "Recurring: Active ⌵") controls billing renewal, pick THAT element's index.
+3. If on an upgrade page with an active subscription, help the user return/navigate to billing (e.g. direct billing settings URL or back button) so the cancellation button can be accessed.
+4. If on a dashboard or homepage without direct cancel buttons, pick the navigation link (e.g. "Subscription info", "Billing", "Account", or Avatar) that leads toward subscriptions and set actionType to "navigate_to_billing".
+5. If accountState is "active_paid" and a chevron or dropdown (like "Recurring: Active ⌵") controls billing renewal, pick THAT element's index.
 
 Return ONLY a valid JSON object matching this schema:
 {
   "accountState": "active_paid" | "free_tier" | "already_cancelled" | "unknown",
   "detectedAmount": "string with currency like $199.00 or null",
   "nextPaymentDate": "string like September 6, 2026 or null",
-  "planName": "string like Semrush One or null",
+  "planName": "string like Semrush One or Claude Pro or null",
   "bestMatchIndex": number (0-based index in the elements array, or -1 if no trigger can be found),
   "targetSelector": "CSS selector if uniquely identifiable, or null",
-  "actionType": "click_cancel" | "open_dropdown" | "navigate_to_billing" | "fill_survey" | "switch_tab" | "contact_support" | "none",
+  "actionType": "click_cancel" | "open_dropdown" | "navigate_to_billing" | "backtrack" | "fill_survey" | "switch_tab" | "contact_support" | "none",
+  "recoveryUrl": "string like https://service.com/settings/billing or null",
   "confidence": number (0.0 to 1.0),
   "guidanceHe": "Clear Hebrew message explaining status and next step",
   "guidanceEn": "Clear English message explaining status and next step"
@@ -118,6 +121,7 @@ Return ONLY a valid JSON object matching this schema:
         bestMatchIndex: typeof parsed.bestMatchIndex === 'number' ? parsed.bestMatchIndex : -1,
         targetSelector: derivedSelector,
         actionType: parsed.actionType || 'none',
+        recoveryUrl: parsed.recoveryUrl || null,
         confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
         guidanceHe: parsed.guidanceHe || null,
         guidanceEn: parsed.guidanceEn || null,

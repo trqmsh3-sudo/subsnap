@@ -2071,7 +2071,7 @@
         }
       }
 
-      // SCENARIO 1: Valid Target Element Resolved (e.g. Cancel button or Chevron/Tab)
+      // SCENARIO 1: Valid Target Element Resolved (Cancel button, Dropdown chevron, or Backtrack navigation)
       if (targetEl) {
         if (existingHud) existingHud.remove()
         hudInjected = false
@@ -2080,11 +2080,16 @@
         targetEl.style.outline = '3px solid #10b981'
         targetEl.style.outlineOffset = '3px'
 
-        const hudTitle = accountState === 'active_paid' && detectedAmount
-          ? (isHebrew ? `💳 מנוי פעיל: ${planName || serviceName} (${detectedAmount})` : `💳 Active Plan: ${planName || serviceName} (${detectedAmount})`)
-          : (isHebrew ? 'נתיב הביטול אותר ע&quot;י AI 🤖⚡' : 'AI Located Cancellation Pathway 🤖⚡')
+        const isBacktrack = res && res.data && (res.data.actionType === 'backtrack' || res.data.actionType === 'navigate_to_billing')
+        const hudTitle = isBacktrack
+          ? (isHebrew ? `🔄 סייר AI מתקן מסלול: ${planName || serviceName}` : `🔄 AI Course Correction: ${planName || serviceName}`)
+          : (accountState === 'active_paid' && detectedAmount
+            ? (isHebrew ? `💳 מנוי פעיל: ${planName || serviceName} (${detectedAmount})` : `💳 Active Plan: ${planName || serviceName} (${detectedAmount})`)
+            : (isHebrew ? 'נתיב הביטול אותר ע"י AI 🤖⚡' : 'AI Located Cancellation Pathway 🤖⚡'))
 
-        const hudSub = guidanceHe || (isHebrew ? 'ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...' : 'SubSnap AI identified the path. Proceeding...')
+        const hudSub = isBacktrack
+          ? (isHebrew ? 'אתה בעמוד שדרוג תוכניות. סייר ה-AI חוזר אוטומטית לעמוד ניהול החיובים וביטול המנוי...' : 'You are on an upgrade page. AI Scout is automatically returning to the billing cancellation pathway...')
+          : (guidanceHe || (isHebrew ? 'ה-AI פיצח את הנתיב. ממשיך ומאמת את התוצאה...' : 'SubSnap AI identified the path. Proceeding...'))
 
         injectSelfHealingHUD(hudTitle, hudSub, () => {
           try {
@@ -2102,26 +2107,52 @@
           } catch (e) {}
 
           forceClick(targetEl)
-          setTimeout(startScanningEngine, 1000)
+          setTimeout(startScanningEngine, 1200)
         })
         return
       }
 
-      // SCENARIO 2: Active Paid Subscription Confirmed (CRITICAL ANTI-FREE SHIELD)
-      // Never, under ANY circumstances, say "No active subscription" when paid indicators exist!
+      // SCENARIO 1.5: Autonomous Recovery URL Navigation (Dead-End / Upgrade / 404 Recovery)
+      if (res && res.data && res.data.recoveryUrl) {
+        if (existingHud) existingHud.remove()
+        hudInjected = false
+
+        const navTitle = isHebrew
+          ? `🔄 סייר AI מנווט להגדרות החיוב (${planName || serviceName})`
+          : `🔄 AI Navigating to Billing Settings (${planName || serviceName})`
+
+        const navSub = isHebrew
+          ? 'עובר אוטומטית לעמוד ניהול החיובים וביטול המנוי...'
+          : 'Automatically transitioning to subscription management...'
+
+        injectSelfHealingHUD(navTitle, navSub, () => {
+          window.location.href = res.data.recoveryUrl
+        })
+        return
+      }
+
+      // SCENARIO 2: Active Paid Subscription on Dead-End Page (Autonomous Fallback to Billing Settings)
       if (accountState === 'active_paid' || detectedAmount || (pageContext.hasAmount && pageContext.hasRecurringActive)) {
         if (existingHud) existingHud.remove()
         hudInjected = false
 
+        const isUpgradeUrl = window.location.href.includes('/upgrade') || window.location.href.includes('/pricing')
+        const fallbackBillingUrl = `https://${window.location.hostname}/settings/billing`
+
         const title = isHebrew
-          ? `💳 זוהה מנוי פעיל: ${planName || serviceName} ${detectedAmount ? `(${detectedAmount})` : ''}`
+          ? `💳 מנוי פעיל: ${planName || serviceName} ${detectedAmount ? `(${detectedAmount})` : ''}`
           : `💳 Active Subscription: ${planName || serviceName} ${detectedAmount ? `(${detectedAmount})` : ''}`
 
-        const defaultGuidance = isHebrew
-          ? `המנוי שלך פעיל${nextPaymentDate ? ` (חיוב הבא: ${nextPaymentDate})` : ''}. האתר מסתיר את הביטול — לחץ על החץ ליד 'Recurring: Active ⌵' או עבור ללשונית 'Billing info'.`
-          : `Your subscription is active${nextPaymentDate ? ` (Next payment: ${nextPaymentDate})` : ''}. Cancellation is hidden behind 'Recurring: Active ⌵' or 'Billing info' tab.`
+        const sub = isUpgradeUrl
+          ? (isHebrew ? 'אתה בעמוד שדרוג תוכניות. סייר ה-AI מעביר אותך כעת לעמוד ניהול החיובים וביטול המנוי...' : 'You are on an upgrade page. AI Scout is redirecting to the billing management dashboard...')
+          : (guidanceHe || (isHebrew ? `המנוי שלך פעיל${nextPaymentDate ? ` (חיוב הבא: ${nextPaymentDate})` : ''}. לחץ על הגדרות חשבון להמשך ביטול.` : `Active subscription detected${nextPaymentDate ? ` (Next payment: ${nextPaymentDate})` : ''}.`))
 
-        const sub = guidanceHe || defaultGuidance
+        if (isUpgradeUrl) {
+          injectSelfHealingHUD(title, sub, () => {
+            window.location.href = fallbackBillingUrl
+          })
+          return
+        }
 
         // Highlight any chevron or billing tab on page to empower user immediately
         const chevronOrTab = document.querySelector('[class*="chevron"], [aria-expanded], a[href*="billing"], [role="tab"]')
