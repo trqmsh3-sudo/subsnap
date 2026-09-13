@@ -1500,6 +1500,47 @@
       bestLink = resultLinks[0]
     }
 
+    // 1. KNOWN SAAS DEEP-LINK MAP: Guaranteed direct landing on billing/cancellation
+    const KNOWN_DIRECT_MAP = {
+      trello: { host: 'trello.com', url: 'https://trello.com/my/billing', name: 'Trello' },
+      atlassian: { host: 'admin.atlassian.com', url: 'https://admin.atlassian.com/billing', name: 'Atlassian' },
+      jira: { host: 'admin.atlassian.com', url: 'https://admin.atlassian.com/billing', name: 'Jira' },
+      slack: { host: 'slack.com', url: 'https://slack.com/admin/billing', name: 'Slack' },
+      notion: { host: 'notion.so', url: 'https://www.notion.so/settings', name: 'Notion' },
+      figma: { host: 'figma.com', url: 'https://www.figma.com/settings', name: 'Figma' },
+      canva: { host: 'canva.com', url: 'https://www.canva.com/settings/billing-and-teams', name: 'Canva' },
+      monday: { host: 'monday.com', url: 'https://monday.com/settings/billing', name: 'Monday.com' },
+      zoom: { host: 'zoom.us', url: 'https://zoom.us/billing', name: 'Zoom' },
+      loom: { host: 'loom.com', url: 'https://www.loom.com/settings/billing', name: 'Loom' },
+      asana: { host: 'asana.com', url: 'https://app.asana.com/-/admin_console', name: 'Asana' },
+      dropbox: { host: 'dropbox.com', url: 'https://www.dropbox.com/account/plan', name: 'Dropbox' },
+      spotify: { host: 'spotify.com', url: 'https://www.spotify.com/account/change-plan/', name: 'Spotify' },
+      netflix: { host: 'netflix.com', url: 'https://www.netflix.com/youraccount', name: 'Netflix' },
+      claude: { host: 'claude.ai', url: 'https://claude.ai/settings/billing', name: 'Claude Pro' },
+      semrush: { host: 'semrush.com', url: 'https://www.semrush.com/accounts/subscription-info/', name: 'Semrush' }
+    }
+
+    // Direct match from user search query (e.g. "how to cancel trello subscription" -> trello)
+    for (const [key, item] of Object.entries(KNOWN_DIRECT_MAP)) {
+      if (cleanedQuery.includes(key) || q.includes(key)) {
+        injectSearchResultActionHUD(item.name, item.host, item.url)
+        return true
+      }
+    }
+
+    // 2. Query lookup service relay for verified cancellation database entries
+    chrome.runtime.sendMessage({ action: 'lookupService', query: cleanedQuery }, (res) => {
+      if (res && res.success && res.data && res.data.entry && res.data.entry.cancelUrl) {
+        const entry = res.data.entry
+        if (!entry.cancelUrl.includes('google.com/search')) {
+          let targetHost = ''
+          try { targetHost = new URL(entry.cancelUrl).hostname.replace(/^www\./, '') } catch (e) {}
+          injectSearchResultActionHUD(entry.name || cleanedQuery, targetHost || entry.name, entry.cancelUrl)
+          return
+        }
+      }
+    })
+
     if (bestLink) {
       const rawTargetUrl = bestLink.href
       let displayHost = ''
@@ -1526,7 +1567,8 @@
           operationalUrl = 'https://myaccount.google.com/subscriptions'
         }
       } else if (displayHost.startsWith('help.') || displayHost.startsWith('support.') || displayHost.includes('zendesk') || displayHost.includes('intercom')) {
-        operationalUrl = `https://${rootAppHost}`
+        // STRICT NO-HOMEPAGE POLICY: Never link to bare marketing root homepage!
+        operationalUrl = `https://${rootAppHost}/settings/billing`
       }
 
       injectSearchResultActionHUD(

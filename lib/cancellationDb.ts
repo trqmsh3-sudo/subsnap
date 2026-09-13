@@ -13,6 +13,22 @@ export interface CancellationEntry {
 
 export const CANCELLATION_DB: CancellationEntry[] = [
   {
+    name: 'Trello',
+    nameHe: 'טרלו (Trello / Atlassian)',
+    keywords: ['trello', 'trello.com', 'טרלו', 'atlassian trello'],
+    loginUrl: 'https://trello.com/login',
+    cancelUrl: 'https://trello.com/my/billing',
+    method: 'url',
+    notes: 'עמוד ניהול החיוב והמנוי הרשמי של Trello Workspaces',
+    difficulty: 'easy',
+    tier: 'auto',
+    steps: [
+      'העמוד נפתח ישירות בהגדרות החיוב (Workspace Billing) של Trello',
+      'סייר SubSnap מאתר את כפתור Cancel Subscription או Downgrade to Free',
+      'מאשרים את המעבר לחשבון חינמי'
+    ],
+  },
+  {
     name: 'Semrush',
     nameHe: 'סמראש (Semrush)',
     keywords: ['semrush', 'semrush.com', 'סמראש', 'סמראשש'],
