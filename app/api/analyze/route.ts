@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { analyzeRatelimit, logBlocked } from '@/lib/ratelimit'
 import { hasFreeScan, consumeFreeScan, deductCredit, logScanResult } from '@/lib/credits'
+import fs from 'fs'
+import path from 'path'
+
+function resolveGeminiApiKey(): string {
+  try {
+    const envLocalPath = path.resolve(process.cwd(), '.env.local')
+    if (fs.existsSync(envLocalPath)) {
+      const raw = fs.readFileSync(envLocalPath, 'utf8')
+      const match = raw.match(/GEMINI_API_KEY\s*=\s*(.+)/)
+      if (match && match[1]) {
+        const k = match[1].trim().replace(/^['"]|['"]$/g, '')
+        if (k && !k.includes('PASTE_YOUR_KEY')) return k
+      }
+    }
+  } catch {}
+  return (process.env.GEMINI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '')
+}
 
 const PROMPT = `You are analyzing a redacted bank statement image. Extract every recurring subscription charge you can identify.
 
@@ -64,7 +81,7 @@ export async function POST(req: NextRequest) {
 
   // ── AI analysis ───────────────────────────────────────────────────────────
   try {
-    const apiKey = process.env.GEMINI_API_KEY
+    const apiKey = resolveGeminiApiKey()
     if (!apiKey) {
       console.error('[analyze] GEMINI_API_KEY is not set. Please set GEMINI_API_KEY in .env.local')
       return NextResponse.json(
@@ -74,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genai = new GoogleGenerativeAI(apiKey)
-    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genai.getGenerativeModel({ model: 'gemini-flash-latest' })
 
     const result = await model.generateContent([
       PROMPT,

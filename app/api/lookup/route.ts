@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { findCancellationEntry, CANCELLATION_DB, CancellationEntry } from '@/lib/cancellationDb'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Redis } from '@upstash/redis'
+import fs from 'fs'
+import path from 'path'
+
+function resolveGeminiApiKey(): string {
+  try {
+    const envLocalPath = path.resolve(process.cwd(), '.env.local')
+    if (fs.existsSync(envLocalPath)) {
+      const raw = fs.readFileSync(envLocalPath, 'utf8')
+      const match = raw.match(/GEMINI_API_KEY\s*=\s*(.+)/)
+      if (match && match[1]) {
+        const k = match[1].trim().replace(/^['"]|['"]$/g, '')
+        if (k && !k.includes('PASTE_YOUR_KEY')) return k
+      }
+    }
+  } catch {}
+  return (process.env.GEMINI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '')
+}
 
 const hasRedis = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
 const redis = hasRedis
@@ -200,12 +217,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 5. AUTONOMOUS AI SCOUT (Gemini 2.5 Flash)
-  const apiKey = process.env.GEMINI_API_KEY
+  // 5. AUTONOMOUS AI SCOUT (Gemini Flash)
+  const apiKey = resolveGeminiApiKey()
   if (apiKey) {
     try {
       const genai = new GoogleGenerativeAI(apiKey)
-      const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      const model = genai.getGenerativeModel({ model: 'gemini-flash-latest' })
 
       const prompt = `You are SubSnap Autonomous Subscription Classification AI Scout.
 Analyze this user query / website / service name: "${query}".

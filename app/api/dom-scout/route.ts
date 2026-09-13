@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Redis } from '@upstash/redis'
 
+import fs from 'fs'
+import path from 'path'
+
+function resolveGeminiApiKey(): string {
+  try {
+    const envLocalPath = path.resolve(process.cwd(), '.env.local')
+    if (fs.existsSync(envLocalPath)) {
+      const raw = fs.readFileSync(envLocalPath, 'utf8')
+      const match = raw.match(/GEMINI_API_KEY\s*=\s*(.+)/)
+      if (match && match[1]) {
+        const k = match[1].trim().replace(/^['"]|['"]$/g, '')
+        if (k && !k.includes('PASTE_YOUR_KEY')) return k
+      }
+    }
+  } catch {}
+  return (process.env.GEMINI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '')
+}
+
 const hasRedis = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
 const redis = hasRedis
   ? new Redis({
@@ -29,14 +47,14 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    // 2. Run Gemini 2.5 Flash on the DOM snapshot + Financial Context
-    const apiKey = process.env.GEMINI_API_KEY
+    // 2. Run Gemini on the DOM snapshot + Financial Context
+    const apiKey = resolveGeminiApiKey()
     if (!apiKey) {
       return NextResponse.json({ targetSelector: null, bestMatchIndex: -1, reason: 'no_api_key' })
     }
 
     const genai = new GoogleGenerativeAI(apiKey)
-    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genai.getGenerativeModel({ model: 'gemini-flash-latest' })
 
     const prompt = `You are SubSnap Autonomous Subscription & Billing AI Scout.
 Analyze this subscription/account page for "${serviceName || hostname}".
