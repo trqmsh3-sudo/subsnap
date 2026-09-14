@@ -1502,7 +1502,7 @@
 
     // 1. KNOWN SAAS DEEP-LINK MAP: Guaranteed direct landing on billing/cancellation
     const KNOWN_DIRECT_MAP = {
-      trello: { host: 'trello.com', url: 'https://trello.com/my/billing', name: 'Trello' },
+      trello: { host: 'trello.com', url: 'https://trello.com', name: 'Trello' },
       atlassian: { host: 'admin.atlassian.com', url: 'https://admin.atlassian.com/billing', name: 'Atlassian' },
       jira: { host: 'admin.atlassian.com', url: 'https://admin.atlassian.com/billing', name: 'Jira' },
       slack: { host: 'slack.com', url: 'https://slack.com/admin/billing', name: 'Slack' },
@@ -2828,14 +2828,7 @@
       return true
     }
 
-    // 1. LOGIN WALL DETECTED: Only if no active plan or app state was found!
-    if (isLoggedOutState()) {
-      safeSessionSet('subsnap_waiting_login', 'true')
-      injectLoginBridgeHUD(targetName)
-      return true
-    }
-
-    // Tier 1.4: 404 / Dead Link Recovery
+    // 1. 404 / Dead Link Recovery: Takes absolute precedence over login checks!
     if (isDeadOr404Page()) {
       const recoveryNav = findNavigationRecoveryElement()
       const cleanHost = window.location.hostname.toLowerCase().replace(/^www\./, '')
@@ -2865,10 +2858,17 @@
         return true
       } else {
         // ALWAYS inject Dead Link Recovery HUD when no recovery element exists!
-        // Never stay silent on a 404 page!
+        // Automatically redirects to the clean main application to navigate from within!
         injectDeadLinkRecoveryHUD(targetName || cleanHost)
         return true
       }
+    }
+
+    // 2. LOGIN WALL DETECTED: Clean login prompt if unauthenticated on a valid application page
+    if (isLoggedOutState()) {
+      safeSessionSet('subsnap_waiting_login', 'true')
+      injectLoginBridgeHUD(targetName)
+      return true
     }
 
     return false

@@ -17,7 +17,7 @@ export const CANCELLATION_DB: CancellationEntry[] = [
     nameHe: 'טרלו (Trello / Atlassian)',
     keywords: ['trello', 'trello.com', 'טרלו', 'atlassian trello'],
     loginUrl: 'https://trello.com/login',
-    cancelUrl: 'https://trello.com/my/billing',
+    cancelUrl: 'https://trello.com',
     method: 'url',
     notes: 'עמוד ניהול החיוב והמנוי הרשמי של Trello Workspaces',
     difficulty: 'easy',
